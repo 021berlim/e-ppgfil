@@ -1,0 +1,545 @@
+'use client'
+
+import type {
+  Anexo,
+  Categoria,
+  EntradaHistorico,
+  NotaInterna,
+  Protocolo,
+  Status,
+  TipoSolicitacao,
+} from './types'
+import { PRAZO_SLA_DIAS, RESPONSAVEIS, STATUS_FINAIS } from './types'
+
+export const STORAGE_KEY = 'epfil:protocolos'
+export const AUTH_KEY = 'epfil:auth'
+export const ARQUIVAMENTO_AUTOMATICO_DIAS = 90
+
+const LISTENERS = new Set<() => void>()
+let protocolosCache: Protocolo[] | null = null
+let storageCache: string | null = null
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10)
+}
+
+export function formatarCPF(cpf: string) {
+  const d = cpf.replace(/\D/g, '').slice(0, 11)
+  return d
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, '$1.$2.$3-$4')
+}
+
+export function soDigitos(v: string) {
+  return v.replace(/\D/g, '')
+}
+
+export function formatarData(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+export function formatarDataCurta(iso: string) {
+  return new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
+/* ----- Prazo / SLA em dias úteis ----- */
+
+export function adicionarDiasUteis(base: Date, dias: number): Date {
+  const d = new Date(base)
+  let restantes = dias
+  while (restantes > 0) {
+    d.setDate(d.getDate() + 1)
+    const diaSemana = d.getDay()
+    if (diaSemana !== 0 && diaSemana !== 6) restantes--
+  }
+  return d
+}
+
+export function prazoPrevisto(p: Protocolo): Date {
+  const dias = PRAZO_SLA_DIAS[p.tipo] ?? 7
+  return adicionarDiasUteis(new Date(p.criadoEm), dias)
+}
+
+export function estaAtrasado(p: Protocolo): boolean {
+  if (STATUS_FINAIS.includes(p.status)) return false
+  return Date.now() > prazoPrevisto(p).getTime()
+}
+
+export function formatarTamanho(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function gerarNumeroProtocolo(existentes: Protocolo[]) {
+  const ano = new Date().getFullYear()
+  const doAno = existentes.filter((p) => p.numero.includes(`/${ano}`)).length
+  const seq = String(doAno + 1).padStart(5, '0')
+  return `PFIL-${seq}/${ano}`
+}
+
+export function arquivoParaAnexo(file: File): Anexo {
+  return { id: uid(), nome: file.name, tipo: file.type || 'arquivo', tamanho: file.size }
+}
+
+function diasAtras(dias: number, horas = 0) {
+  const d = new Date()
+  d.setDate(d.getDate() - dias)
+  d.setHours(9 + horas, 30, 0, 0)
+  return d.toISOString()
+}
+
+// Listas para sorteio aleatório em massa
+const NOMES_MOCK = [
+  'Ana Beatriz Moura Lima', 'Rafael Teixeira de Andrade', 'Helena Duarte Vasconcelos',
+  'Lucas Ferreira Campos', 'Mariana Souza Albuquerque', 'Carlos Eduardo Silva',
+  'Fernanda Oliveira Costa', 'Gabriel Santos Pereira', 'Juliana Alves Rodrigues',
+  'Rodrigo Martins Ribeiro', 'Beatriz Lima Carvalho', 'Thiago Gomes Barbosa'
+]
+
+const CATEGORIAS_MOCK: Categoria[] = ['Discente', 'Docente', 'Candidato', 'Externo']
+const TIPOS_MOCK: TipoSolicitacao[] = [
+  'Matrícula', 'Trancamento', 'Aproveitamento de disciplina',
+  'Solicitação de documento', 'Outros'
+]
+const STATUS_MOCK: Status[] = ['Gerado', 'Em tramitação', 'Com exigência', 'Deferido', 'Indeferido']
+
+/**
+ * Gera uma quantidade N de protocolos em memória para testes de stress/benchmarks.
+ */
+export function gerarMassaProtocolos(quantidade = 20000): Protocolo[] {
+  const ano = new Date().getFullYear()
+  const lista: Protocolo[] = new Array(quantidade)
+
+  for (let i = 0; i < quantidade; i++) {
+    const seq = String(i + 1).padStart(5, '0')
+    const status = STATUS_MOCK[i % STATUS_MOCK.length]
+    const cpfNum = String(10000000000 + (i % 89999999999))
+    const dias = Math.floor(Math.random() * 60) + 1
+    const dataCriacao = diasAtras(dias, i % 12)
+    const finalizado = STATUS_FINAIS.includes(status)
+
+    const historico: EntradaHistorico[] = [
+      {
+        id: uid(),
+        data: dataCriacao,
+        autor: 'Sistema',
+        origem: 'sistema',
+        status: 'Gerado',
+        mensagem: 'Protocolo gerado e registrado na secretaria do PPGFIL.',
+        anexos: i % 2 === 0 ? [{ id: uid(), nome: `documento-${i}.pdf`, tipo: 'application/pdf', tamanho: 150000 }] : [],
+      },
+    ]
+
+    // Protocolos concluídos recebem uma data de conclusão realista (1 a 12 dias após a abertura),
+    // permitindo calcular o tempo médio de conclusão no painel.
+    let dataAtualizacao = dataCriacao
+    if (finalizado) {
+      const criado = new Date(dataCriacao)
+      criado.setDate(criado.getDate() + ((i % 12) + 1))
+      dataAtualizacao = criado.toISOString()
+      historico.push({
+        id: uid(),
+        data: dataAtualizacao,
+        autor: 'Sistema',
+        origem: 'sistema',
+        status,
+        mensagem: `Processo movido para: ${status}`,
+        anexos: [],
+      })
+    }
+
+    lista[i] = {
+      id: uid(),
+      numero: `PFIL-${seq}/${ano}`,
+      cpf: cpfNum,
+      nome: NOMES_MOCK[i % NOMES_MOCK.length],
+      email: `usuario${i}@exemplo.com`,
+      categoria: CATEGORIAS_MOCK[i % CATEGORIAS_MOCK.length],
+      tipo: TIPOS_MOCK[i % TIPOS_MOCK.length],
+      resumo: `Solicitação automatizada em massa de teste número ${i + 1}.`,
+      status,
+      criadoEm: dataCriacao,
+      atualizadoEm: dataAtualizacao,
+      responsavel: i % 3 === 0 ? RESPONSAVEIS[i % RESPONSAVEIS.length] : undefined,
+      notasInternas: [],
+      historico,
+    }
+  }
+
+  return lista
+}
+
+function seed(): Protocolo[] {
+  // Gera 1.000 para o localStorage evitar estouro do limite de 5MB do navegador
+  return gerarMassaProtocolos(1000)
+}
+
+function emit() {
+  LISTENERS.forEach((l) => l())
+}
+
+export function subscribe(listener: () => void) {
+  LISTENERS.add(listener)
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) {
+      protocolosCache = null
+      storageCache = null
+      listener()
+    }
+  }
+  window.addEventListener('storage', onStorage)
+  return () => {
+    LISTENERS.delete(listener)
+    window.removeEventListener('storage', onStorage)
+  }
+}
+
+export function lerProtocolos(): Protocolo[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (!raw) {
+      if (protocolosCache) return protocolosCache
+      const inicial = seed()
+      try {
+        const serializado = JSON.stringify(inicial)
+        window.localStorage.setItem(STORAGE_KEY, serializado)
+        storageCache = serializado
+      } catch (e) {
+        console.warn('[Storage] Não foi possível salvar no localStorage (limite excedido). Mantendo em memória.', e)
+      }
+      protocolosCache = inicial
+      return inicial
+    }
+    if (protocolosCache && raw === storageCache) return protocolosCache
+    const parsed = JSON.parse(raw)
+    protocolosCache = Array.isArray(parsed) ? (parsed as Protocolo[]) : []
+    storageCache = raw
+    return protocolosCache
+  } catch (err) {
+    console.log('[v0] erro ao ler protocolos:', err)
+    return []
+  }
+}
+
+function salvar(lista: Protocolo[]) {
+  try {
+    const serializado = JSON.stringify(lista)
+    window.localStorage.setItem(STORAGE_KEY, serializado)
+    protocolosCache = lista
+    storageCache = serializado
+  } catch (e) {
+    console.error('[Storage] Erro ao salvar lista no localStorage:', e)
+    protocolosCache = lista
+  }
+  emit()
+}
+
+export function criarProtocolo(dados: {
+  cpf: string
+  nome: string
+  email: string
+  categoria: Categoria
+  tipo: TipoSolicitacao
+  resumo: string
+  anexos: Anexo[]
+}): Protocolo {
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  const novo: Protocolo = {
+    id: uid(),
+    numero: gerarNumeroProtocolo(lista),
+    cpf: soDigitos(dados.cpf),
+    nome: dados.nome.trim(),
+    email: dados.email.trim(),
+    categoria: dados.categoria,
+    tipo: dados.tipo,
+    resumo: dados.resumo.trim(),
+    status: 'Gerado',
+    criadoEm: agora,
+    atualizadoEm: agora,
+    responsavel: undefined,
+    notasInternas: [],
+    historico: [
+      {
+        id: uid(),
+        data: agora,
+        autor: 'Sistema',
+        origem: 'sistema',
+        status: 'Gerado',
+        mensagem: 'Protocolo gerado e registrado na secretaria do PPGFIL.',
+        anexos: dados.anexos,
+      },
+    ],
+  }
+  salvar([novo, ...lista])
+  return novo
+}
+
+export function atribuirResponsavel(id: string, responsavel: string) {
+  const lista = lerProtocolos()
+  salvar(
+    lista.map((p) =>
+      p.id === id ? { ...p, responsavel: responsavel || undefined } : p,
+    ),
+  )
+}
+
+export function adicionarNotaInterna(id: string, mensagem: string, autor = 'Secretaria') {
+  const texto = mensagem.trim()
+  if (!texto) return
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id) return p
+      const nota: NotaInterna = { id: uid(), data: agora, autor, mensagem: texto }
+      return { ...p, notasInternas: [...(p.notasInternas ?? []), nota] }
+    }),
+  )
+}
+
+export function moverStatus(id: string, status: Status) {
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id || p.status === status) return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor: 'Sistema',
+        origem: 'sistema',
+        status,
+        mensagem: `Processo movido para: ${status}`,
+        anexos: [],
+      }
+      return {
+        ...p,
+        status,
+        subetapaExigencia: undefined,
+        atualizadoEm: agora,
+        historico: [...p.historico, entrada],
+      }
+    }),
+  )
+}
+
+export function adicionarEntradaManual(
+  id: string,
+  mensagem: string,
+  anexos: Anexo[],
+  autor = 'Secretaria — Carla Nogueira',
+) {
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id) return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor,
+        origem: 'secretaria',
+        status: p.status,
+        mensagem: mensagem.trim(),
+        anexos,
+      }
+      return { ...p, atualizadoEm: agora, historico: [...p.historico, entrada] }
+    }),
+  )
+}
+
+export function adicionarAnexosSolicitante(id: string, anexos: Anexo[]) {
+  if (anexos.length === 0) return
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id || p.status !== 'Com exigência') return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor: p.nome,
+        origem: 'solicitante',
+        status: p.status,
+        mensagem: 'Documento enviado pelo aluno',
+        anexos,
+      }
+      return {
+        ...p,
+        subetapaExigencia: 'respondida',
+        atualizadoEm: agora,
+        historico: [...p.historico, entrada],
+      }
+    }),
+  )
+}
+
+export function recusarRespostaExigencia(id: string, motivo: string, autor = 'Secretaria') {
+  const justificativa = motivo.trim()
+  if (!justificativa) return
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id || p.status !== 'Com exigência' || p.subetapaExigencia !== 'respondida') {
+        return p
+      }
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor,
+        origem: 'secretaria',
+        status: p.status,
+        mensagem: `Documento recusado ou insuficiente. Motivo: ${justificativa}`,
+        anexos: [],
+      }
+      return {
+        ...p,
+        subetapaExigencia: undefined,
+        atualizadoEm: agora,
+        historico: [...p.historico, entrada],
+      }
+    }),
+  )
+}
+
+export function arquivarProtocolo(id: string, responsavel: string) {
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id || p.arquivado || !STATUS_FINAIS.includes(p.status)) return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor: responsavel,
+        origem: 'secretaria',
+        status: p.status,
+        mensagem: `Protocolo arquivado por ${responsavel}`,
+        anexos: [],
+      }
+      return {
+        ...p,
+        arquivado: true,
+        arquivadoEm: agora,
+        arquivadoPor: responsavel,
+        historico: [...p.historico, entrada],
+      }
+    }),
+  )
+}
+
+export function desarquivarProtocolo(id: string, responsavel: string) {
+  const lista = lerProtocolos()
+  const agora = new Date().toISOString()
+  salvar(
+    lista.map((p) => {
+      if (p.id !== id || !p.arquivado) return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor: responsavel,
+        origem: 'secretaria',
+        status: p.status,
+        mensagem: `Protocolo desarquivado por ${responsavel}`,
+        anexos: [],
+      }
+      return {
+        ...p,
+        arquivado: false,
+        arquivadoEm: undefined,
+        arquivadoPor: undefined,
+        historico: [...p.historico, entrada],
+      }
+    }),
+  )
+}
+
+/**
+ * O protótipo não possui servidor/cron. Esta manutenção é executada ao abrir o admin
+ * e periodicamente enquanto ele estiver aberto.
+ */
+export function arquivarFinalizadosAutomaticamente(dias = ARQUIVAMENTO_AUTOMATICO_DIAS) {
+  const lista = lerProtocolos()
+  const limite = Date.now() - dias * 86_400_000
+  const agora = new Date().toISOString()
+  let alterou = false
+
+  const atualizada = lista.map((p) => {
+    if (p.arquivado || !STATUS_FINAIS.includes(p.status)) return p
+    const entradaFinal = [...p.historico].reverse().find((h) => STATUS_FINAIS.includes(h.status))
+    const inicioFinal = new Date(entradaFinal?.data ?? p.atualizadoEm).getTime()
+    if (!Number.isFinite(inicioFinal) || inicioFinal > limite) return p
+    alterou = true
+    const entrada: EntradaHistorico = {
+      id: uid(),
+      data: agora,
+      autor: 'Sistema',
+      origem: 'sistema',
+      status: p.status,
+      mensagem: `Arquivado automaticamente após ${dias} dias na etapa final`,
+      anexos: [],
+    }
+    return {
+      ...p,
+      arquivado: true,
+      arquivadoEm: agora,
+      arquivadoPor: 'Sistema',
+      historico: [...p.historico, entrada],
+    }
+  })
+
+  if (alterou) salvar(atualizada)
+}
+
+export function consultarProtocolo(cpf: string, numero: string): Protocolo | null {
+  const alvoCpf = soDigitos(cpf)
+  const alvoNum = numero.trim().toUpperCase()
+  const encontrado = lerProtocolos().find(
+    (p) => p.cpf === alvoCpf && p.numero.toUpperCase() === alvoNum,
+  )
+  return encontrado ?? null
+}
+
+export function resetarDados() {
+  window.localStorage.removeItem(STORAGE_KEY)
+  protocolosCache = null
+  storageCache = null
+  lerProtocolos()
+  emit()
+}
+
+/* auth simulada */
+export function login(email: string) {
+  window.localStorage.setItem(AUTH_KEY, JSON.stringify({ email, em: Date.now() }))
+}
+
+export function logout() {
+  window.localStorage.removeItem(AUTH_KEY)
+}
+
+export function usuarioAtual(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(AUTH_KEY)
+    if (!raw) return null
+    const sessao = JSON.parse(raw) as { email?: string; usuario?: string }
+    return sessao.email ?? sessao.usuario ?? null
+  } catch {
+    return null
+  }
+}
