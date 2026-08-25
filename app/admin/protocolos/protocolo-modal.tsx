@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ArchiveRestore, ArrowLeft, CircleCheckBig, EyeOff, Lock, Plus, RotateCcw, TriangleAlert } from 'lucide-react'
+import { ArchiveRestore, ArrowLeft, CircleCheckBig, Download, EyeOff, Lock, Plus, RotateCcw, TriangleAlert } from 'lucide-react'
 import {
   adicionarEntradaManual,
   adicionarNotaInterna,
@@ -15,6 +15,7 @@ import {
   recusarRespostaExigencia,
   usuarioAtual,
 } from '@/lib/store'
+import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import {
   MODELOS_RESPOSTA,
   PRAZO_SLA_DIAS,
@@ -180,19 +181,30 @@ export function ProtocoloDetalhes({
               </p>
               <p className="font-mono text-xl font-extrabold text-primary">{protocolo.numero}</p>
             </div>
-            <StatusBadge status={protocolo.status} />
-            {protocolo.status === 'Com exigência' &&
-              protocolo.subetapaExigencia === 'respondida' && (
-                <span className="rounded-full border border-[#B7791F]/40 bg-[#B7791F]/12 px-2.5 py-1 text-xs font-extrabold text-[#79500F]">
-                  Aguardando conferência
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => baixarComprovantePDF(protocolo)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary shadow-2xs"
+                title="Baixar comprovante oficial de protocolo em PDF"
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                <span>Baixar comprovante PDF</span>
+              </button>
+              <StatusBadge status={protocolo.status} />
+              {protocolo.status === 'Com exigência' &&
+                protocolo.subetapaExigencia === 'respondida' && (
+                  <span className="rounded-full border border-[#B7791F]/40 bg-[#B7791F]/12 px-2.5 py-1 text-xs font-extrabold text-[#79500F]">
+                    Aguardando conferência
+                  </span>
+                )}
+              {atrasado && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/12 px-2.5 py-1 text-xs font-extrabold text-destructive">
+                  <TriangleAlert className="size-3.5" aria-hidden="true" />
+                  Atrasado
                 </span>
               )}
-            {atrasado && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/12 px-2.5 py-1 text-xs font-extrabold text-destructive">
-                <TriangleAlert className="size-3.5" aria-hidden="true" />
-                Atrasado
-              </span>
-            )}
+            </div>
           </div>
 
           <dl data-tour="detail-data" className="mx-4 mt-4 grid gap-px overflow-hidden rounded-xl border border-border bg-border shadow-sm sm:grid-cols-3 lg:mx-8">

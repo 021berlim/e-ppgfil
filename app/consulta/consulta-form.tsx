@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, CalendarClock, CircleAlert, Search, Send } from 'lucide-react'
+import { ArrowLeft, CalendarClock, CircleAlert, Download, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
 import { Field, TextInput } from '@/components/form-field'
 import { UploadAnexos } from '@/components/anexos'
@@ -18,6 +18,7 @@ import {
   soDigitos,
 } from '@/lib/store'
 import { STATUS_FINAIS, type Anexo, type Protocolo } from '@/lib/types'
+import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 
 export function ConsultaForm() {
   const [cpf, setCpf] = useState('')
@@ -140,6 +141,15 @@ export function ConsultaForm() {
               <p className="font-mono text-xl font-extrabold text-primary">{resultado.numero}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => baixarComprovantePDF(resultado)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary shadow-2xs"
+                title="Baixar comprovante oficial de protocolo em PDF"
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                <span>Baixar comprovante PDF</span>
+              </button>
               <StatusBadge status={resultado.status} />
               {resultado.subetapaExigencia === 'respondida' && (
                 <span className="rounded-full border border-[#B7791F]/40 bg-[#B7791F]/12 px-2.5 py-1 text-xs font-extrabold text-[#79500F]">

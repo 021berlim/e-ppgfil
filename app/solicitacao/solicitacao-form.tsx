@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, CircleCheckBig, Copy, Search, Send } from 'lucide-react'
+import { ArrowLeft, CircleCheckBig, Copy, Download, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
 import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { UploadAnexos } from '@/components/anexos'
@@ -11,6 +11,7 @@ import { criarProtocolo, formatarCPF, soDigitos } from '@/lib/store'
 import type { Anexo, Protocolo } from '@/lib/types'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { useCategorias } from '@/hooks/use-categorias'
+import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 
 type Erros = Partial<Record<'cpf' | 'nome' | 'email' | 'categoria' | 'tipo', string>>
 
@@ -102,18 +103,28 @@ export function SolicitacaoForm() {
             <p className="mt-1 font-mono text-3xl font-extrabold tracking-tight text-primary">
               {criado.numero}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard?.writeText(criado.numero)
-                setCopiado(true)
-                setTimeout(() => setCopiado(false), 2000)
-              }}
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
-            >
-              <Copy className="size-3.5" aria-hidden="true" />
-              {copiado ? 'Copiado!' : 'Copiar número'}
-            </button>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => baixarComprovantePDF(criado)}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 hover:shadow"
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                Baixar Comprovante em PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(criado.numero)
+                  setCopiado(true)
+                  setTimeout(() => setCopiado(false), 2000)
+                }}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
+              >
+                <Copy className="size-3.5" aria-hidden="true" />
+                {copiado ? 'Copiado!' : 'Copiar número'}
+              </button>
+            </div>
           </div>
 
           <dl className="mt-7 grid gap-px overflow-hidden rounded-xl border border-border bg-border text-sm sm:grid-cols-2">
@@ -140,9 +151,17 @@ export function SolicitacaoForm() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => baixarComprovantePDF(criado)}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 hover:shadow"
+            >
+              <Download className="size-4" aria-hidden="true" />
+              Baixar Comprovante em PDF
+            </button>
             <Link
               href="/consulta"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
             >
               <Search className="size-4" aria-hidden="true" />
               Consultar andamento
