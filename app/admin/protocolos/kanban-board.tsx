@@ -458,6 +458,14 @@ export function KanbanBoard() {
     })
   }, [protocolos, filtro, filtroResp, buscaAdiada])
 
+  const tiposDisponiveis = useMemo(() => {
+    const tipos = new Set<string>()
+    protocolos.forEach((p) => {
+      if (p.tipo) tipos.add(p.tipo)
+    })
+    return Array.from(tipos).sort()
+  }, [protocolos])
+
   const porStatus = useMemo(() => {
     const mapa = {} as Record<Status, Protocolo[]>
     STATUS_LIST.forEach((s) => {
@@ -577,7 +585,7 @@ export function KanbanBoard() {
               className="w-full sm:w-52"
             >
               <option value="">Todos os tipos</option>
-              {TIPOS_SOLICITACAO.map((t) => (
+              {tiposDisponiveis.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>

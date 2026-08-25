@@ -8,12 +8,14 @@ import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { UploadAnexos } from '@/components/anexos'
 import { CaptchaMock, type CaptchaHandle } from '@/components/captcha-mock'
 import { criarProtocolo, formatarCPF, soDigitos } from '@/lib/store'
-import { CATEGORIAS, TIPOS_SOLICITACAO, type Anexo, type Protocolo } from '@/lib/types'
+import type { Anexo, Protocolo } from '@/lib/types'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
+import { useCategorias } from '@/hooks/use-categorias'
 
 type Erros = Partial<Record<'cpf' | 'nome' | 'email' | 'categoria' | 'tipo', string>>
 
 export function SolicitacaoForm() {
+  const { categorias } = useCategorias()
   const [cpf, setCpf] = useState('')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -26,6 +28,26 @@ export function SolicitacaoForm() {
   const [copiado, setCopiado] = useState(false)
   const [confirmarCriacao, setConfirmarCriacao] = useState(false)
   const captchaRef = useRef<CaptchaHandle>(null)
+
+  const categoriaSelecionada = categorias.find(
+    (c) => c.id === categoria || c.nome === categoria,
+  )
+  const tiposDisponiveis = categoriaSelecionada?.tiposSolicitacao ?? []
+  const tipoSelecionado = tiposDisponiveis.find(
+    (t) => t.id === tipo || t.nome === tipo,
+  )
+
+  function handleCategoriaChange(novaCat: string) {
+    setCategoria(novaCat)
+    const catObj = categorias.find((c) => c.id === novaCat || c.nome === novaCat)
+    const tipos = catObj?.tiposSolicitacao ?? []
+    if (!tipos.some((t) => t.nome === tipo || t.id === tipo)) {
+      setTipo('')
+    }
+    if (erros.categoria) {
+      setErros((prev) => ({ ...prev, categoria: undefined }))
+    }
+  }
 
   function validar(): boolean {
     const e: Erros = {}
@@ -44,7 +66,6 @@ export function SolicitacaoForm() {
     ev.preventDefault()
     const camposOk = validar()
     const captchaOk = captchaRef.current?.validar() ?? false
-    // Só prossegue se os campos E o captcha estiverem válidos (sem consumir protocolo).
     if (!camposOk || !captchaOk) return
     setConfirmarCriacao(true)
   }
@@ -191,27 +212,59 @@ export function SolicitacaoForm() {
           </Field>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Categoria" required htmlFor="categoria" error={erros.categoria}>
+            <Field
+              label="Categoria"
+              required
+              htmlFor="categoria"
+              error={erros.categoria}
+              hint={categoriaSelecionada?.descricao}
+            >
               <Select
                 id="categoria"
                 value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
+                onChange={(e) => handleCategoriaChange(e.target.value)}
               >
-                <option value="">Selecione…</option>
-                {CATEGORIAS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                <option value="">Selecione sua categoria…</option>
+                {categorias.map((c) => (
+                  <option key={c.id} value={c.nome}>
+                    {c.nome}
                   </option>
                 ))}
               </Select>
             </Field>
 
-            <Field label="Tipo de solicitação" required htmlFor="tipo" error={erros.tipo}>
-              <Select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                <option value="">Selecione…</option>
-                {TIPOS_SOLICITACAO.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+            <Field
+              label="Tipo de solicitação"
+              required
+              htmlFor="tipo"
+              error={erros.tipo}
+              hint={
+                tipoSelecionado
+                  ? `${tipoSelecionado.descricao ? `${tipoSelecionado.descricao} ` : ''}(Prazo estimado: ${tipoSelecionado.prazoDias ?? 7} dias úteis)`
+                  : categoria
+                  ? 'Selecione o tipo de serviço desejado.'
+                  : 'Escolha uma categoria primeiro.'
+              }
+            >
+              <Select
+                id="tipo"
+                value={tipo}
+                onChange={(e) => {
+                  setTipo(e.target.value)
+                  if (erros.tipo) setErros((prev) => ({ ...prev, tipo: undefined }))
+                }}
+                disabled={!categoria || tiposDisponiveis.length === 0}
+              >
+                <option value="">
+                  {!categoria
+                    ? 'Selecione primeiro uma categoria…'
+                    : tiposDisponiveis.length === 0
+                    ? 'Nenhum tipo cadastrado para esta categoria'
+                    : 'Selecione o tipo de solicitação…'}
+                </option>
+                {tiposDisponiveis.map((t) => (
+                  <option key={t.id} value={t.nome}>
+                    {t.nome} {t.prazoDias ? `(${t.prazoDias} dias)` : ''}
                   </option>
                 ))}
               </Select>

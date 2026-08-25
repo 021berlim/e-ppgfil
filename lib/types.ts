@@ -9,7 +9,8 @@ export const STATUS_LIST = [
 export type Status = (typeof STATUS_LIST)[number]
 
 export const CATEGORIAS = ['Discente', 'Docente', 'Candidato', 'Externo'] as const
-export type Categoria = (typeof CATEGORIAS)[number]
+export type CategoriaPadrao = (typeof CATEGORIAS)[number]
+export type Categoria = string
 
 export const TIPOS_SOLICITACAO = [
   'Matrícula',
@@ -18,7 +19,22 @@ export const TIPOS_SOLICITACAO = [
   'Solicitação de documento',
   'Outros',
 ] as const
-export type TipoSolicitacao = (typeof TIPOS_SOLICITACAO)[number]
+export type TipoSolicitacaoPadrao = (typeof TIPOS_SOLICITACAO)[number]
+export type TipoSolicitacao = string
+
+export type TipoSolicitacaoItem = {
+  id: string
+  nome: string
+  descricao?: string
+  prazoDias?: number
+}
+
+export type CategoriaItem = {
+  id: string
+  nome: string
+  descricao: string
+  tiposSolicitacao: TipoSolicitacaoItem[]
+}
 
 export type Anexo = {
   id: string
@@ -28,7 +44,7 @@ export type Anexo = {
 }
 
 // Prazo padrão (em dias úteis) por tipo de solicitação. Mockado, porém configurável.
-export const PRAZO_SLA_DIAS: Record<TipoSolicitacao, number> = {
+export const PRAZO_SLA_DIAS: Record<string, number> = {
   'Matrícula': 3,
   'Trancamento': 5,
   'Aproveitamento de disciplina': 10,

@@ -74,11 +74,16 @@ export function PainelDashboard() {
       }
     }
 
+    const tiposOrdenados = Object.entries(porTipo)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tipo]) => tipo)
+
     const tempoMedio = concluidos > 0 ? somaDias / concluidos : 0
     return {
       total: protocolos.length,
       porStatus,
       porTipo,
+      tiposOrdenados,
       atrasados,
       concluidos,
       tempoMedio,
@@ -163,16 +168,20 @@ export function PainelDashboard() {
                 <h2 className="text-base font-extrabold text-foreground">
                   Protocolos por tipo de solicitação
                 </h2>
-                <div className="mt-5 grid gap-3">
-                  {TIPOS_SOLICITACAO.map((t) => (
-                    <Barra
-                      key={t}
-                      label={t}
-                      valor={m.porTipo[t]}
-                      max={m.maxTipo}
-                      cor="bg-primary"
-                    />
-                  ))}
+                <div className="mt-5 grid gap-3 max-h-[380px] overflow-y-auto pr-1">
+                  {m.tiposOrdenados.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nenhum protocolo registrado.</p>
+                  ) : (
+                    m.tiposOrdenados.map((t) => (
+                      <Barra
+                        key={t}
+                        label={t}
+                        valor={m.porTipo[t] ?? 0}
+                        max={m.maxTipo}
+                        cor="bg-primary"
+                      />
+                    ))
+                  )}
                 </div>
               </section>
             </div>

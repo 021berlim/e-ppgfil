@@ -14,6 +14,7 @@ import {
   LogOut,
   CircleHelp,
   RotateCcw,
+  Tags,
   Users,
   Workflow,
 } from 'lucide-react'
@@ -29,6 +30,12 @@ const NAV = [
     itens: [
       { href: '/admin/painel', label: 'Painel', icone: BarChart3 },
       { href: '/admin/protocolos', label: 'Esteira de protocolos', icone: LayoutGrid },
+    ],
+  },
+  {
+    grupo: 'Configuração',
+    itens: [
+      { href: '/admin/categorias', label: 'Categorias e Serviços', icone: Tags },
     ],
   },
   {

@@ -10,6 +10,7 @@ import type {
   TipoSolicitacao,
 } from './types'
 import { PRAZO_SLA_DIAS, RESPONSAVEIS, STATUS_FINAIS } from './types'
+import { obterPrazoSlaTipo, restaurarCategoriasPadrao } from './categorias'
 
 export const STORAGE_KEY = 'epfil:protocolos'
 export const AUTH_KEY = 'epfil:auth'
@@ -67,7 +68,7 @@ export function adicionarDiasUteis(base: Date, dias: number): Date {
 }
 
 export function prazoPrevisto(p: Protocolo): Date {
-  const dias = PRAZO_SLA_DIAS[p.tipo] ?? 7
+  const dias = PRAZO_SLA_DIAS[p.tipo] ?? obterPrazoSlaTipo(p.tipo) ?? 7
   return adicionarDiasUteis(new Date(p.criadoEm), dias)
 }
 
@@ -519,6 +520,7 @@ export function resetarDados() {
   window.localStorage.removeItem(STORAGE_KEY)
   protocolosCache = null
   storageCache = null
+  restaurarCategoriasPadrao()
   lerProtocolos()
   emit()
 }

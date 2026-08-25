@@ -1,0 +1,260 @@
+[
+  {
+    "id": "docente",
+    "nome": "Docente",
+    "descricao": "Professores permanentes e colaboradores do programa de pós-graduação.",
+    "tiposSolicitacao": [
+      {
+        "id": "marcacao-defesa-doutorado",
+        "nome": "Marcação de Defesa de Doutorado",
+        "descricao": "Solicitação formal de agendamento e composição de banca de tese de doutorado.",
+        "prazoDias": 15
+      },
+      {
+        "id": "marcacao-defesa-mestrado",
+        "nome": "Marcação de Defesa de Mestrado",
+        "descricao": "Solicitação de agendamento e composição de banca de dissertação de mestrado.",
+        "prazoDias": 15
+      },
+      {
+        "id": "banca-qualificacao",
+        "nome": "Homologação de Banca de Qualificação",
+        "descricao": "Indicação de membros para banca de exame de qualificação.",
+        "prazoDias": 10
+      },
+      {
+        "id": "credenciamento-docente",
+        "nome": "Credenciamento / Recredenciamento Docente",
+        "descricao": "Submissão de pedido de inclusão ou renovação no quadro docente do PPGFIL.",
+        "prazoDias": 20
+      },
+      {
+        "id": "proposta-disciplina",
+        "nome": "Proposta de Disciplina / Seminário",
+        "descricao": "Envio de plano de ensino e ementa para oferta de nova disciplina.",
+        "prazoDias": 10
+      },
+      {
+        "id": "solicitacao-auxilio",
+        "nome": "Solicitação de Auxílio / Diárias / Passagens",
+        "descricao": "Pedido de apoio financeiro para participação em eventos acadêmicos.",
+        "prazoDias": 10
+      },
+      {
+        "id": "outros-docente",
+        "nome": "Outros pedidos (Docente)",
+        "descricao": "Demais solicitações institucionais de docentes não listadas acima.",
+        "prazoDias": 7
+      }
+    ]
+  },
+  {
+    "id": "discente-doutorado",
+    "nome": "Discente (Doutorado)",
+    "descricao": "Alunos regularmente matriculados no curso de Doutorado em Filosofia.",
+    "tiposSolicitacao": [
+      {
+        "id": "matricula-disciplina-doutorado",
+        "nome": "Matrícula / Inscrição em Disciplinas",
+        "descricao": "Inscrição semestral em disciplinas obrigatórias e eletivas do doutorado.",
+        "prazoDias": 3
+      },
+      {
+        "id": "exame-qualificacao-doutorado",
+        "nome": "Exame de Qualificação de Doutorado",
+        "descricao": "Requerimento de realização do exame de qualificação com envio do projeto.",
+        "prazoDias": 10
+      },
+      {
+        "id": "aproveitamento-creditos-doutorado",
+        "nome": "Aproveitamento de Créditos / Disciplinas",
+        "descricao": "Validação de disciplinas cursadas no mestrado ou em outros programas.",
+        "prazoDias": 10
+      },
+      {
+        "id": "prorrogacao-prazo-doutorado",
+        "nome": "Prorrogação de Prazo de Conclusão",
+        "descricao": "Solicitação de extensão do prazo regular de defesa da tese.",
+        "prazoDias": 15
+      },
+      {
+        "id": "trancamento-doutorado",
+        "nome": "Trancamento de Matrícula",
+        "descricao": "Suspensão temporária dos estudos conforme regulamento do curso.",
+        "prazoDias": 5
+      },
+      {
+        "id": "estagio-docente-doutorado",
+        "nome": "Estágio Docente (Doutorado)",
+        "descricao": "Inscrição e comprovação de cumprimento do estágio de docência.",
+        "prazoDias": 5
+      },
+      {
+        "id": "solicitacao-documento-doutorado",
+        "nome": "Solicitação de Declaração / Histórico Escolar",
+        "descricao": "Emissão de declarações de matrícula, histórico e atestados acadêmicos.",
+        "prazoDias": 3
+      },
+      {
+        "id": "outros-doutorado",
+        "nome": "Outros pedidos (Doutorado)",
+        "descricao": "Demais solicitações acadêmicas de discentes de doutorado.",
+        "prazoDias": 7
+      }
+    ]
+  },
+  {
+    "id": "discente-mestrado",
+    "nome": "Discente (Mestrado)",
+    "descricao": "Alunos regularmente matriculados no curso de Mestrado em Filosofia.",
+    "tiposSolicitacao": [
+      {
+        "id": "matricula-disciplina-mestrado",
+        "nome": "Matrícula / Inscrição em Disciplinas",
+        "descricao": "Inscrição semestral em disciplinas obrigatórias e eletivas do mestrado.",
+        "prazoDias": 3
+      },
+      {
+        "id": "exame-qualificacao-mestrado",
+        "nome": "Exame de Qualificação de Mestrado",
+        "descricao": "Requerimento de banca e envio do trabalho de qualificação de mestrado.",
+        "prazoDias": 10
+      },
+      {
+        "id": "aproveitamento-creditos-mestrado",
+        "nome": "Aproveitamento de Créditos / Disciplinas",
+        "descricao": "Validação de créditos obtidos em disciplinas externas ou isoladas.",
+        "prazoDias": 10
+      },
+      {
+        "id": "prorrogacao-prazo-mestrado",
+        "nome": "Prorrogação de Prazo de Conclusão",
+        "descricao": "Pedido de extensão de prazo para conclusão da dissertação de mestrado.",
+        "prazoDias": 15
+      },
+      {
+        "id": "trancamento-mestrado",
+        "nome": "Trancamento de Matrícula",
+        "descricao": "Suspensão temporária do curso de mestrado com justificativa.",
+        "prazoDias": 5
+      },
+      {
+        "id": "estagio-docente-mestrado",
+        "nome": "Estágio Docente (Mestrado)",
+        "descricao": "Registro de plano e relatório de estágio docência no mestrado.",
+        "prazoDias": 5
+      },
+      {
+        "id": "solicitacao-documento-mestrado",
+        "nome": "Solicitação de Declaração / Histórico Escolar",
+        "descricao": "Emissão de declaração de vínculo, histórico escolar e atestados acadêmicos.",
+        "prazoDias": 3
+      },
+      {
+        "id": "outros-mestrado",
+        "nome": "Outros pedidos (Mestrado)",
+        "descricao": "Demais solicitações acadêmicas de discentes de mestrado.",
+        "prazoDias": 7
+      }
+    ]
+  },
+  {
+    "id": "egresso",
+    "nome": "Egresso / Ex-Aluno",
+    "descricao": "Diplomados e ex-alunos dos cursos de pós-graduação do PPGFIL.",
+    "tiposSolicitacao": [
+      {
+        "id": "requerimento-diploma",
+        "nome": "Requerimento de Diploma / Certificado",
+        "descricao": "Solicitação de confecção, registro e expedição do diploma de pós-graduação.",
+        "prazoDias": 20
+      },
+      {
+        "id": "historico-final-ementas",
+        "nome": "Emissão de Histórico Final e Ementas Autenticadas",
+        "descricao": "Histórico integral de conclusão com ementas das disciplinas cursadas.",
+        "prazoDias": 10
+      },
+      {
+        "id": "revalidacao-documentos",
+        "nome": "Revalidação / Segunda Via de Documentos",
+        "descricao": "Emissão de 2ª via de atestados, certidões de conclusão ou ementários.",
+        "prazoDias": 10
+      },
+      {
+        "id": "outros-egresso",
+        "nome": "Outros pedidos (Egresso)",
+        "descricao": "Demais demandas de ex-alunos junto ao PPGFIL.",
+        "prazoDias": 7
+      }
+    ]
+  },
+  {
+    "id": "candidato",
+    "nome": "Candidato / Processo Seletivo",
+    "descricao": "Inscritos e interessados nos processos seletivos de ingresso ao PPGFIL.",
+    "tiposSolicitacao": [
+      {
+        "id": "recurso-processo-seletivo",
+        "nome": "Recurso de Etapa do Processo Seletivo",
+        "descricao": "Interposição formal de recurso contra resultado de etapa do edital de seleção.",
+        "prazoDias": 2
+      },
+      {
+        "id": "isencao-taxa",
+        "nome": "Isenção de Taxa de Inscrição",
+        "descricao": "Envio de documentação comprobatória para pedido de isenção de taxa.",
+        "prazoDias": 3
+      },
+      {
+        "id": "documentacao-complementar-selecao",
+        "nome": "Envio de Documentação Complementar",
+        "descricao": "Complementação de documentação exigida pela comissão de seleção.",
+        "prazoDias": 3
+      },
+      {
+        "id": "esclarecimento-edital",
+        "nome": "Esclarecimentos sobre Edital",
+        "descricao": "Dúvidas e pedidos de esclarecimento sobre itens dos editais de seleção.",
+        "prazoDias": 3
+      },
+      {
+        "id": "outros-candidato",
+        "nome": "Outros pedidos (Candidato)",
+        "descricao": "Demais solicitações relativas a processos seletivos.",
+        "prazoDias": 5
+      }
+    ]
+  },
+  {
+    "id": "externo",
+    "nome": "Comunidade Externa",
+    "descricao": "Alunos de outras instituições, pesquisadores e comunidade externa em geral.",
+    "tiposSolicitacao": [
+      {
+        "id": "inscricao-disciplina-isolada",
+        "nome": "Inscrição em Disciplina Isolada (Aluno Especial)",
+        "descricao": "Solicitação de cursar disciplina isolada sem vínculo formal com o programa.",
+        "prazoDias": 5
+      },
+      {
+        "id": "inscricao-aluno-externo",
+        "nome": "Inscrição de Aluno Externo / Convênio",
+        "descricao": "Inscrição de discentes de outros programas de pós-graduação conveniados.",
+        "prazoDias": 5
+      },
+      {
+        "id": "autenticacao-consulta",
+        "nome": "Autenticação e Verificação de Documentos",
+        "descricao": "Verificação de autenticidade de certidões e declarações expedidas pelo PPGFIL.",
+        "prazoDias": 5
+      },
+      {
+        "id": "outros-externo",
+        "nome": "Outros pedidos (Externo)",
+        "descricao": "Demais solicitações do público externo.",
+        "prazoDias": 7
+      }
+    ]
+  }
+]
