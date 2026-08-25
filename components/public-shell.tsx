@@ -3,17 +3,39 @@ import Link from 'next/link'
 import { Lock } from 'lucide-react'
 import { EpfilLogo } from '@/components/epfil-logo'
 
-export function PublicShell({ children }: { children: React.ReactNode }) {
+type PublicShellProps = {
+  children: React.ReactNode
+  compact?: boolean
+  className?: string
+  contentClassName?: string
+}
+
+export function PublicShell({
+  children,
+  compact = false,
+  className,
+  contentClassName,
+}: PublicShellProps) {
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-border bg-card/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-4">
+    <div
+      className={
+        compact
+          ? `flex min-h-dvh flex-col justify-between sm:h-dvh sm:max-h-dvh overflow-x-hidden ${className ?? ''}`
+          : `flex min-h-dvh flex-col ${className ?? ''}`
+      }
+    >
+      <header className="border-b border-border bg-card/80 backdrop-blur shrink-0">
+        <div
+          className={`mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 ${
+            compact ? 'py-2.5 sm:py-3' : 'py-4'
+          }`}
+        >
           <Link href="/" aria-label="Página inicial do e-PPGFIL">
             <EpfilLogo size="sm" />
           </Link>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
           >
             <Lock className="size-3.5" aria-hidden="true" />
             Acesso restrito
@@ -21,21 +43,53 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-10">{children}</main>
+      <main
+        className={`mx-auto w-full max-w-5xl flex-1 px-4 sm:px-6 ${
+          compact
+            ? 'flex flex-col justify-center py-2 sm:py-4 min-h-0'
+            : 'py-10'
+        } ${contentClassName ?? ''}`}
+      >
+        {children}
+      </main>
 
-      <footer className="border-t border-border bg-card/60">
-        <div className="mx-auto w-full max-w-5xl px-5 py-6 text-xs leading-relaxed text-muted-foreground">
-          <p className="font-bold text-foreground">
-            PPGFIL — Programa de Pós-Graduação em Filosofia
-          </p>
-          <p>
-            Universidade do Estado do Rio de Janeiro · Contato:{' '}
-            <a href="mailto:posfil@gmail.com" className="font-semibold text-primary underline-offset-2 hover:underline">
-              posfil@gmail.com
-            </a>
-          </p>
-          <p className="mt-2">Protótipo de interface — dados armazenados apenas neste navegador.</p>
-        </div>
+      <footer className="border-t border-border bg-card/60 shrink-0">
+        {compact ? (
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-1 px-5 py-2 text-[11px] leading-tight text-muted-foreground sm:flex-row sm:py-2.5">
+            <p className="font-bold text-foreground">
+              PPGFIL — Programa de Pós-Graduação em Filosofia · UERJ
+            </p>
+            <div className="flex items-center gap-3">
+              <span>
+                Contato:{' '}
+                <a
+                  href="mailto:posfil@gmail.com"
+                  className="font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  posfil@gmail.com
+                </a>
+              </span>
+              <span className="hidden text-muted-foreground/40 sm:inline">|</span>
+              <span className="hidden sm:inline">Protótipo de interface (dados locais)</span>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto w-full max-w-5xl px-5 py-6 text-xs leading-relaxed text-muted-foreground">
+            <p className="font-bold text-foreground">
+              PPGFIL — Programa de Pós-Graduação em Filosofia
+            </p>
+            <p>
+              Universidade do Estado do Rio de Janeiro · Contato:{' '}
+              <a
+                href="mailto:posfil@gmail.com"
+                className="font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                posfil@gmail.com
+              </a>
+            </p>
+            <p className="mt-2">Protótipo de interface — dados armazenados apenas neste navegador.</p>
+          </div>
+        )}
       </footer>
     </div>
   )
