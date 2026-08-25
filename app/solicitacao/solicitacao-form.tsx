@@ -211,18 +211,20 @@ export function SolicitacaoForm() {
             />
           </Field>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:items-start">
             <Field
               label="Categoria"
               required
               htmlFor="categoria"
               error={erros.categoria}
               hint={categoriaSelecionada?.descricao}
+              className="min-w-0"
             >
               <Select
                 id="categoria"
                 value={categoria}
                 onChange={(e) => handleCategoriaChange(e.target.value)}
+                className="w-full min-w-0"
               >
                 <option value="">Selecione sua categoria…</option>
                 {categorias.map((c) => (
@@ -245,6 +247,7 @@ export function SolicitacaoForm() {
                   ? 'Selecione o tipo de serviço desejado.'
                   : 'Escolha uma categoria primeiro.'
               }
+              className="min-w-0"
             >
               <Select
                 id="tipo"
@@ -254,6 +257,7 @@ export function SolicitacaoForm() {
                   if (erros.tipo) setErros((prev) => ({ ...prev, tipo: undefined }))
                 }}
                 disabled={!categoria || tiposDisponiveis.length === 0}
+                className="w-full min-w-0"
               >
                 <option value="">
                   {!categoria

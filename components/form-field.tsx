@@ -7,7 +7,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const inputBase =
-  'w-full rounded-xl border border-input bg-card px-4 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-4 focus:ring-primary/12'
+  'w-full min-w-0 max-w-full rounded-xl border border-input bg-card px-4 h-11 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-4 focus:ring-primary/12 box-border'
 
 export function Field({
   label,
@@ -27,20 +27,20 @@ export function Field({
   className?: string
 }) {
   return (
-    <div className={cn('grid gap-1.5', className)}>
-      <label htmlFor={htmlFor} className="text-sm font-bold text-foreground">
+    <div className={cn('flex flex-col gap-1.5 min-w-0 w-full', className)}>
+      <label htmlFor={htmlFor} className="block text-sm font-bold text-foreground leading-snug truncate">
         {label}
         {required && (
           <span className="ml-1 text-destructive" aria-hidden="true">
             *
           </span>
         )}
-        {!required && <span className="ml-1 font-medium text-muted-foreground">(opcional)</span>}
+        {!required && <span className="ml-1 text-xs font-normal text-muted-foreground">(opcional)</span>}
       </label>
-      {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <div className="w-full min-w-0">{children}</div>
+      {hint && !error && <p className="text-xs text-muted-foreground leading-relaxed">{hint}</p>}
       {error && (
-        <p className="text-xs font-bold text-destructive" role="alert">
+        <p className="text-xs font-bold text-destructive leading-relaxed" role="alert">
           {error}
         </p>
       )}
@@ -53,7 +53,15 @@ export function TextInput(props: React.ComponentProps<'input'>) {
 }
 
 export function TextArea(props: React.ComponentProps<'textarea'>) {
-  return <textarea {...props} className={cn(inputBase, 'min-h-28 resize-y', props.className)} />
+  return (
+    <textarea
+      {...props}
+      className={cn(
+        'w-full min-w-0 max-w-full rounded-xl border border-input bg-card px-4 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-4 focus:ring-primary/12 box-border min-h-28 resize-y',
+        props.className,
+      )}
+    />
+  )
 }
 
 export function Select({
@@ -102,26 +110,31 @@ export function Select({
         aria-describedby={ariaDescribedBy}
         className={cn(
           inputBase,
-          'flex cursor-pointer items-center justify-between gap-3 bg-card text-left shadow-sm data-[popup-open]:border-primary data-[popup-open]:ring-4 data-[popup-open]:ring-primary/12 disabled:cursor-not-allowed disabled:opacity-55',
+          'flex cursor-pointer items-center justify-between gap-2.5 bg-card text-left shadow-xs box-border data-[popup-open]:border-primary data-[popup-open]:ring-4 data-[popup-open]:ring-primary/12 disabled:cursor-not-allowed disabled:opacity-55',
           className,
         )}
       >
-        <BaseSelect.Value className="min-w-0 flex-1 truncate" />
-        <BaseSelect.Icon className="shrink-0 text-primary transition-transform data-[popup-open]:rotate-180">
+        <BaseSelect.Value className="min-w-0 flex-1 truncate block text-left text-sm font-semibold text-foreground" />
+        <BaseSelect.Icon className="shrink-0 text-primary transition-transform duration-150 data-[popup-open]:rotate-180">
           <ChevronDown className="size-4" aria-hidden="true" />
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
 
       <BaseSelect.Portal>
-        <BaseSelect.Positioner sideOffset={6} align="start" className="z-[110]" alignItemWithTrigger={false}>
-          <BaseSelect.Popup className="w-[var(--anchor-width)] min-w-48 origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-border bg-card p-1.5 text-foreground shadow-lg transition-[transform,opacity] duration-150 data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0">
+        <BaseSelect.Positioner
+          sideOffset={6}
+          align="start"
+          className="z-[110]"
+          alignItemWithTrigger={false}
+        >
+          <BaseSelect.Popup className="w-[var(--anchor-width)] min-w-[min(100vw-2rem,22rem)] max-w-[calc(100vw-2rem)] origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-border bg-card p-1.5 text-foreground shadow-xl transition-[transform,opacity] duration-150 data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0">
             <BaseSelect.List className="max-h-64 overflow-y-auto overscroll-contain">
               {opcoes.map((opcao) => (
                 <BaseSelect.Item
                   key={opcao.value}
                   value={opcao.value}
                   disabled={opcao.disabled}
-                  className="flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45 data-[highlighted]:bg-secondary data-[selected]:font-bold data-[selected]:text-primary"
+                  className="flex cursor-pointer select-none items-center justify-between gap-2.5 rounded-lg px-3 py-2 text-sm outline-none transition data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45 data-[highlighted]:bg-secondary data-[selected]:font-bold data-[selected]:text-primary"
                 >
                   <BaseSelect.ItemText className="min-w-0 flex-1 truncate">
                     {opcao.label}
