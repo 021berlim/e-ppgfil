@@ -6,6 +6,7 @@ import type {
   EntradaHistorico,
   NotaInterna,
   Protocolo,
+  RegistroAuditoria,
   Status,
   TipoSolicitacao,
 } from './types'
@@ -234,6 +235,24 @@ export function lerProtocolos(): Protocolo[] {
     return []
   }
 }
+
+export function lerAuditoria(): RegistroAuditoria[] {
+  return lerProtocolos()
+    .flatMap((protocolo) =>
+      protocolo.historico.map((entrada) => ({
+        id: `${protocolo.id}:${entrada.id}`,
+        data: entrada.data,
+        ator: entrada.autor,
+        acao: entrada.status,
+        categoria: 'protocolo' as const,
+        protocoloNumero: protocolo.numero,
+        detalhes: entrada.mensagem,
+      })),
+    )
+    .sort((a, b) => b.data.localeCompare(a.data))
+}
+
+export const subscribeAuditoria = subscribe
 
 function salvar(lista: Protocolo[]) {
   try {

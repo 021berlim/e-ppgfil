@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import {
+  ArrowDown,
+  ArrowUp,
   Clock,
   Edit2,
   FolderTree,
@@ -28,8 +30,21 @@ import {
   editarTipoSolicitacao,
   restaurarCategoriasPadrao,
   type CategoriaItem,
+  type DocumentoExigido,
   type TipoSolicitacaoItem,
 } from '@/lib/categorias'
+
+function novoDocumentoExigido(): DocumentoExigido {
+  return {
+    id: `documento-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    nome: '',
+    obrigatorio: true,
+    formatosAceitos: ['pdf'],
+    tamanhoMaximoMB: 10,
+  }
+}
+
+const FORMATOS_DISPONIVEIS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']
 
 export function CategoriasManager() {
   const { categorias, carregado } = useCategorias()
@@ -49,6 +64,7 @@ export function CategoriasManager() {
   const [nomeTipo, setNomeTipo] = useState('')
   const [descTipo, setDescTipo] = useState('')
   const [prazoDias, setPrazoDias] = useState(7)
+  const [documentosExigidos, setDocumentosExigidos] = useState<DocumentoExigido[]>([])
   const [erroTipo, setErroTipo] = useState('')
 
   // Modais de Exclusão e Confirmação
@@ -140,6 +156,7 @@ export function CategoriasManager() {
     setNomeTipo('')
     setDescTipo('')
     setPrazoDias(7)
+    setDocumentosExigidos([])
     setErroTipo('')
     setModalTipoAberta(true)
   }
@@ -150,6 +167,7 @@ export function CategoriasManager() {
     setNomeTipo(tipo.nome)
     setDescTipo(tipo.descricao || '')
     setPrazoDias(tipo.prazoDias || 7)
+    setDocumentosExigidos(tipo.documentosExigidos ?? [])
     setErroTipo('')
     setModalTipoAberta(true)
   }
@@ -161,12 +179,25 @@ export function CategoriasManager() {
       return
     }
     if (!categoriaAlvoTipo) return
+    const documentoSemNome = documentosExigidos.some((documento) => !documento.nome.trim())
+    const documentoSemFormato = documentosExigidos.some(
+      (documento) => documento.formatosAceitos.length === 0,
+    )
+    if (documentoSemNome || documentoSemFormato) {
+      setErroTipo(
+        documentoSemNome
+          ? 'Informe o nome de todos os documentos exigidos.'
+          : 'Selecione ao menos um formato aceito para cada documento.',
+      )
+      return
+    }
 
     if (tipoEdicao) {
       editarTipoSolicitacao(categoriaAlvoTipo.id, tipoEdicao.id, {
         nome: nomeTipo,
         descricao: descTipo,
         prazoDias: Number(prazoDias) || 7,
+        documentosExigidos,
       })
       toast(`Tipo "${nomeTipo}" atualizado com sucesso.`)
     } else {
@@ -174,11 +205,34 @@ export function CategoriasManager() {
         nome: nomeTipo,
         descricao: descTipo,
         prazoDias: Number(prazoDias) || 7,
+        documentosExigidos,
       })
       toast(`Novo tipo "${nomeTipo}" adicionado a ${categoriaAlvoTipo.nome}.`)
     }
 
     setModalTipoAberta(false)
+  }
+
+  function atualizarDocumento(id: string, dados: Partial<DocumentoExigido>) {
+    setDocumentosExigidos((atuais) =>
+      atuais.map((documento) =>
+        documento.id === id ? { ...documento, ...dados } : documento,
+      ),
+    )
+    if (erroTipo) setErroTipo('')
+  }
+
+  function moverDocumento(indice: number, direcao: -1 | 1) {
+    const destino = indice + direcao
+    if (destino < 0 || destino >= documentosExigidos.length) return
+    setDocumentosExigidos((atuais) => {
+      const reordenados = [...atuais]
+      ;[reordenados[indice], reordenados[destino]] = [
+        reordenados[destino],
+        reordenados[indice],
+      ]
+      return reordenados
+    })
   }
 
   function executarExclusaoTipo() {
@@ -395,6 +449,14 @@ export function CategoriasManager() {
                             <Clock className="size-3 shrink-0" aria-hidden="true" />
                             <span>Prazo SLA: {t.prazoDias ?? 7} dias úteis</span>
                           </div>
+                          {(t.documentosExigidos?.length ?? 0) > 0 && (
+                            <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
+                              {t.documentosExigidos!.length}{' '}
+                              {t.documentosExigidos!.length === 1
+                                ? 'documento configurado'
+                                : 'documentos configurados'}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -462,6 +524,7 @@ export function CategoriasManager() {
                 />
               </Field>
 
+
               <div className="mt-4 flex justify-end gap-3 border-t border-border pt-4">
                 <button
                   type="button"
@@ -490,7 +553,7 @@ export function CategoriasManager() {
           aria-labelledby="modal-tipo-titulo"
           className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-background/80 p-4 backdrop-blur-xs"
         >
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl">
+          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-xl">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
                 <h2 id="modal-tipo-titulo" className="text-lg font-extrabold text-foreground">
@@ -557,6 +620,120 @@ export function CategoriasManager() {
                   onChange={(e) => setPrazoDias(Math.max(1, parseInt(e.target.value) || 1))}
                 />
               </Field>
+
+              <section className="grid gap-3 border-t border-border pt-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-foreground">Documentos exigidos</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Deixe a lista vazia para manter o upload livre e opcional.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDocumentosExigidos((atuais) => [...atuais, novoDocumentoExigido()])}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-card px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/10"
+                  >
+                    <Plus className="size-3.5" aria-hidden="true" />
+                    Adicionar documento
+                  </button>
+                </div>
+
+                {documentosExigidos.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-secondary/30 px-4 py-5 text-center text-xs text-muted-foreground">
+                    Nenhum documento específico configurado.
+                  </p>
+                ) : (
+                  <div className="grid max-h-[45vh] gap-3 overflow-y-auto pr-1">
+                    {documentosExigidos.map((documento, indice) => (
+                      <article key={documento.id} className="rounded-xl border border-border bg-secondary/20 p-4">
+                        <div className="flex items-start gap-3">
+                          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-extrabold text-primary">
+                            {indice + 1}
+                          </span>
+                          <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
+                            <label className="grid gap-1 text-xs font-bold text-foreground sm:col-span-2">
+                              Nome do documento
+                              <TextInput
+                                value={documento.nome}
+                                onChange={(evento) => atualizarDocumento(documento.id, { nome: evento.target.value })}
+                                placeholder="Ex.: Comprovante de matrícula anterior"
+                              />
+                            </label>
+                            <fieldset className="grid gap-1 text-xs font-bold text-foreground">
+                              <legend>Formatos aceitos</legend>
+                              <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-xl border border-border bg-background px-2 py-1.5">
+                                {FORMATOS_DISPONIVEIS.map((formato) => {
+                                  const selecionado = documento.formatosAceitos.includes(formato)
+                                  return (
+                                    <button
+                                      key={formato}
+                                      type="button"
+                                      aria-pressed={selecionado}
+                                      onClick={() => atualizarDocumento(documento.id, {
+                                        formatosAceitos: selecionado
+                                          ? documento.formatosAceitos.filter((item) => item !== formato)
+                                          : [...documento.formatosAceitos, formato],
+                                      })}
+                                      className={`rounded-md px-2 py-1 text-[10px] font-extrabold uppercase transition ${
+                                        selecionado
+                                          ? 'bg-primary text-primary-foreground'
+                                          : 'bg-secondary text-muted-foreground hover:text-foreground'
+                                      }`}
+                                    >
+                                      {formato}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </fieldset>
+                            <label className="grid gap-1 text-xs font-bold text-foreground">
+                              Tamanho máximo (MB)
+                              <TextInput
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={documento.tamanhoMaximoMB}
+                                onChange={(evento) => atualizarDocumento(documento.id, {
+                                  tamanhoMaximoMB: Math.max(1, Number.parseInt(evento.target.value) || 1),
+                                })}
+                              />
+                            </label>
+                            <label className="grid gap-1 text-xs font-bold text-foreground sm:col-span-2">
+                              Descrição opcional
+                              <TextInput
+                                value={documento.descricao ?? ''}
+                                onChange={(evento) => atualizarDocumento(documento.id, { descricao: evento.target.value || undefined })}
+                                placeholder="Orientação exibida ao solicitante"
+                              />
+                            </label>
+                            <label className="inline-flex items-center gap-2 text-xs font-bold text-foreground">
+                              <input
+                                type="checkbox"
+                                checked={documento.obrigatorio}
+                                onChange={(evento) => atualizarDocumento(documento.id, { obrigatorio: evento.target.checked })}
+                                className="size-4 accent-primary"
+                              />
+                              Documento obrigatório
+                            </label>
+                          </div>
+                          <div className="grid shrink-0 gap-1">
+                            <button type="button" onClick={() => moverDocumento(indice, -1)} disabled={indice === 0} title="Mover documento para cima" className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30">
+                              <ArrowUp className="size-3.5" aria-hidden="true" />
+                            </button>
+                            <button type="button" onClick={() => moverDocumento(indice, 1)} disabled={indice === documentosExigidos.length - 1} title="Mover documento para baixo" className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30">
+                              <ArrowDown className="size-3.5" aria-hidden="true" />
+                            </button>
+                            <button type="button" onClick={() => setDocumentosExigidos((atuais) => atuais.filter((item) => item.id !== documento.id))} title="Remover documento" className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                              <Trash2 className="size-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
 
               <div className="mt-4 flex justify-end gap-3 border-t border-border pt-4">
                 <button

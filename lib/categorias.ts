@@ -2,11 +2,21 @@
 
 import categoriasIniciais from '@/data/categorias-solicitacoes.json'
 
+export type DocumentoExigido = {
+  id: string
+  nome: string
+  obrigatorio: boolean
+  formatosAceitos: string[]
+  tamanhoMaximoMB: number
+  descricao?: string
+}
+
 export type TipoSolicitacaoItem = {
   id: string
   nome: string
   descricao?: string
   prazoDias?: number
+  documentosExigidos?: DocumentoExigido[]
 }
 
 export type CategoriaItem = {
@@ -166,7 +176,12 @@ export function deletarCategoria(id: string): boolean {
 
 export function adicionarTipoSolicitacao(
   categoriaId: string,
-  tipo: { nome: string; descricao?: string; prazoDias?: number },
+  tipo: {
+    nome: string
+    descricao?: string
+    prazoDias?: number
+    documentosExigidos?: DocumentoExigido[]
+  },
 ): TipoSolicitacaoItem | null {
   const lista = lerCategorias()
   const categoria = lista.find((c) => c.id === categoriaId)
@@ -184,6 +199,7 @@ export function adicionarTipoSolicitacao(
     nome: tipo.nome.trim(),
     descricao: tipo.descricao?.trim() || undefined,
     prazoDias: tipo.prazoDias || 7,
+    documentosExigidos: tipo.documentosExigidos ?? [],
   }
 
   editarCategoria(categoriaId, {
@@ -196,7 +212,12 @@ export function adicionarTipoSolicitacao(
 export function editarTipoSolicitacao(
   categoriaId: string,
   tipoId: string,
-  dados: { nome?: string; descricao?: string; prazoDias?: number },
+  dados: {
+    nome?: string
+    descricao?: string
+    prazoDias?: number
+    documentosExigidos?: DocumentoExigido[]
+  },
 ): TipoSolicitacaoItem | null {
   const lista = lerCategorias()
   const categoria = lista.find((c) => c.id === categoriaId)
@@ -211,6 +232,10 @@ export function editarTipoSolicitacao(
       nome: dados.nome !== undefined ? dados.nome.trim() : t.nome,
       descricao: dados.descricao !== undefined ? dados.descricao.trim() : t.descricao,
       prazoDias: dados.prazoDias !== undefined ? dados.prazoDias : t.prazoDias,
+      documentosExigidos:
+        dados.documentosExigidos !== undefined
+          ? dados.documentosExigidos
+          : t.documentosExigidos,
     }
     return tipoAtualizado
   })

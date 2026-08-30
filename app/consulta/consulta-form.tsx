@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, CalendarClock, CircleAlert, Download, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
@@ -28,6 +28,11 @@ export function ConsultaForm() {
   const [anexos, setAnexos] = useState<Anexo[]>([])
   const [erroAnexos, setErroAnexos] = useState('')
   const [confirmarEnvio, setConfirmarEnvio] = useState(false)
+
+  useEffect(() => {
+    const protocolo = new URLSearchParams(window.location.search).get('protocolo')
+    if (protocolo) setNumero(protocolo)
+  }, [])
 
   function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()

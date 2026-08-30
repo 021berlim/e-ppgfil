@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, CircleCheckBig, Copy, Download, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
 import { Field, Select, TextArea, TextInput } from '@/components/form-field'
-import { UploadAnexos } from '@/components/anexos'
+import { ChecklistDocumentos, UploadAnexos } from '@/components/anexos'
 import { CaptchaMock, type CaptchaHandle } from '@/components/captcha-mock'
 import { criarProtocolo, formatarCPF, soDigitos } from '@/lib/store'
 import type { Anexo, Protocolo } from '@/lib/types'
@@ -13,7 +13,9 @@ import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { useCategorias } from '@/hooks/use-categorias'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 
-type Erros = Partial<Record<'cpf' | 'nome' | 'email' | 'categoria' | 'tipo', string>>
+type Erros = Partial<
+  Record<'cpf' | 'nome' | 'email' | 'categoria' | 'tipo' | 'documentos', string>
+>
 
 export function SolicitacaoForm() {
   const { categorias } = useCategorias()
@@ -24,6 +26,9 @@ export function SolicitacaoForm() {
   const [tipo, setTipo] = useState('')
   const [resumo, setResumo] = useState('')
   const [anexos, setAnexos] = useState<Anexo[]>([])
+  const [anexosPorDocumento, setAnexosPorDocumento] = useState<
+    Record<string, Anexo | undefined>
+  >({})
   const [erros, setErros] = useState<Erros>({})
   const [criado, setCriado] = useState<Protocolo | null>(null)
   const [copiado, setCopiado] = useState(false)
@@ -37,6 +42,7 @@ export function SolicitacaoForm() {
   const tipoSelecionado = tiposDisponiveis.find(
     (t) => t.id === tipo || t.nome === tipo,
   )
+  const documentosExigidos = tipoSelecionado?.documentosExigidos ?? []
 
   function handleCategoriaChange(novaCat: string) {
     setCategoria(novaCat)
@@ -45,6 +51,8 @@ export function SolicitacaoForm() {
     if (!tipos.some((t) => t.nome === tipo || t.id === tipo)) {
       setTipo('')
     }
+    setAnexos([])
+    setAnexosPorDocumento({})
     if (erros.categoria) {
       setErros((prev) => ({ ...prev, categoria: undefined }))
     }
@@ -59,6 +67,14 @@ export function SolicitacaoForm() {
       e.email = 'Informe um e-mail válido.'
     if (!categoria) e.categoria = 'Selecione uma categoria.'
     if (!tipo) e.tipo = 'Selecione o tipo de solicitação.'
+    const documentosFaltantes = documentosExigidos.filter(
+      (documento) => documento.obrigatorio && !anexosPorDocumento[documento.id],
+    )
+    if (documentosFaltantes.length > 0) {
+      e.documentos = `Anexe os documentos obrigatórios: ${documentosFaltantes
+        .map((documento) => documento.nome)
+        .join(', ')}.`
+    }
     setErros(e)
     return Object.keys(e).length === 0
   }
@@ -79,7 +95,10 @@ export function SolicitacaoForm() {
       categoria: categoria as Protocolo['categoria'],
       tipo: tipo as Protocolo['tipo'],
       resumo,
-      anexos,
+      anexos:
+        documentosExigidos.length > 0
+          ? Object.values(anexosPorDocumento).filter((anexo): anexo is Anexo => Boolean(anexo))
+          : anexos,
     })
     setCriado(novo)
     setConfirmarCriacao(false)
@@ -273,7 +292,11 @@ export function SolicitacaoForm() {
                 value={tipo}
                 onChange={(e) => {
                   setTipo(e.target.value)
+                  setAnexos([])
+                  setAnexosPorDocumento({})
                   if (erros.tipo) setErros((prev) => ({ ...prev, tipo: undefined }))
+                  if (erros.documentos)
+                    setErros((prev) => ({ ...prev, documentos: undefined }))
                 }}
                 disabled={!categoria || tiposDisponiveis.length === 0}
                 className="w-full min-w-0"
@@ -307,12 +330,29 @@ export function SolicitacaoForm() {
             />
           </Field>
 
-          <UploadAnexos
-            anexos={anexos}
-            onChange={setAnexos}
-            label="Anexar documentos"
-            hint="Os arquivos aparecem no primeiro registro do histórico do protocolo."
-          />
+          {documentosExigidos.length > 0 ? (
+            <ChecklistDocumentos
+              documentos={documentosExigidos}
+              anexosPorDocumento={anexosPorDocumento}
+              erroObrigatorios={erros.documentos}
+              onChange={(documentoId, anexo) => {
+                setAnexosPorDocumento((atuais) => ({
+                  ...atuais,
+                  [documentoId]: anexo,
+                }))
+                if (erros.documentos) {
+                  setErros((atuais) => ({ ...atuais, documentos: undefined }))
+                }
+              }}
+            />
+          ) : (
+            <UploadAnexos
+              anexos={anexos}
+              onChange={setAnexos}
+              label="Anexar documentos"
+              hint="Os arquivos aparecem no primeiro registro do histórico do protocolo."
+            />
+          )}
 
           <CaptchaMock ref={captchaRef} />
 

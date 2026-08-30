@@ -8,7 +8,31 @@
         "id": "marcacao-defesa-doutorado",
         "nome": "Marcação de Defesa de Doutorado",
         "descricao": "Solicitação formal de agendamento e composição de banca de tese de doutorado.",
-        "prazoDias": 15
+        "prazoDias": 15,
+        "documentosExigidos": [
+          {
+            "id": "tese-versao-final",
+            "nome": "Tese — versão para a banca",
+            "obrigatorio": true,
+            "formatosAceitos": ["pdf"],
+            "tamanhoMaximoMB": 25,
+            "descricao": "Arquivo integral da tese em versão PDF."
+          },
+          {
+            "id": "formulario-banca",
+            "nome": "Formulário de composição da banca",
+            "obrigatorio": true,
+            "formatosAceitos": ["pdf", "doc", "docx"],
+            "tamanhoMaximoMB": 10
+          },
+          {
+            "id": "anuencia-orientador",
+            "nome": "Anuência do orientador",
+            "obrigatorio": false,
+            "formatosAceitos": ["pdf", "jpg", "png"],
+            "tamanhoMaximoMB": 10
+          }
+        ]
       },
       {
         "id": "marcacao-defesa-mestrado",
@@ -81,7 +105,24 @@
         "id": "trancamento-doutorado",
         "nome": "Trancamento de Matrícula",
         "descricao": "Suspensão temporária dos estudos conforme regulamento do curso.",
-        "prazoDias": 5
+        "prazoDias": 5,
+        "documentosExigidos": [
+          {
+            "id": "requerimento-trancamento",
+            "nome": "Requerimento de trancamento assinado",
+            "obrigatorio": true,
+            "formatosAceitos": ["pdf"],
+            "tamanhoMaximoMB": 10
+          },
+          {
+            "id": "documento-comprobatorio",
+            "nome": "Documento comprobatório",
+            "obrigatorio": false,
+            "formatosAceitos": ["pdf", "jpg", "jpeg", "png"],
+            "tamanhoMaximoMB": 10,
+            "descricao": "Inclua documentação que fundamente o pedido, quando aplicável."
+          }
+        ]
       },
       {
         "id": "estagio-docente-doutorado",
@@ -167,7 +208,23 @@
         "id": "requerimento-diploma",
         "nome": "Requerimento de Diploma / Certificado",
         "descricao": "Solicitação de confecção, registro e expedição do diploma de pós-graduação.",
-        "prazoDias": 20
+        "prazoDias": 20,
+        "documentosExigidos": [
+          {
+            "id": "documento-identidade",
+            "nome": "Documento de identidade",
+            "obrigatorio": true,
+            "formatosAceitos": ["pdf", "jpg", "jpeg", "png"],
+            "tamanhoMaximoMB": 10
+          },
+          {
+            "id": "ata-defesa",
+            "nome": "Ata de defesa",
+            "obrigatorio": true,
+            "formatosAceitos": ["pdf"],
+            "tamanhoMaximoMB": 10
+          }
+        ]
       },
       {
         "id": "historico-final-ementas",

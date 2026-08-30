@@ -9,6 +9,7 @@ export function ConfirmacaoModal({
   titulo,
   descricao,
   textoConfirmar = 'Confirmar',
+  tom = 'padrao',
   exigirMotivo = false,
   labelMotivo = 'Motivo',
   placeholderMotivo,
@@ -19,6 +20,7 @@ export function ConfirmacaoModal({
   titulo: string
   descricao: string
   textoConfirmar?: string
+  tom?: 'padrao' | 'perigo'
   exigirMotivo?: boolean
   labelMotivo?: string
   placeholderMotivo?: string
@@ -95,7 +97,15 @@ export function ConfirmacaoModal({
           <button type="button" onClick={onCancelar} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-extrabold text-foreground hover:bg-secondary">
             Cancelar
           </button>
-          <button type="button" onClick={confirmar} className="rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground hover:opacity-90">
+          <button
+            type="button"
+            onClick={confirmar}
+            className={`rounded-full px-5 py-2.5 text-sm font-extrabold hover:opacity-90 ${
+              tom === 'perigo'
+                ? 'bg-destructive text-destructive-foreground'
+                : 'bg-primary text-primary-foreground'
+            }`}
+          >
             {textoConfirmar}
           </button>
         </div>

@@ -22,20 +22,6 @@ export const TIPOS_SOLICITACAO = [
 export type TipoSolicitacaoPadrao = (typeof TIPOS_SOLICITACAO)[number]
 export type TipoSolicitacao = string
 
-export type TipoSolicitacaoItem = {
-  id: string
-  nome: string
-  descricao?: string
-  prazoDias?: number
-}
-
-export type CategoriaItem = {
-  id: string
-  nome: string
-  descricao: string
-  tiposSolicitacao: TipoSolicitacaoItem[]
-}
-
 export type Anexo = {
   id: string
   nome: string
@@ -88,6 +74,16 @@ export type EntradaHistorico = {
   status: Status
   mensagem: string
   anexos: Anexo[]
+}
+
+export type RegistroAuditoria = {
+  id: string
+  data: string
+  ator: string
+  acao: string
+  categoria: 'protocolo' | 'autenticacao' | 'sistema'
+  protocoloNumero?: string
+  detalhes: string
 }
 
 export type Protocolo = {

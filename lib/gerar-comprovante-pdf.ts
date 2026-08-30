@@ -1,8 +1,15 @@
 'use client'
 
 import { jsPDF } from 'jspdf'
-import { formatarCPF, formatarData, formatarTamanho, prazoPrevisto } from './store'
+import QRCode from 'qrcode'
+import { formatarData, formatarTamanho, prazoPrevisto } from './store'
+import { obterPrazoSlaTipo } from './categorias'
 import type { Protocolo } from './types'
+
+export function mascararCPF(cpf: string): string {
+  const digitos = cpf.replace(/\D/g, '').padStart(11, '0').slice(-11)
+  return `***.***.${digitos.slice(6, 9)}-${digitos.slice(9)}`
+}
 
 function gerarCodigoAutenticacao(id: string, criadoEm: string): string {
   const hashBase = `${id}-${criadoEm}`
@@ -15,7 +22,14 @@ function gerarCodigoAutenticacao(id: string, criadoEm: string): string {
   return `AUT-${new Date(criadoEm).getFullYear()}-${hex.slice(0, 4)}-${hex.slice(4, 8)}`
 }
 
-export function baixarComprovantePDF(protocolo: Protocolo) {
+export async function baixarComprovantePDF(protocolo: Protocolo) {
+  const urlConsulta = new URL('/consulta', window.location.origin)
+  urlConsulta.searchParams.set('protocolo', protocolo.numero)
+  const qrCodeDataUrl = await QRCode.toDataURL(urlConsulta.toString(), {
+    errorCorrectionLevel: 'M',
+    margin: 1,
+    width: 256,
+  })
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -126,13 +140,13 @@ export function baixarComprovantePDF(protocolo: Protocolo) {
   cursorY += 3
   const campos = [
     { rotulo: 'Nome do Solicitante:', valor: protocolo.nome },
-    { rotulo: 'CPF:', valor: formatarCPF(protocolo.cpf) },
+    { rotulo: 'CPF:', valor: mascararCPF(protocolo.cpf) },
     { rotulo: 'E-mail:', valor: protocolo.email },
     { rotulo: 'Categoria / Vínculo:', valor: protocolo.categoria },
     { rotulo: 'Tipo de Solicitação:', valor: protocolo.tipo },
     {
       rotulo: 'Previsão de Análise (SLA):',
-      valor: `${prazoPrevisto(protocolo).toLocaleDateString('pt-BR')} (estimativa padrão da secretaria)`,
+      valor: `${obterPrazoSlaTipo(protocolo.tipo)} dias úteis · previsão ${prazoPrevisto(protocolo).toLocaleDateString('pt-BR')}`,
     },
   ]
 
@@ -223,7 +237,10 @@ export function baixarComprovantePDF(protocolo: Protocolo) {
   cursorY += 3
   doc.setFillColor(247, 245, 242)
   doc.setDrawColor(213, 204, 196)
-  doc.roundedRect(margin, cursorY, contentWidth, 24, 2, 2, 'FD')
+  doc.roundedRect(margin, cursorY, contentWidth, 30, 2, 2, 'FD')
+  const qrTamanho = 24
+  const qrX = pageWidth - margin - qrTamanho - 3
+  doc.addImage(qrCodeDataUrl, 'PNG', qrX, cursorY + 3, qrTamanho, qrTamanho)
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8)
@@ -234,21 +251,29 @@ export function baixarComprovantePDF(protocolo: Protocolo) {
   doc.setFontSize(7.5)
   doc.setTextColor(70, 70, 70)
   doc.text(
-    'Acesse https://e-ppgfil.uerj.br/consulta a qualquer momento e informe seu CPF e o número de protocolo acima.',
+    'Escaneie o QR code ou acesse a consulta pública e informe também seu CPF.',
     margin + 4,
     cursorY + 10,
   )
   doc.text(
-    'Caso seja solicitada complementação (status "Com exigência"), novos documentos poderão ser enviados pela mesma tela.',
+    'O QR informa somente o protocolo; o CPF não é incluído no endereço.',
     margin + 4,
     cursorY + 14.5,
+  )
+
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 100, 100)
+  doc.text(
+    doc.splitTextToSize(urlConsulta.toString(), contentWidth - qrTamanho - 12),
+    margin + 4,
+    cursorY + 19,
   )
 
   const codigoAuth = gerarCodigoAutenticacao(protocolo.id, protocolo.criadoEm)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.5)
   doc.setTextColor(100, 100, 100)
-  doc.text(`Código de Autenticação Digital: ${codigoAuth}`, margin + 4, cursorY + 19.5)
+  doc.text(`Código de Autenticação Digital: ${codigoAuth}`, margin + 4, cursorY + 26)
 
   // 9. Rodapé Institucional
   const rodapeY = pageHeight - 12
@@ -264,6 +289,6 @@ export function baixarComprovantePDF(protocolo: Protocolo) {
   doc.text('Página 1 de 1', pageWidth - margin - 16, rodapeY + 1)
 
   // Salva o PDF no dispositivo do usuário
-  const nomeArquivo = `Comprovante-Protocolo-${protocolo.numero.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`
+  const nomeArquivo = `protocolo-${protocolo.numero.replace(/[/\\?%*:|"<>]/g, '-')}.pdf`
   doc.save(nomeArquivo)
 }
