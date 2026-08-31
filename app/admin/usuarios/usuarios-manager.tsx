@@ -6,6 +6,7 @@ import { Edit2, Plus, Search, Shield, Trash2, UserRound, X } from 'lucide-react'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { Field, Select, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
+import { DASHBOARD_ROLE_LABELS } from '@/lib/auth-types'
 
 type RoleSlug = 'ROOT' | 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR' | 'COORDINATOR'
 
@@ -42,13 +43,6 @@ const EMPTY_FORM: FormState = {
   password: '',
   role: 'SECRETARY_OPERATOR',
   is_active: true,
-}
-
-const ROLE_LABELS: Record<RoleSlug, string> = {
-  ROOT: 'ROOT',
-  SECRETARY_ADMIN: 'SECRETARY_ADMIN',
-  SECRETARY_OPERATOR: 'SECRETARY_OPERATOR',
-  COORDINATOR: 'COORDINATOR',
 }
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -230,7 +224,7 @@ export function UsuariosManager() {
                     <td className="px-5 py-4">
                       <span className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-extrabold text-foreground">
                         <Shield className="size-3.5 text-primary" aria-hidden="true" />
-                        {user.role ? ROLE_LABELS[user.role] : 'Sem cargo'}
+                        {user.role ? DASHBOARD_ROLE_LABELS[user.role] : 'Sem cargo'}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -335,7 +329,7 @@ export function UsuariosManager() {
                 >
                   {roles.map((role) => (
                     <option key={role.slug} value={role.slug}>
-                      {ROLE_LABELS[role.slug]}
+                      {DASHBOARD_ROLE_LABELS[role.slug]}
                     </option>
                   ))}
                 </Select>

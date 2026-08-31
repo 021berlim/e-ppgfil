@@ -13,7 +13,6 @@ import {
   LayoutGrid,
   LogOut,
   CircleHelp,
-  RotateCcw,
   Tags,
   Users,
   Workflow,
@@ -22,8 +21,8 @@ import { cn } from '@/lib/utils'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { Toaster } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
-import { login, logout, resetarDados, usuarioAtualInfo } from '@/lib/store'
-import { canManageUsers, isCoordinator, type ClientSession } from '@/lib/auth-types'
+import { login, logout, usuarioAtualInfo } from '@/lib/store'
+import { DASHBOARD_ROLE_LABELS, canManageUsers, isCoordinator, type ClientSession } from '@/lib/auth-types'
 
 const NAV = [
   {
@@ -56,7 +55,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sessao, setSessao] = useState<ClientSession | null>(null)
   const [pronto, setPronto] = useState(false)
-  const [acaoPendente, setAcaoPendente] = useState<'resetar' | 'sair' | null>(null)
+  const [confirmarSaida, setConfirmarSaida] = useState(false)
   const [sidebarRecolhida, setSidebarRecolhida] = useState(false)
 
   useEffect(() => {
@@ -185,7 +184,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className={cn('border-t border-sidebar-border py-4', sidebarRecolhida ? 'lg:px-2' : 'px-4')}>
           <div className={cn(sidebarRecolhida && 'lg:sr-only')}>
             <p className="px-2 text-xs font-bold text-sidebar-foreground">{sessao?.name ?? sessao?.email}</p>
-            <p className="px-2 text-[11px] text-sidebar-foreground/60">{sessao?.role ?? 'Dashboard'} · PPGFIL</p>
+            <p className="px-2 text-[11px] text-sidebar-foreground/60">
+              {sessao?.role ? DASHBOARD_ROLE_LABELS[sessao.role] : 'Dashboard'} · PPGFIL
+            </p>
           </div>
           <div className="mt-3 grid gap-1.5">
             <button
@@ -197,20 +198,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <CircleHelp className="size-3.5" aria-hidden="true" />
               <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Ver tutorial</span>
             </button>
-            {!isCoordinator(sessao?.role) && (
-              <button
-                type="button"
-                onClick={() => setAcaoPendente('resetar')}
-                title={sidebarRecolhida ? 'Restaurar dados de exemplo' : undefined}
-                className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
-              >
-                <RotateCcw className="size-3.5" aria-hidden="true" />
-                <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Restaurar dados de exemplo</span>
-              </button>
-            )}
             <button
               type="button"
-              onClick={() => setAcaoPendente('sair')}
+              onClick={() => setConfirmarSaida(true)}
               title={sidebarRecolhida ? 'Sair' : undefined}
               className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
             >
@@ -231,22 +221,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </main>
       <Toaster />
       <ConfirmacaoModal
-        aberto={acaoPendente !== null}
-        titulo={acaoPendente === 'resetar' ? 'Restaurar dados de exemplo?' : 'Sair do sistema?'}
-        descricao={
-          acaoPendente === 'resetar'
-            ? 'Todas as alterações locais nos protocolos serão substituídas pelos dados iniciais.'
-            : 'Sua sessão administrativa será encerrada.'
-        }
-        textoConfirmar={acaoPendente === 'resetar' ? 'Restaurar dados' : 'Sair'}
-        onCancelar={() => setAcaoPendente(null)}
+        aberto={confirmarSaida}
+        titulo="Sair do sistema?"
+        descricao="Sua sessão administrativa será encerrada."
+        textoConfirmar="Sair"
+        onCancelar={() => setConfirmarSaida(false)}
         onConfirmar={() => {
-          if (acaoPendente === 'resetar') resetarDados()
-          if (acaoPendente === 'sair') {
-            logout()
-            router.replace('/login')
-          }
-          setAcaoPendente(null)
+          logout()
+          router.replace('/login')
+          setConfirmarSaida(false)
         }}
       />
     </div>

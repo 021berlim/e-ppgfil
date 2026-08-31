@@ -12,7 +12,7 @@ import type {
 } from './types'
 import type { ClientSession, DashboardRole } from './auth-types'
 import { RESPONSAVEIS, STATUS_FINAIS } from './types'
-import { obterPrazoSlaTipo, restaurarCategoriasDemo } from './categorias'
+import { obterPrazoSlaTipo } from './categorias'
 
 export const STORAGE_KEY = 'epfil:protocolos'
 export const AUTH_KEY = 'epfil:auth'
@@ -186,8 +186,7 @@ export function gerarMassaProtocolos(quantidade = 20000): Protocolo[] {
 }
 
 function seed(): Protocolo[] {
-  // Gera 1.000 para o localStorage evitar estouro do limite de 5MB do navegador
-  return gerarMassaProtocolos(1000)
+  return []
 }
 
 function emit() {
@@ -535,15 +534,6 @@ export function consultarProtocolo(cpf: string, numero: string): Protocolo | nul
     (p) => p.cpf === alvoCpf && p.numero.toUpperCase() === alvoNum,
   )
   return encontrado ?? null
-}
-
-export function resetarDados() {
-  window.localStorage.removeItem(STORAGE_KEY)
-  protocolosCache = null
-  storageCache = null
-  restaurarCategoriasDemo()
-  lerProtocolos()
-  emit()
 }
 
 /* auth propria */
