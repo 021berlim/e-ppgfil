@@ -42,3 +42,7 @@ export function canManageAdministrativeCatalogs(role?: string | null) {
 export function canCreateUsers(role?: string | null) {
   return role === 'ROOT'
 }
+
+export function canViewAuditLogs(role?: string | null) {
+  return role === 'ROOT'
+}

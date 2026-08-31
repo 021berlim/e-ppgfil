@@ -13,6 +13,7 @@ import {
   LayoutGrid,
   LogOut,
   CircleHelp,
+  ScrollText,
   UserCircle,
   Tags,
   Users,
@@ -27,6 +28,7 @@ import {
   DASHBOARD_ROLE_LABELS,
   canManageAdministrativeCatalogs,
   canManageUsers,
+  canViewAuditLogs,
   type ClientSession,
 } from '@/lib/auth-types'
 
@@ -43,6 +45,7 @@ const NAV = [
     itens: [
       { href: '/admin/usuarios', label: 'Usuários', icone: Users },
       { href: '/admin/categorias', label: 'Categorias e Serviços', icone: Tags },
+      { href: '/admin/auditoria', label: 'Auditoria', icone: ScrollText },
     ],
   },
   {
@@ -109,6 +112,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     itens: grupo.itens.filter((item) => {
       if (item.href === '/admin/usuarios') return canManageUsers(sessao?.role)
       if (item.href === '/admin/categorias') return canManageAdministrativeCatalogs(sessao?.role)
+      if (item.href === '/admin/auditoria') return canViewAuditLogs(sessao?.role)
       return true
     }),
   })).filter((grupo) => grupo.itens.length > 0)
