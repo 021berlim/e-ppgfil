@@ -23,7 +23,6 @@ import {
   estaAtrasado,
   formatarCPF,
   formatarData,
-  moverStatus,
   nomeUsuarioAtual,
   soDigitos,
   usuarioAtual,
@@ -40,9 +39,10 @@ import {
 import { useProtocolos } from '@/hooks/use-protocolos'
 import { PageHeader } from '@/components/admin-shell'
 import { Select, TextInput } from '@/components/form-field'
-import { notificarEmail } from '@/components/toast'
+import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
+import { moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_TUTORIAL: TourStep[] = [
   { alvo: '[data-tour="admin-sidebar"]', titulo: 'Navegação principal', texto: 'Use este menu para acessar a esteira, o painel e os conteúdos administrativos.', posicao: 'right' },
@@ -613,8 +613,11 @@ export function KanbanBoard() {
       setMovimentoPendente(null)
       return
     }
-    moverStatus(movimentoPendente.id, movimentoPendente.destino, nomeUsuarioAtual() ?? 'Secretaria')
-    notificarEmail(movimentoPendente.nome)
+    void moverStatusRemoto(movimentoPendente.id, movimentoPendente.destino)
+      .then(() => toast(`Etapa atualizada e e-mail enviado a ${movimentoPendente.nome}.`))
+      .catch((error) =>
+        toast(error instanceof Error ? error.message : 'Nao foi possivel atualizar o protocolo.'),
+      )
     setMovimentoPendente(null)
   }, [movimentoPendente, readOnly])
 

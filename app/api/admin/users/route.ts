@@ -7,6 +7,8 @@ import {
 } from '@/lib/users-admin'
 import { requireCreateUsers, requireManageUsers } from '@/lib/auth-server'
 import { registrarAuditoria } from '@/lib/audit-server'
+import { recordEmailDelivery } from '@/lib/email/delivery-log'
+import { sendWelcomeEmail } from '@/lib/email/senders'
 
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : 'Erro inesperado.'
@@ -28,13 +30,31 @@ export async function POST(request: Request) {
     const actor = await requireCreateUsers()
     const payload = await request.json()
     const row = await createDashboardUser(payload)
+    const loginUrl = new URL('/login', process.env.APP_BASE_URL || request.url).toString()
+    const emailResult = await sendWelcomeEmail(row.email, {
+      userName: row.name,
+      loginUrl,
+    })
+    await recordEmailDelivery({
+      eventType: 'welcome',
+      recipientEmail: row.email,
+      userId: row.id,
+      result: emailResult,
+    })
     await registrarAuditoria({
       actor: { type: 'user', user: actor },
       category: 'sistema',
       action: 'usuario_criado',
-      details: { userId: row.id, name: row.name, email: row.email, role: row.role },
+      details: {
+        userId: row.id,
+        name: row.name,
+        email: row.email,
+        role: row.role,
+        emailStatus: emailResult.status,
+        emailError: emailResult.error,
+      },
     })
-    return NextResponse.json(row, { status: 201 })
+    return NextResponse.json({ ...row, emailStatus: emailResult.status }, { status: 201 })
   } catch (error) {
     return errorResponse(error)
   }

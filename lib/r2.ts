@@ -62,6 +62,25 @@ export async function createPresignedDownloadUrl(key: string, expiresIn = 300) {
   )
 }
 
+export async function putR2Object({
+  key,
+  body,
+  contentType,
+}: {
+  key: string
+  body: Buffer | Uint8Array | string
+  contentType: string
+}) {
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: getR2Bucket(),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  )
+}
+
 export async function headR2Object(key: string) {
   return getR2Client().send(
     new HeadObjectCommand({

@@ -7,11 +7,16 @@ import { FormCard } from '@/components/public-shell'
 import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { ChecklistDocumentos, UploadAnexos } from '@/components/anexos'
 import { CaptchaMock, type CaptchaHandle } from '@/components/captcha-mock'
-import { criarProtocolo, formatarCPF, soDigitos } from '@/lib/store'
+import { formatarCPF, soDigitos } from '@/lib/store'
 import type { Anexo, Protocolo } from '@/lib/types'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { useCategorias } from '@/hooks/use-categorias'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
+import {
+  abrirDocumentoRemoto,
+  criarProtocoloRemoto,
+  type CriarProtocoloResponse,
+} from '@/lib/protocolos-client'
 
 type Erros = Partial<
   Record<'cpf' | 'nome' | 'email' | 'categoria' | 'tipo' | 'documentos', string>
@@ -31,8 +36,10 @@ export function SolicitacaoForm() {
   >({})
   const [erros, setErros] = useState<Erros>({})
   const [criado, setCriado] = useState<Protocolo | null>(null)
+  const [resultadoCriacao, setResultadoCriacao] = useState<CriarProtocoloResponse | null>(null)
   const [copiado, setCopiado] = useState(false)
   const [confirmarCriacao, setConfirmarCriacao] = useState(false)
+  const [enviando, setEnviando] = useState(false)
   const captchaRef = useRef<CaptchaHandle>(null)
 
   const categoriaSelecionada = categorias.find(
@@ -87,22 +94,33 @@ export function SolicitacaoForm() {
     setConfirmarCriacao(true)
   }
 
-  function confirmarSolicitacao() {
-    const novo = criarProtocolo({
-      cpf,
-      nome,
-      email,
-      categoria: categoria as Protocolo['categoria'],
-      tipo: tipo as Protocolo['tipo'],
-      resumo,
-      anexos:
-        documentosExigidos.length > 0
-          ? Object.values(anexosPorDocumento).filter((anexo): anexo is Anexo => Boolean(anexo))
-          : anexos,
-    })
-    setCriado(novo)
-    setConfirmarCriacao(false)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  async function confirmarSolicitacao() {
+    setEnviando(true)
+    try {
+      const resultado = await criarProtocoloRemoto({
+        cpf,
+        nome,
+        email,
+        categoria: categoria as Protocolo['categoria'],
+        tipo: tipo as Protocolo['tipo'],
+        resumo,
+        anexos:
+          documentosExigidos.length > 0
+            ? Object.values(anexosPorDocumento).filter((anexo): anexo is Anexo => Boolean(anexo))
+            : anexos,
+      })
+      setResultadoCriacao(resultado)
+      setCriado(resultado.protocolo)
+      setConfirmarCriacao(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (error) {
+      setErros({
+        documentos: error instanceof Error ? error.message : 'Nao foi possivel registrar a solicitacao.',
+      })
+      setConfirmarCriacao(false)
+    } finally {
+      setEnviando(false)
+    }
   }
 
   if (criado) {
@@ -125,7 +143,16 @@ export function SolicitacaoForm() {
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => baixarComprovantePDF(criado)}
+                onClick={() => {
+                  if (resultadoCriacao?.receipt) {
+                    void abrirDocumentoRemoto(
+                      resultadoCriacao.receipt.documentFileId,
+                      resultadoCriacao.receipt.downloadToken,
+                    )
+                    return
+                  }
+                  baixarComprovantePDF(criado)
+                }}
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 hover:shadow"
               >
                 <Download className="size-3.5" aria-hidden="true" />
@@ -167,12 +194,26 @@ export function SolicitacaoForm() {
           <p className="mt-5 rounded-xl border border-border bg-secondary/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
             O acompanhamento é feito na tela de consulta, informando o CPF e este número. Cada
             movimentação da secretaria gera um novo registro no histórico.
+            {resultadoCriacao?.emailStatus === 'sent'
+              ? ' O comprovante tambem foi enviado ao e-mail informado.'
+              : resultadoCriacao?.emailStatus
+                ? ' O protocolo foi criado, mas o envio do e-mail ficara pendente para reprocessamento.'
+                : ''}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => baixarComprovantePDF(criado)}
+              onClick={() => {
+                if (resultadoCriacao?.receipt) {
+                  void abrirDocumentoRemoto(
+                    resultadoCriacao.receipt.documentFileId,
+                    resultadoCriacao.receipt.downloadToken,
+                  )
+                  return
+                }
+                baixarComprovantePDF(criado)
+              }}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 hover:shadow"
             >
               <Download className="size-4" aria-hidden="true" />
@@ -382,6 +423,11 @@ export function SolicitacaoForm() {
         onCancelar={() => setConfirmarCriacao(false)}
         onConfirmar={confirmarSolicitacao}
       />
+      {enviando && (
+        <p className="mt-3 text-center text-xs font-bold text-muted-foreground">
+          Registrando protocolo e enviando comprovante...
+        </p>
+      )}
     </div>
   )
 }

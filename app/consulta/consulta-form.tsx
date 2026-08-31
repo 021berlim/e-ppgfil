@@ -10,8 +10,6 @@ import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { StatusBadge } from '@/components/status-badge'
 import { Timeline } from '@/components/timeline'
 import {
-  adicionarAnexosSolicitante,
-  consultarProtocolo,
   formatarCPF,
   formatarData,
   prazoPrevisto,
@@ -20,6 +18,7 @@ import {
 import { STATUS_FINAIS, type Anexo, type Protocolo } from '@/lib/types'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import { obterPrazoDescricaoTipo } from '@/lib/categorias'
+import { adicionarAndamentoRemoto, consultarProtocoloRemoto } from '@/lib/protocolos-client'
 
 export function ConsultaForm() {
   const [cpf, setCpf] = useState('')
@@ -29,13 +28,14 @@ export function ConsultaForm() {
   const [anexos, setAnexos] = useState<Anexo[]>([])
   const [erroAnexos, setErroAnexos] = useState('')
   const [confirmarEnvio, setConfirmarEnvio] = useState(false)
+  const [consultando, setConsultando] = useState(false)
 
   useEffect(() => {
     const protocolo = new URLSearchParams(window.location.search).get('protocolo')
     if (protocolo) setNumero(protocolo)
   }, [])
 
-  function handleSubmit(ev: React.FormEvent) {
+  async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
     setErro('')
     setResultado(null)
@@ -51,14 +51,17 @@ export function ConsultaForm() {
       return
     }
 
-    const achado = consultarProtocolo(cpf, numero)
-    if (!achado) {
+    setConsultando(true)
+    try {
+      const achado = await consultarProtocoloRemoto(cpf, numero)
+      setResultado(achado)
+    } catch {
       setErro(
         'Nenhum protocolo encontrado com esse CPF e número. Confira os dados e tente novamente.',
       )
-      return
+    } finally {
+      setConsultando(false)
     }
-    setResultado(achado)
   }
 
   function handleEnviarAnexos() {
@@ -70,14 +73,24 @@ export function ConsultaForm() {
     setConfirmarEnvio(true)
   }
 
-  function confirmarEnvioAnexos() {
+  async function confirmarEnvioAnexos() {
     if (!resultado) return
-    adicionarAnexosSolicitante(resultado.id, anexos)
-    const atualizado = consultarProtocolo(resultado.cpf, resultado.numero)
-    if (atualizado) setResultado(atualizado)
-    setAnexos([])
-    setErroAnexos('')
-    setConfirmarEnvio(false)
+    try {
+      await adicionarAndamentoRemoto({
+        id: resultado.id,
+        message: `Documento enviado pelo solicitante (${anexos.length} anexo(s)).`,
+        anexos,
+        origin: 'solicitante',
+        authorName: resultado.nome,
+      })
+      const atualizado = await consultarProtocoloRemoto(resultado.cpf, resultado.numero)
+      setResultado(atualizado)
+      setAnexos([])
+      setErroAnexos('')
+      setConfirmarEnvio(false)
+    } catch (error) {
+      setErroAnexos(error instanceof Error ? error.message : 'Nao foi possivel enviar os documentos.')
+    }
   }
 
   const previsaoRetorno = resultado ? prazoPrevisto(resultado) : null
@@ -123,7 +136,7 @@ export function ConsultaForm() {
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
             >
               <Search className="size-4" aria-hidden="true" />
-              Consultar
+              {consultando ? 'Consultando...' : 'Consultar'}
             </button>
           </div>
         </form>

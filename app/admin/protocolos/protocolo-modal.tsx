@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArchiveRestore, ArrowLeft, CircleCheckBig, Download, EyeOff, Lock, Plus, RotateCcw, TriangleAlert } from 'lucide-react'
 import {
-  adicionarEntradaManual,
   adicionarNotaInterna,
   atribuirResponsavel,
   desarquivarProtocolo,
   estaAtrasado,
   formatarCPF,
   formatarData,
-  moverStatus,
   nomeUsuarioAtual,
   prazoPrevisto,
   recusarRespostaExigencia,
@@ -32,9 +30,10 @@ import { StatusBadge } from '@/components/status-badge'
 import { Timeline } from '@/components/timeline'
 import { UploadAnexos } from '@/components/anexos'
 import { Select, TextArea } from '@/components/form-field'
-import { notificarEmail } from '@/components/toast'
+import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
+import { adicionarAndamentoRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_DETALHES: TourStep[] = [
   { alvo: '[data-tour="detail-header"]', titulo: 'Detalhes do protocolo', texto: 'Esta página reúne todas as informações e ações de um protocolo.', posicao: 'bottom' },
@@ -156,7 +155,7 @@ export function ProtocoloDetalhes({
     setAcaoPendente({ tipo: 'recusar' })
   }
 
-  function executarAcao(motivo: string) {
+  async function executarAcao(motivo: string) {
     if (!acaoPendente) return
     if (coordenador && acaoPendente.tipo !== 'nota') {
       setAcaoPendente(null)
@@ -165,24 +164,38 @@ export function ProtocoloDetalhes({
     const autor = nomeUsuarioAtual() ?? 'Secretaria'
 
     if (acaoPendente.tipo === 'andamento') {
-      adicionarEntradaManual(protocolo.id, mensagem, anexos, autor)
-      setMensagem('')
-      setAnexos([])
-      setModelo('')
-      notificarEmail(protocolo.nome)
+      try {
+        await adicionarAndamentoRemoto({
+          id: protocolo.id,
+          message: mensagem,
+          anexos,
+          origin: 'secretaria',
+          authorName: autor,
+        })
+        setMensagem('')
+        setAnexos([])
+        setModelo('')
+        toast(`Andamento registrado e e-mail enviado a ${protocolo.nome}.`)
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel registrar o andamento.')
+      }
     } else if (acaoPendente.tipo === 'nota') {
       adicionarNotaInterna(protocolo.id, nota, autor)
       setNota('')
     } else if (acaoPendente.tipo === 'status') {
-      moverStatus(protocolo.id, acaoPendente.status, autor)
-      notificarEmail(protocolo.nome)
+      try {
+        await moverStatusRemoto(protocolo.id, acaoPendente.status)
+        toast(`Etapa atualizada e e-mail enviado a ${protocolo.nome}.`)
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel atualizar o protocolo.')
+      }
     } else if (acaoPendente.tipo === 'responsavel') {
       atribuirResponsavel(protocolo.id, acaoPendente.responsavel, autor)
     } else if (acaoPendente.tipo === 'desarquivar') {
       desarquivarProtocolo(protocolo.id, autor)
     } else {
       recusarRespostaExigencia(protocolo.id, motivo, autor)
-      notificarEmail(protocolo.nome)
+      toast(`Resposta recusada. Envie um andamento para notificar ${protocolo.nome}.`)
     }
     setAcaoPendente(null)
   }
