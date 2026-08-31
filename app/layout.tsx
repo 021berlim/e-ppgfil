@@ -15,12 +15,9 @@ export const metadata: Metadata = {
     'Sistema de abertura, consulta e acompanhamento de solicitações do Programa de Pós-Graduação em Filosofia da UERJ.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      { url: '/logo-ppgfil.svg', type: 'image/svg+xml' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
+    icon: [{ url: '/logo-ppgfil.svg', type: 'image/svg+xml' }],
     shortcut: '/logo-ppgfil.svg',
-    apple: '/apple-icon.png',
+    apple: [{ url: '/logo-ppgfil.svg', type: 'image/svg+xml' }],
   },
 }
 
