@@ -17,6 +17,8 @@ export async function criarProtocoloRemoto(dados: {
   email: string
   categoria: string
   tipo: string
+  categoryId: string
+  requestTypeId: string
   resumo: string
   anexos: Anexo[]
 }) {

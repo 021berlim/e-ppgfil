@@ -10,6 +10,8 @@ export type ProtocolCreateInput = {
   email: string
   categoria: string
   tipo: string
+  categoryId: string
+  requestTypeId: string
   resumo: string
   anexos: Anexo[]
 }
@@ -59,6 +61,8 @@ export function validateProtocolCreateInput(payload: unknown): ProtocolCreateInp
   const email = String(data.email ?? '').trim().toLowerCase()
   const categoria = String(data.categoria ?? '').trim()
   const tipo = String(data.tipo ?? '').trim()
+  const categoryId = String(data.categoryId ?? '').trim()
+  const requestTypeId = String(data.requestTypeId ?? '').trim()
   const resumo = String(data.resumo ?? '').trim()
   const anexos = Array.isArray(data.anexos) ? (data.anexos as Anexo[]) : []
 
@@ -67,8 +71,9 @@ export function validateProtocolCreateInput(payload: unknown): ProtocolCreateInp
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) throw new Error('Informe um e-mail valido.')
   if (!categoria) throw new Error('Selecione uma categoria.')
   if (!tipo) throw new Error('Selecione o tipo de solicitacao.')
+  if (!categoryId || !requestTypeId) throw new Error('Categoria ou tipo de solicitacao sem identificador valido.')
 
-  return { cpf: digitsOnly(cpf), nome, email, categoria, tipo, resumo, anexos }
+  return { cpf: digitsOnly(cpf), nome, email, categoria, tipo, categoryId, requestTypeId, resumo, anexos }
 }
 
 function validateStatus(value: string): Status {
@@ -262,18 +267,31 @@ export async function createProtocol(input: ProtocolCreateInput): Promise<Create
     )
     const requester = requesterResult.rows[0]
 
+    const catalogResult = await client.query(
+      `SELECT c.id AS category_id, c.name AS category_name, t.id AS request_type_id, t.name AS request_type_name
+       FROM request_categories c JOIN request_types t ON t.category_id=c.id
+       WHERE c.is_active=true AND t.is_active=true
+         AND (c.id::text=$1 OR c.slug=$1) AND (t.id::text=$2 OR t.slug=$2)
+       LIMIT 1`,
+      [input.categoryId, input.requestTypeId],
+    )
+    const catalog = catalogResult.rows[0]
+    if (!catalog) throw new Error('Categoria e tipo de solicitacao nao correspondem ao catalogo ativo.')
+
     const protocolResult = await client.query(
       `
         INSERT INTO public.protocols (
           requester_id,
+          category_id,
+          request_type_id,
           category_name_snapshot,
           request_type_name_snapshot,
           summary
         )
-        VALUES ($1, $2, $3, $4)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, number, category_name_snapshot, request_type_name_snapshot, summary, status, created_at, updated_at
       `,
-      [requester.id, input.categoria, input.tipo, input.resumo],
+      [requester.id, catalog.category_id, catalog.request_type_id, catalog.category_name, catalog.request_type_name, input.resumo],
     )
     const protocol = protocolResult.rows[0]
 

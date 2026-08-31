@@ -56,10 +56,19 @@ async function main() {
         AND rowsecurity = true
     `)
 
+    const integrity = await client.query(`
+      SELECT
+        (SELECT count(*) FROM public.protocols WHERE category_id IS NULL)::int AS protocols_without_category,
+        (SELECT count(*) FROM public.protocols WHERE request_type_id IS NULL)::int AS protocols_without_request_type,
+        (SELECT count(*) FROM public.protocols p JOIN public.request_types t ON t.id = p.request_type_id WHERE t.category_id <> p.category_id)::int AS mismatched_protocol_catalog,
+        (SELECT count(*) FROM public.email_deliveries)::int AS email_deliveries
+    `)
+
     console.log(JSON.stringify({
       publicTables: tables.rows[0].total,
       rlsEnabledTables: rls.rows[0].enabled,
       seeds: seeds.rows[0],
+      integrity: integrity.rows[0],
     }, null, 2))
   } finally {
     await client.end()

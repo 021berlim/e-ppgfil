@@ -98,8 +98,10 @@ export function SolicitacaoForm() {
         cpf,
         nome,
         email,
-        categoria: categoria as Protocolo['categoria'],
-        tipo: tipo as Protocolo['tipo'],
+        categoria: categoriaSelecionada!.nome as Protocolo['categoria'],
+        tipo: tipoSelecionado!.nome as Protocolo['tipo'],
+        categoryId: categoriaSelecionada!.id,
+        requestTypeId: tipoSelecionado!.id,
         resumo,
         anexos:
           documentosExigidos.length > 0
@@ -304,7 +306,7 @@ export function SolicitacaoForm() {
               >
                 <option value="">Selecione sua categoria…</option>
                 {categorias.map((c) => (
-                  <option key={c.id} value={c.nome}>
+                  <option key={c.id} value={c.id}>
                     {c.nome}
                   </option>
                 ))}
@@ -351,7 +353,7 @@ export function SolicitacaoForm() {
                     : 'Selecione o tipo de solicitação…'}
                 </option>
                 {tiposDisponiveis.map((t) => (
-                  <option key={t.id} value={t.nome}>
+                  <option key={t.id} value={t.id}>
                     {t.nome}{' '}
                     {t.prazoDias
                       ? `(${t.prazoDias} dias)`
