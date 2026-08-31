@@ -27,6 +27,9 @@ export type Anexo = {
   nome: string
   tipo: string
   tamanho: number
+  documentFileId?: string
+  downloadToken?: string
+  status?: 'pending_upload' | 'available' | 'quarantined' | 'deleted'
 }
 
 // Prazo padrão (em dias úteis) por tipo de solicitação. Mockado, porém configurável.

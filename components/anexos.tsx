@@ -1,9 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { CircleCheck, Download, Paperclip, Upload, X } from 'lucide-react'
+import { CircleCheck, Download, Loader2, Paperclip, Upload, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { arquivoParaAnexo, formatarTamanho } from '@/lib/store'
+import { formatarTamanho } from '@/lib/store'
+import { enviarDocumentoR2 } from '@/lib/documentos-r2-client'
 import type { Anexo } from '@/lib/types'
 import type { DocumentoExigido } from '@/lib/categorias'
 
@@ -14,10 +15,33 @@ export function AnexoChip({
   anexo: Anexo
   onRemove?: () => void
 }) {
-  function baixarAnexo() {
-    alert(
-      `Download simulado\n\nArquivo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${formatarTamanho(anexo.tamanho)}`,
-    )
+  const [baixando, setBaixando] = useState(false)
+
+  async function baixarAnexo() {
+    if (!anexo.documentFileId) {
+      alert(
+        `Arquivo sem armazenamento configurado\n\nArquivo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${formatarTamanho(anexo.tamanho)}`,
+      )
+      return
+    }
+
+    setBaixando(true)
+    try {
+      const params = new URLSearchParams()
+      if (anexo.downloadToken) params.set('token', anexo.downloadToken)
+      const resposta = await fetch(
+        `/api/documents/${anexo.documentFileId}/download?${params.toString()}`,
+      )
+      const dados = (await resposta.json()) as { url?: string; error?: string }
+      if (!resposta.ok || !dados.url) {
+        throw new Error(dados.error ?? 'Nao foi possivel gerar o link de download.')
+      }
+      window.open(dados.url, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Nao foi possivel baixar o arquivo.')
+    } finally {
+      setBaixando(false)
+    }
   }
 
   return (
@@ -29,12 +53,17 @@ export function AnexoChip({
         <button
           type="button"
           onClick={baixarAnexo}
+          disabled={baixando}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-card px-2.5 py-1.5 font-extrabold text-primary shadow-sm transition hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
           aria-label={`Baixar anexo ${anexo.nome}`}
           title="Baixar arquivo"
         >
-          <Download className="size-3.5" aria-hidden="true" />
-          Baixar
+          {baixando ? (
+            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="size-3.5" aria-hidden="true" />
+          )}
+          {baixando ? 'Gerando link' : 'Baixar'}
         </button>
       )}
       {onRemove && (
@@ -65,11 +94,22 @@ export function UploadAnexos({
   compact?: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [enviando, setEnviando] = useState(false)
+  const [erroUpload, setErroUpload] = useState('')
 
-  function handleFiles(files: FileList | null) {
+  async function handleFiles(files: FileList | null) {
     if (!files?.length) return
-    onChange([...anexos, ...Array.from(files).map(arquivoParaAnexo)])
-    if (inputRef.current) inputRef.current.value = ''
+    setEnviando(true)
+    setErroUpload('')
+    try {
+      const enviados = await Promise.all(Array.from(files).map(enviarDocumentoR2))
+      onChange([...anexos, ...enviados])
+    } catch (error) {
+      setErroUpload(error instanceof Error ? error.message : 'Nao foi possivel enviar o arquivo.')
+    } finally {
+      setEnviando(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
   }
 
   return (
@@ -82,17 +122,23 @@ export function UploadAnexos({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
+        disabled={enviando}
         className={cn(
           'flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-border bg-secondary/40 text-left transition hover:border-primary/50 hover:bg-secondary',
+          enviando && 'cursor-wait opacity-70',
           compact ? 'px-3 py-2.5' : 'px-4 py-4',
         )}
       >
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-          <Upload className="size-4" aria-hidden="true" />
+          {enviando ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Upload className="size-4" aria-hidden="true" />
+          )}
         </span>
         <span className="min-w-0">
           <span className="block text-sm font-bold text-foreground">
-            {compact ? 'Anexar arquivo' : 'Selecionar arquivos'}
+            {enviando ? 'Enviando arquivo' : compact ? 'Anexar arquivo' : 'Selecionar arquivos'}
           </span>
           {!compact && <span className="block text-xs text-muted-foreground">{hint}</span>}
         </span>
@@ -105,6 +151,11 @@ export function UploadAnexos({
         onChange={(e) => handleFiles(e.target.files)}
         aria-label="Selecionar arquivos para anexar"
       />
+      {erroUpload && (
+        <p role="alert" className="text-xs font-bold text-destructive">
+          {erroUpload}
+        </p>
+      )}
       {anexos.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-1">
           {anexos.map((a) => (
@@ -132,12 +183,13 @@ export function ChecklistDocumentos({
   erroObrigatorios?: string
 }) {
   const [errosArquivo, setErrosArquivo] = useState<Record<string, string>>({})
+  const [enviandoDocumento, setEnviandoDocumento] = useState<Record<string, boolean>>({})
   const obrigatorios = documentos.filter((documento) => documento.obrigatorio)
   const obrigatoriosAnexados = obrigatorios.filter(
     (documento) => anexosPorDocumento[documento.id],
   ).length
 
-  function selecionarArquivo(documento: DocumentoExigido, arquivo?: File) {
+  async function selecionarArquivo(documento: DocumentoExigido, arquivo?: File) {
     if (!arquivo) return
     const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? ''
     const formatos = documento.formatosAceitos.map((formato) =>
@@ -158,7 +210,19 @@ export function ChecklistDocumentos({
       return
     }
     setErrosArquivo((atuais) => ({ ...atuais, [documento.id]: '' }))
-    onChange(documento.id, arquivoParaAnexo(arquivo))
+    setEnviandoDocumento((atuais) => ({ ...atuais, [documento.id]: true }))
+    try {
+      const anexo = await enviarDocumentoR2(arquivo)
+      onChange(documento.id, anexo)
+    } catch (error) {
+      setErrosArquivo((atuais) => ({
+        ...atuais,
+        [documento.id]:
+          error instanceof Error ? error.message : 'Nao foi possivel enviar o arquivo.',
+      }))
+    } finally {
+      setEnviandoDocumento((atuais) => ({ ...atuais, [documento.id]: false }))
+    }
   }
 
   return (
@@ -184,6 +248,7 @@ export function ChecklistDocumentos({
       <div className="grid gap-3">
         {documentos.map((documento) => {
           const anexo = anexosPorDocumento[documento.id]
+          const enviando = enviandoDocumento[documento.id] ?? false
           const inputId = `documento-${documento.id}`
           return (
             <article key={documento.id} className="rounded-xl border border-border bg-secondary/30 p-4">
@@ -209,19 +274,34 @@ export function ChecklistDocumentos({
                     {documento.formatosAceitos.map((formato) => formato.toUpperCase()).join(', ')} · até {documento.tamanhoMaximoMB} MB
                   </p>
                 </div>
-                {anexo && <CircleCheck className="size-5 shrink-0 text-[#2d5540]" aria-label="Arquivo anexado" />}
+                {enviando ? (
+                  <Loader2 className="size-5 shrink-0 animate-spin text-primary" aria-label="Enviando arquivo" />
+                ) : (
+                  anexo && <CircleCheck className="size-5 shrink-0 text-[#2d5540]" aria-label="Arquivo anexado" />
+                )}
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <label htmlFor={inputId} className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-extrabold text-primary transition hover:border-primary/40">
-                  <Upload className="size-3.5" aria-hidden="true" />
-                  {anexo ? 'Substituir arquivo' : 'Selecionar arquivo'}
+                <label
+                  htmlFor={inputId}
+                  className={cn(
+                    'inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-extrabold text-primary transition hover:border-primary/40',
+                    enviando && 'pointer-events-none cursor-wait opacity-70',
+                  )}
+                >
+                  {enviando ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Upload className="size-3.5" aria-hidden="true" />
+                  )}
+                  {enviando ? 'Enviando arquivo' : anexo ? 'Substituir arquivo' : 'Selecionar arquivo'}
                 </label>
                 <input
                   id={inputId}
                   type="file"
                   accept={documento.formatosAceitos.map((formato) => `.${formato.replace(/^\./, '')}`).join(',')}
                   className="sr-only"
+                  disabled={enviando}
                   onChange={(evento) => {
                     selecionarArquivo(documento, evento.target.files?.[0])
                     evento.target.value = ''
