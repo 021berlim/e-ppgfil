@@ -14,6 +14,7 @@ import {
   LogOut,
   CircleHelp,
   ScrollText,
+  Settings,
   UserCircle,
   Tags,
   Users,
@@ -192,42 +193,47 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className={cn('border-t border-sidebar-border py-4', sidebarRecolhida ? 'lg:px-2' : 'px-4')}>
-          <Link
-            href="/admin/perfil"
-            title={sidebarRecolhida ? 'Perfil' : undefined}
-            className={cn(
-              'flex items-center gap-3 rounded-xl px-2 py-2 text-sidebar-foreground transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
-              sidebarRecolhida && 'lg:justify-center lg:px-2',
-            )}
-          >
-            {sessao?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={sessao.avatar_url}
-                alt=""
-                className="size-9 shrink-0 rounded-full object-cover ring-2 ring-sidebar-accent"
-              />
-            ) : (
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
-                <UserCircle className="size-5" aria-hidden="true" />
-              </span>
-            )}
-            <span className={cn('min-w-0', sidebarRecolhida && 'lg:sr-only')}>
-              <span className="block truncate text-xs font-bold">{sessao?.name ?? sessao?.email}</span>
-              <span className="block truncate text-[11px] text-sidebar-foreground/60">
-                {sessao?.role ? DASHBOARD_ROLE_LABELS[sessao.role] : 'Dashboard'}
-              </span>
-            </span>
-          </Link>
-          <div className="mt-3 grid gap-1.5">
+          <div className={cn('flex items-center gap-2 rounded-xl px-2 py-2 text-sidebar-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}>
             <Link
               href="/admin/perfil"
               title={sidebarRecolhida ? 'Perfil' : undefined}
-              className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-3 rounded-lg transition hover:text-sidebar-accent-foreground',
+                sidebarRecolhida && 'lg:flex-none',
+              )}
             >
-              <UserCircle className="size-3.5" aria-hidden="true" />
-              <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Perfil</span>
+              {sessao?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={sessao.avatar_url}
+                  alt=""
+                  className="size-9 shrink-0 rounded-full object-cover ring-2 ring-sidebar-accent"
+                />
+              ) : (
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
+                  <UserCircle className="size-5" aria-hidden="true" />
+                </span>
+              )}
+              <span className={cn('min-w-0', sidebarRecolhida && 'lg:sr-only')}>
+                <span className="block truncate text-xs font-bold">{sessao?.name ?? sessao?.email}</span>
+                <span className="block truncate text-[11px] text-sidebar-foreground/60">
+                  {sessao?.role ? DASHBOARD_ROLE_LABELS[sessao.role] : 'Dashboard'}
+                </span>
+              </span>
             </Link>
+            <Link
+              href="/admin/perfil"
+              aria-label="Perfil"
+              title="Perfil"
+              className={cn(
+                'grid size-8 shrink-0 place-items-center rounded-lg text-sidebar-foreground/70 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus-visible:ring-4 focus-visible:ring-primary-foreground/20',
+                sidebarRecolhida && 'lg:hidden',
+              )}
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="mt-3 grid gap-1.5">
             <button
               type="button"
               onClick={iniciarTutorial}

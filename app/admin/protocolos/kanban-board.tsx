@@ -628,9 +628,6 @@ export function KanbanBoard() {
         titulo="Esteira de protocolos"
         descricao={readOnly ? 'Consulte os protocolos e seus detalhes.' : 'Arraste os cards entre as etapas. Cada movimentação gera automaticamente um registro no histórico e uma notificação ao solicitante.'}
       >
-        <span className="rounded-full border border-border bg-card px-3.5 py-2.5 text-xs font-extrabold text-foreground">
-          {filtrados.length} {filtrados.length === 1 ? 'protocolo' : 'protocolos'}
-        </span>
         <Link
           href="/admin/protocolos/arquivados"
           className="rounded-full border border-border bg-card px-3.5 py-2.5 text-xs font-extrabold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
