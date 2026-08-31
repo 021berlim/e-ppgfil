@@ -42,19 +42,18 @@ export function ProtocolReceiptEmail({
   return (
     <EmailShell
       preview={`Protocolo ${protocolNumber} registrado no e-PPGFIL.`}
-      title="Comprovante de protocolização"
-      description="Confirmação de recebimento e registro da solicitação."
+      title="Recebemos sua solicitação"
+      description="Ela foi registrada e já pode ser acompanhada pelo e-PPGFIL."
       reference={protocolNumber}
     >
       <Content>
         <Text style={textStyle}>Olá, <strong>{requesterName}</strong>.</Text>
         <Text style={textStyle}>
-          Sua solicitação foi recebida e registrada no e-PPGFIL. Este e-mail funciona
-          como comprovante eletrônico de protocolização.
+          Sua solicitação foi registrada. Guarde o número abaixo para acompanhar o andamento.
         </Text>
         <ProtocolReference number={protocolNumber} status={status} />
-        <Notice title="Guarde este número">
-          Ele será solicitado sempre que você consultar ou complementar a solicitação.
+        <Notice title="Importante">
+          Use este número e o CPF informado no cadastro para consultar a solicitação.
         </Notice>
         <InfoPanel>
           <InfoRow label="Data de abertura" value={createdAt} />

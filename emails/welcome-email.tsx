@@ -10,14 +10,13 @@ export function WelcomeEmail({ userName, loginUrl }: WelcomeEmailProps) {
   return (
     <EmailShell
       preview="Sua conta administrativa no e-PPGFIL foi criada."
-      title="Credencial de acesso criada"
-      description="Cadastro concluído para acesso ao ambiente administrativo."
+      title="Seu acesso foi criado"
+      description="Você já pode entrar no painel administrativo do e-PPGFIL."
     >
       <Content>
         <Text style={textStyle}>Olá, <strong>{userName}</strong>.</Text>
         <Text style={textStyle}>
-          Sua conta administrativa foi cadastrada. Você já pode acessar o painel com
-          as credenciais definidas pela administração.
+          Sua conta foi cadastrada. Use as credenciais definidas pela administração para entrar.
         </Text>
         <InfoPanel title="Dados do acesso"><InfoRow label="Sistema" value="e-PPGFIL" /><InfoRow label="Perfil" value="Usuário administrativo" /></InfoPanel>
         <ActionBlock href={loginUrl} label="Acessar painel administrativo" />

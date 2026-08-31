@@ -31,13 +31,13 @@ export function ProtocolStatusUpdateEmail({
   return (
     <EmailShell
       preview={`Atualizacao do protocolo ${protocolNumber}: ${currentStatus}.`}
-      title="Movimentação processual"
-      description="O andamento da sua solicitação foi atualizado."
+      title="Seu protocolo foi atualizado"
+      description={`A situação agora é “${currentStatus}”.`}
       reference={protocolNumber}
     >
       <Content>
         <Text style={textStyle}>Olá, <strong>{requesterName}</strong>.</Text>
-        <Text style={textStyle}>Foi registrada uma nova movimentação na sua solicitação.</Text>
+        <Text style={textStyle}>Há uma nova atualização na sua solicitação.</Text>
         <ProtocolReference number={protocolNumber} status={currentStatus} />
         <InfoPanel title="Dados da movimentação">
           <InfoRow label="Situação anterior" value={previousStatus} />
@@ -45,7 +45,7 @@ export function ProtocolStatusUpdateEmail({
           <InfoRow label="Data da movimentação" value={updatedAt} />
         </InfoPanel>
         <Text style={textStyle}>
-          <strong>Despacho/observação:</strong> {observation || 'Sem observações adicionais.'}
+          <strong>Observação:</strong> {observation || 'Não há observações adicionais.'}
         </Text>
         <ActionBlock href={consultationUrl} label="Consultar protocolo" />
       </Content>

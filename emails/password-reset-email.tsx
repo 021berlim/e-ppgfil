@@ -11,15 +11,15 @@ export function PasswordResetEmail({ userName, resetUrl, expiresAt }: PasswordRe
   return (
     <EmailShell
       preview="Use o link temporário para redefinir sua senha no e-PPGFIL."
-      title="Redefinição de credencial"
-      description="Solicitação de recuperação de acesso ao painel administrativo."
+      title="Redefina sua senha"
+      description="Recebemos um pedido para alterar a senha da sua conta."
     >
       <Content>
         <Text style={textStyle}>Olá, <strong>{userName}</strong>.</Text>
         <Text style={textStyle}>
-          Recebemos uma solicitação para redefinir sua senha de acesso ao e-PPGFIL.
+          Use o botão abaixo para escolher uma nova senha de acesso ao e-PPGFIL.
         </Text>
-        <Notice title="Link temporário">Este acesso é individual e expira em {expiresAt}. Não encaminhe esta mensagem.</Notice>
+        <Notice title="Este link é temporário">Ele expira em {expiresAt}. Não encaminhe esta mensagem.</Notice>
         <ActionBlock href={resetUrl} label="Redefinir minha senha" />
         <Text style={mutedTextStyle}>Se você não fez esta solicitação, ignore a mensagem. Sua senha atual permanecerá válida.</Text>
       </Content>
