@@ -14,7 +14,7 @@ export const CONTATO_PPGFIL = {
   endereco: 'Rua São Francisco Xavier, 524, Sala 9037, Bloco F, Maracanã, Rio de Janeiro/RJ, CEP 20550-900',
   atendimento: 'Segunda a sexta, das 9h às 19h',
   ifch: 'http://ifch.uerj.br',
-  filosofia: 'http://filosofia.uerj.br',
+  ppgfil: 'https://ppgfil.uerj.br/',
   ouvidoria: 'https://www.ouvidoria.uerj.br/',
   sic: 'https://www.ouvidoria.uerj.br/sic-servico-de-informacao-ao-cidadao/',
 } as const

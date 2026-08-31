@@ -25,7 +25,7 @@ Atualização baseada em consulta ao site oficial do PPGFIL/UERJ em 30/08/2026.
 - E-mail: posfil@gmail.com; inscrições em disciplinas: inscricaoppgfil@gmail.com.
 - Endereço: Rua São Francisco Xavier, 524, sala 9037, bloco F, Maracanã, Rio de Janeiro/RJ, CEP 20550-900.
 - Atendimento: segunda a sexta, das 9h às 19h.
-- Links institucionais: [IFCH](http://ifch.uerj.br), [Filosofia/UERJ](http://filosofia.uerj.br), [Ouvidoria-Geral](https://www.ouvidoria.uerj.br/) e [SIC](https://www.ouvidoria.uerj.br/sic-servico-de-informacao-ao-cidadao/).
+- Links institucionais: [IFCH](http://ifch.uerj.br), [PPGFIL](https://ppgfil.uerj.br/), [Ouvidoria-Geral](https://www.ouvidoria.uerj.br/) e [SIC](https://www.ouvidoria.uerj.br/sic-servico-de-informacao-ao-cidadao/).
 
 ## Arquivos e telas alterados
 

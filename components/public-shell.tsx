@@ -92,7 +92,7 @@ export function PublicShell({
             <p>Atendimento: {CONTATO_PPGFIL.atendimento}</p>
             <div className="mt-2 flex flex-wrap gap-3">
               <a href={CONTATO_PPGFIL.ifch} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">IFCH</a>
-              <a href={CONTATO_PPGFIL.filosofia} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Filosofia UERJ</a>
+              <a href={CONTATO_PPGFIL.ppgfil} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Site do PPGFIL</a>
               <a href={CONTATO_PPGFIL.ouvidoria} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Ouvidoria-Geral da UERJ</a>
               <a href={CONTATO_PPGFIL.sic} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Serviço de Informação ao Cidadão (SIC)</a>
             </div>
