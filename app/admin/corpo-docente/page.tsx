@@ -13,13 +13,13 @@ export default function CorpoDocentePage() {
       <div className="px-6 py-6 lg:px-8">
         <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="max-h-[calc(100vh-15rem)] overflow-auto overscroll-contain">
-            <table className="w-full min-w-[1100px] text-left text-sm">
+            <table className="w-full min-w-[950px] text-left text-sm">
             <caption className="sr-only">
-              Lista de docentes do PPGFIL, cargos, linhas de pesquisa e áreas de atuação
+              Lista de docentes do PPGFIL, cargos, formação acadêmica e áreas de atuação
             </caption>
-            <thead className="bg-secondary/60">
+            <thead className="sticky top-0 z-10 bg-secondary/95 shadow-sm backdrop-blur">
               <tr>
-                {['Docente', 'Cargo', 'Linha de pesquisa', 'Área de atuação', 'Maior pós-graduação', 'Currículo Lattes'].map((h) => (
+                {['Docente', 'Cargo', 'Área de atuação', 'Maior pós-graduação', 'Currículo Lattes'].map((h) => (
                   <th
                     key={h}
                     scope="col"
@@ -41,13 +41,6 @@ export default function CorpoDocentePage() {
                     </a>
                     </th>
                     <td className="px-5 py-4 font-semibold text-foreground">{d.cargo}</td>
-                    <td className="px-5 py-4">
-                    {d.linha ? (
-                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">{d.linha}</span>
-                    ) : (
-                      <span className="text-xs font-semibold text-muted-foreground">TODO: não publicada</span>
-                    )}
-                    </td>
                     <td className="px-5 py-4 text-muted-foreground">{d.atuacao ?? 'TODO: área não detalhada na página individual'}</td>
                     <td className="max-w-xs px-5 py-4 text-muted-foreground">{formacao?.posGraduacao ?? 'TODO: formação não confirmada na fonte pública'}</td>
                     <td className="px-5 py-4">

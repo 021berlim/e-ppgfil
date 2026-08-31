@@ -9,9 +9,9 @@ type Props = {
 }
 
 const sizes = {
-  sm: { width: 156, height: 65 },
-  md: { width: 220, height: 92 },
-  lg: { width: 300, height: 125 },
+  sm: { width: 220, height: 92 },
+  md: { width: 320, height: 133 },
+  lg: { width: 440, height: 183 },
 }
 
 export function EpfilLogo({
