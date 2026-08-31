@@ -8,7 +8,7 @@ export default function PerfilPage() {
     <>
       <PageHeader
         titulo="Perfil"
-        descricao="Atualize sua foto, e-mail e senha de acesso ao painel."
+        descricao="Gerencie sua identidade visual, e-mail e seguranca de acesso ao painel."
       />
       <PerfilForm />
     </>

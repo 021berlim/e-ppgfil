@@ -49,7 +49,6 @@ export async function updateOwnProfile(user: ClientSession, payload: Record<stri
     throw new Error('Sessao invalida.')
   }
 
-  const name = requiredString(payload.name, 'name')
   const email = validateEmail(payload.email)
   const avatarUrl = validateAvatarUrl(payload.avatar_url)
   const newPassword = validateNewPassword(payload.newPassword)
@@ -59,6 +58,7 @@ export async function updateOwnProfile(user: ClientSession, payload: Record<stri
     `
       SELECT
         u.id,
+        u.name,
         u.password_hash,
         r.slug AS role
       FROM public.users u
@@ -90,25 +90,23 @@ export async function updateOwnProfile(user: ClientSession, payload: Record<stri
     ? await db.query(
         `
           UPDATE public.users
-          SET name = $2,
-              email = $3,
-              avatar_url = $4,
-              password_hash = $5
+          SET email = $2,
+              avatar_url = $3,
+              password_hash = $4
           WHERE id = $1
           RETURNING id, name, email, avatar_url
         `,
-        [user.id, name, email, avatarUrl, await bcrypt.hash(newPassword, 12)],
+        [user.id, email, avatarUrl, await bcrypt.hash(newPassword, 12)],
       )
     : await db.query(
         `
           UPDATE public.users
-          SET name = $2,
-              email = $3,
-              avatar_url = $4
+          SET email = $2,
+              avatar_url = $3
           WHERE id = $1
           RETURNING id, name, email, avatar_url
         `,
-        [user.id, name, email, avatarUrl],
+        [user.id, email, avatarUrl],
       )
 
   const updated = result.rows[0]
