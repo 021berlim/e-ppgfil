@@ -44,7 +44,7 @@ async function sendReactEmail(input: {
 }
 
 export function emailSendingConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM)
+  return Boolean(process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM?.trim())
 }
 
 export async function sendWelcomeEmail(to: string, user: WelcomeEmailData) {
