@@ -1,81 +1,463 @@
-import { Body, Button, Container, Head, Heading, Hr, Html, Img, Link, Preview, Section, Text } from '@react-email/components'
-import type { ReactNode } from 'react'
+import {
+  Body,
+  Button,
+  Column,
+  Container,
+  Head,
+  Heading,
+  Hr,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Row,
+  Section,
+  Text,
+} from "@react-email/components";
+import type { ReactNode } from "react";
 
-const c = { primary: '#6B1E2C', dark: '#48131E', gold: '#B89420', text: '#252220', muted: '#68615C', bg: '#F2F0ED', soft: '#F8F7F5', border: '#D8D3CE' }
-const font = 'Arial, Helvetica, sans-serif'
-const logoUrl = `${(process.env.APP_BASE_URL || 'https://e-ppgfil.vercel.app').replace(/\/$/, '')}/logo-ppgfil-email.png`
+const c = {
+  primary: "#6B1E2C",
+  dark: "#48131E",
+  gold: "#B89420",
+  text: "#252220",
+  muted: "#68615C",
+  bg: "#F2F0ED",
+  soft: "#F8F7F5",
+  border: "#D8D3CE",
+};
+const font = "Arial, Helvetica, sans-serif";
+const logoUrl = `${(process.env.APP_BASE_URL || "https://e-ppgfil.vercel.app").replace(/\/$/, "")}/logo-ppgfil-email.png`;
 
-export function EmailShell({ preview, title, description, reference, children }: { preview: string; title: string; description?: string; reference?: string; children: ReactNode }) {
-  return <Html lang="pt-BR"><Head /><Preview>{preview}</Preview><Body style={body}>
-    <Container style={wrapper}><Text style={preHeader}>e-PPGFIL • Notificação automática</Text>
-      <Container style={container}><Section style={header}>
-        <Img src={logoUrl} width="240" height="100" alt="PPGFIL UERJ — Pós-graduação em Filosofia" style={logo} />
-        <Text style={bannerTitle}>e-PPGFIL</Text>
-        <Text style={bannerSubtitle}>Sistema de solicitações do Programa de Pós-Graduação em Filosofia</Text>
-      </Section><Section style={documentHeader}>
-        <Heading style={heading}>{title}</Heading>{description ? <Text style={headingDescription}>{description}</Text> : null}
-        {reference ? <Text style={referenceText}>Referência: {reference}</Text> : null}
-      </Section>{children}<Section style={securityNotice}><Text style={securityTitle}>Segurança</Text>
-        <Text style={securityText}>O PPGFIL não solicita senhas por e-mail. Para enviar documentos ou consultar informações, use os links desta mensagem.</Text>
-      </Section><Hr style={hr} /><Section style={footerSection}><Text style={footerStrong}>e-PPGFIL • PPGFIL/UERJ</Text>
-        <Text style={footer}>Programa de Pós-Graduação em Filosofia da Universidade do Estado do Rio de Janeiro.</Text>
-        <Text style={footer}>Em caso de dúvida, responda a esta mensagem para falar com a secretaria.</Text></Section>
-      </Container><Text style={legal}>© {new Date().getFullYear()} PPGFIL/UERJ</Text></Container>
-  </Body></Html>
+export function EmailShell({
+  preview,
+  title,
+  description,
+  reference,
+  children,
+}: {
+  preview: string;
+  title: string;
+  description?: string;
+  reference?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Html lang="pt-BR">
+      <Head />
+      <Preview>{preview}</Preview>
+      <Body style={body}>
+        <Container style={wrapper}>
+          <Container style={container}>
+            <Section style={header}>
+              <Row>
+                <Column style={logoColumn}>
+                  <Img
+                    src={logoUrl}
+                    width="192"
+                    height="80"
+                    alt="PPGFIL UERJ — Pós-graduação em Filosofia"
+                    style={logo}
+                  />
+                </Column>
+                <Column style={bannerTextColumn}>
+                  <Text style={bannerTitle}>e-PPGFIL</Text>
+                  <Text style={bannerSubtitle}>
+                    Sistema de solicitações do Programa de Pós-Graduação em
+                    Filosofia
+                  </Text>
+                </Column>
+              </Row>
+            </Section>
+            <Section style={documentHeader}>
+              <Heading style={heading}>{title}</Heading>
+              {description ? (
+                <Text style={headingDescription}>{description}</Text>
+              ) : null}
+              {reference ? (
+                <Text style={referenceText}>Referência: {reference}</Text>
+              ) : null}
+            </Section>
+            {children}
+            <Hr style={hr} />
+            <Section style={footerSection}>
+              <Text style={footerStrong}>e-PPGFIL</Text>
+              <Text style={footer}>
+                Programa de Pós-Graduação em Filosofia da Universidade do Estado
+                do Rio de Janeiro.
+              </Text>
+              <Text style={footer}>
+                Em caso de dúvida, responda a esta mensagem para falar com a
+                secretaria.
+              </Text>
+            </Section>
+          </Container>
+          <Text style={legal}>© {new Date().getFullYear()} PPGFIL/UERJ</Text>
+        </Container>
+      </Body>
+    </Html>
+  );
 }
 
-export function Content({ children }: { children: ReactNode }) { return <Section style={content}>{children}</Section> }
-export function PrimaryButton({ href, children }: { href: string; children: ReactNode }) { return <Button href={href} style={button}>{children}</Button> }
-export function ActionBlock({ href, label }: { href: string; label: string }) { return <Section style={actionBlock}><PrimaryButton href={href}>{label}</PrimaryButton><Text style={actionHelp}>Se o botão não funcionar, copie e cole este endereço no navegador:</Text><Link href={href} style={fallbackLink}>{href}</Link></Section> }
-export function SecondaryLink({ href, children }: { href: string; children: ReactNode }) { return <Link href={href} style={secondaryLink}>{children}</Link> }
+export function Content({ children }: { children: ReactNode }) {
+  return <Section style={content}>{children}</Section>;
+}
+export function PrimaryButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Button href={href} style={button}>
+      {children}
+    </Button>
+  );
+}
+export function ActionBlock({ href, label }: { href: string; label: string }) {
+  return (
+    <Section style={actionBlock}>
+      <PrimaryButton href={href}>{label}</PrimaryButton>
+      <Text style={actionHelp}>
+        Se o botão não funcionar, copie e cole este endereço no navegador:
+      </Text>
+      <Link href={href} style={fallbackLink}>
+        {href}
+      </Link>
+    </Section>
+  );
+}
+export function SecondaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} style={secondaryLink}>
+      {children}
+    </Link>
+  );
+}
 
-export function ProtocolReference({ number, status }: { number: string; status?: string }) { return <Section style={protocolReference}><Text style={protocolLabel}>NÚMERO DO PROTOCOLO</Text><Text style={protocolNumber}>{number}</Text>{status ? <StatusBadge status={status} /> : null}</Section> }
+export function ProtocolReference({
+  number,
+  status,
+}: {
+  number: string;
+  status?: string;
+}) {
+  return (
+    <Section style={protocolReference}>
+      <Text style={protocolLabel}>NÚMERO DO PROTOCOLO</Text>
+      <Text style={protocolNumber}>{number}</Text>
+      {status ? <StatusBadge status={status} /> : null}
+    </Section>
+  );
+}
 export function StatusBadge({ status }: { status: string }) {
-  const n = status.toLocaleLowerCase('pt-BR')
-  const backgroundColor = n.includes('indeferido') ? '#9B2C2C' : n.includes('deferido') ? '#25603B' : n.includes('exigência') ? '#8A5A12' : c.primary
-  return <Text style={{ ...statusBadge, backgroundColor }}>SITUAÇÃO: {status.toUpperCase()}</Text>
+  const n = status.toLocaleLowerCase("pt-BR");
+  const backgroundColor = n.includes("indeferido")
+    ? "#9B2C2C"
+    : n.includes("deferido")
+      ? "#25603B"
+      : n.includes("exigência")
+        ? "#8A5A12"
+        : c.primary;
+  return (
+    <Text style={{ ...statusBadge, backgroundColor }}>
+      SITUAÇÃO: {status.toUpperCase()}
+    </Text>
+  );
 }
-export function InfoPanel({ children, title = 'Dados da solicitação' }: { children: ReactNode; title?: string }) { return <Section style={panel}><Text style={panelTitle}>{title}</Text>{children}</Section> }
-export function InfoRow({ label, value }: { label: string; value: ReactNode }) { return <Section style={row}><Text style={rowLabel}>{label}</Text><Text style={rowValue}>{value}</Text></Section> }
-export function Notice({ title, children }: { title: string; children: ReactNode }) { return <Section style={notice}><Text style={noticeTitle}>{title}</Text><Text style={noticeText}>{children}</Text></Section> }
+export function InfoPanel({
+  children,
+  title = "Dados da solicitação",
+}: {
+  children: ReactNode;
+  title?: string;
+}) {
+  return (
+    <Section style={panel}>
+      <Text style={panelTitle}>{title}</Text>
+      {children}
+    </Section>
+  );
+}
+export function InfoRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <Section style={row}>
+      <Text style={rowLabel}>{label}</Text>
+      <Text style={rowValue}>{value}</Text>
+    </Section>
+  );
+}
+export function Notice({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <Section style={notice}>
+      <Text style={noticeTitle}>{title}</Text>
+      <Text style={noticeText}>{children}</Text>
+    </Section>
+  );
+}
 
-export const textStyle = { color: c.text, fontFamily: font, fontSize: '15px', lineHeight: '24px', margin: '0 0 14px' }
-export const mutedTextStyle = { ...textStyle, color: c.muted, fontSize: '13px', lineHeight: '20px' }
-const body = { backgroundColor: '#F6F7F8', margin: 0, padding: '32px 12px', width: '100%' }
-const wrapper = { maxWidth: '680px', margin: '0 auto' }
-const preHeader = { color: '#77706B', fontFamily: font, fontSize: '10px', margin: '0 0 8px', textAlign: 'center' as const }
-const container = { backgroundColor: '#FFF', border: `1px solid ${c.border}`, borderRadius: '6px', overflow: 'hidden', padding: 0, maxWidth: '680px' }
-const header = { backgroundColor: c.dark, borderBottom: `5px solid ${c.gold}`, padding: '22px 32px 20px', textAlign: 'center' as const }
-const logo = { display: 'block', height: '100px', margin: '0 auto 10px', objectFit: 'contain' as const, width: '240px' }
-const bannerTitle = { color: '#FFF', fontFamily: font, fontSize: '16px', fontWeight: '700', letterSpacing: '.3px', lineHeight: '22px', margin: '0 0 2px', textAlign: 'center' as const }
-const bannerSubtitle = { color: '#E6D8DB', fontFamily: font, fontSize: '10px', lineHeight: '16px', margin: 0, textAlign: 'center' as const }
-const documentHeader = { borderBottom: `1px solid ${c.border}`, padding: '28px 38px 22px' }
-const heading = { color: c.text, fontFamily: font, fontSize: '23px', lineHeight: '30px', margin: 0 }
-const headingDescription = { color: c.muted, fontFamily: font, fontSize: '14px', lineHeight: '21px', margin: '7px 0 0' }
-const referenceText = { color: c.primary, fontFamily: font, fontSize: '12px', fontWeight: '700', margin: '12px 0 0' }
-const content = { padding: '26px 38px 8px' }
-const protocolReference = { backgroundColor: '#FAF9F8', border: `1px solid ${c.border}`, borderLeft: `4px solid ${c.primary}`, borderRadius: '4px', margin: '18px 0', padding: '16px 18px' }
-const protocolLabel = { color: c.muted, fontFamily: font, fontSize: '10px', fontWeight: '700', letterSpacing: '1px', margin: '0 0 5px' }
-const protocolNumber = { color: c.dark, fontFamily: 'Courier New, monospace', fontSize: '22px', fontWeight: '700', lineHeight: '28px', margin: '0 0 10px' }
-const statusBadge = { borderRadius: '3px', color: '#FFF', display: 'inline-block', fontFamily: font, fontSize: '10px', fontWeight: '700', letterSpacing: '.5px', lineHeight: '16px', margin: 0, padding: '4px 8px' }
-const panel = { backgroundColor: '#FFF', border: `1px solid ${c.border}`, borderRadius: '4px', margin: '18px 0', padding: '0 18px 8px' }
-const panelTitle = { borderBottom: `1px solid ${c.border}`, color: c.dark, fontFamily: font, fontSize: '12px', fontWeight: '700', margin: '0 -18px 5px', padding: '12px 18px', textTransform: 'uppercase' as const }
-const row = { borderBottom: '1px solid #E7E3DF', margin: 0, padding: '0 0 9px' }
-const rowLabel = { color: c.muted, fontFamily: font, fontSize: '10px', fontWeight: '700', letterSpacing: '.4px', lineHeight: '15px', margin: '9px 0 1px', textTransform: 'uppercase' as const }
-const rowValue = { color: c.text, fontFamily: font, fontSize: '14px', fontWeight: '600', lineHeight: '20px', margin: 0 }
-const notice = { backgroundColor: '#FFF9E8', border: '1px solid #E5D5A1', borderRadius: '4px', margin: '18px 0', padding: '13px 15px' }
-const noticeTitle = { color: '#69480F', fontFamily: font, fontSize: '12px', fontWeight: '700', margin: '0 0 4px' }
-const noticeText = { color: '#55482D', fontFamily: font, fontSize: '13px', lineHeight: '20px', margin: 0 }
-const actionBlock = { margin: '22px 0 20px' }
-const button = { backgroundColor: c.primary, borderRadius: '5px', color: '#FFF', display: 'inline-block', fontFamily: font, fontSize: '14px', fontWeight: '700', margin: '0 0 12px', padding: '13px 22px', textDecoration: 'none' }
-const actionHelp = { color: c.muted, fontFamily: font, fontSize: '11px', lineHeight: '17px', margin: '0 0 2px' }
-const fallbackLink = { color: c.primary, fontFamily: font, fontSize: '11px', lineHeight: '17px', overflowWrap: 'anywhere' as const, textDecoration: 'underline' }
-const secondaryLink = { border: `1px solid ${c.primary}`, borderRadius: '4px', color: c.primary, display: 'inline-block', fontFamily: font, fontSize: '13px', fontWeight: '700', margin: '0 0 18px', padding: '10px 14px', textDecoration: 'none' }
-const securityNotice = { backgroundColor: '#F7F7F7', borderTop: `1px solid ${c.border}`, margin: '20px 0 0', padding: '16px 38px' }
-const securityTitle = { color: c.text, fontFamily: font, fontSize: '11px', fontWeight: '700', margin: '0 0 4px' }
-const securityText = { color: c.muted, fontFamily: font, fontSize: '11px', lineHeight: '17px', margin: 0 }
-const hr = { borderColor: c.border, margin: 0 }
-const footerSection = { padding: '18px 38px 24px', textAlign: 'center' as const }
-const footerStrong = { color: c.dark, fontFamily: font, fontSize: '11px', fontWeight: '700', margin: '0 0 4px' }
-const footer = { color: c.muted, fontFamily: font, fontSize: '10px', lineHeight: '16px', margin: '0 0 2px' }
-const legal = { color: '#7A746F', fontFamily: font, fontSize: '10px', margin: '10px 0 0', textAlign: 'center' as const }
+export const textStyle = {
+  color: c.text,
+  fontFamily: font,
+  fontSize: "15px",
+  lineHeight: "24px",
+  margin: "0 0 14px",
+};
+export const mutedTextStyle = {
+  ...textStyle,
+  color: c.muted,
+  fontSize: "13px",
+  lineHeight: "20px",
+};
+const body = {
+  backgroundColor: "#F6F7F8",
+  margin: 0,
+  padding: "32px 12px",
+  width: "100%",
+};
+const wrapper = { maxWidth: "680px", margin: "0 auto" };
+const container = {
+  backgroundColor: "#FFF",
+  border: `1px solid ${c.border}`,
+  borderRadius: "6px",
+  overflow: "hidden",
+  padding: 0,
+  maxWidth: "680px",
+};
+const header = {
+  backgroundColor: c.dark,
+  borderBottom: `5px solid ${c.gold}`,
+  padding: "22px 32px 20px",
+};
+const logoColumn = { width: "42%", verticalAlign: "middle" as const };
+const logo = {
+  display: "block",
+  height: "80px",
+  margin: 0,
+  objectFit: "contain" as const,
+  width: "192px",
+};
+const bannerTextColumn = {
+  paddingLeft: "24px",
+  verticalAlign: "middle" as const,
+};
+const bannerTitle = {
+  color: "#FFF",
+  fontFamily: font,
+  fontSize: "24px",
+  fontWeight: "700",
+  letterSpacing: ".3px",
+  lineHeight: "30px",
+  margin: "0 0 5px",
+  textAlign: "left" as const,
+};
+const bannerSubtitle = {
+  color: "#E6D8DB",
+  fontFamily: font,
+  fontSize: "13px",
+  lineHeight: "19px",
+  margin: 0,
+  textAlign: "left" as const,
+};
+const documentHeader = {
+  borderBottom: `1px solid ${c.border}`,
+  padding: "28px 38px 22px",
+};
+const heading = {
+  color: c.text,
+  fontFamily: font,
+  fontSize: "23px",
+  lineHeight: "30px",
+  margin: 0,
+};
+const headingDescription = {
+  color: c.muted,
+  fontFamily: font,
+  fontSize: "14px",
+  lineHeight: "21px",
+  margin: "7px 0 0",
+};
+const referenceText = {
+  color: c.primary,
+  fontFamily: font,
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "12px 0 0",
+};
+const content = { padding: "26px 38px 8px" };
+const protocolReference = {
+  backgroundColor: "#FAF9F8",
+  border: `1px solid ${c.border}`,
+  borderLeft: `4px solid ${c.primary}`,
+  borderRadius: "4px",
+  margin: "18px 0",
+  padding: "16px 18px",
+};
+const protocolLabel = {
+  color: c.muted,
+  fontFamily: font,
+  fontSize: "10px",
+  fontWeight: "700",
+  letterSpacing: "1px",
+  margin: "0 0 5px",
+};
+const protocolNumber = {
+  color: c.dark,
+  fontFamily: "Courier New, monospace",
+  fontSize: "22px",
+  fontWeight: "700",
+  lineHeight: "28px",
+  margin: "0 0 10px",
+};
+const statusBadge = {
+  borderRadius: "3px",
+  color: "#FFF",
+  display: "inline-block",
+  fontFamily: font,
+  fontSize: "10px",
+  fontWeight: "700",
+  letterSpacing: ".5px",
+  lineHeight: "16px",
+  margin: 0,
+  padding: "4px 8px",
+};
+const panel = {
+  backgroundColor: "#FFF",
+  border: `1px solid ${c.border}`,
+  borderRadius: "4px",
+  margin: "18px 0",
+  padding: "0 18px 8px",
+};
+const panelTitle = {
+  borderBottom: `1px solid ${c.border}`,
+  color: c.dark,
+  fontFamily: font,
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "0 -18px 5px",
+  padding: "12px 18px",
+  textTransform: "uppercase" as const,
+};
+const row = {
+  borderBottom: "1px solid #E7E3DF",
+  margin: 0,
+  padding: "0 0 9px",
+};
+const rowLabel = {
+  color: c.muted,
+  fontFamily: font,
+  fontSize: "10px",
+  fontWeight: "700",
+  letterSpacing: ".4px",
+  lineHeight: "15px",
+  margin: "9px 0 1px",
+  textTransform: "uppercase" as const,
+};
+const rowValue = {
+  color: c.text,
+  fontFamily: font,
+  fontSize: "14px",
+  fontWeight: "600",
+  lineHeight: "20px",
+  margin: 0,
+};
+const notice = {
+  backgroundColor: "#FFF9E8",
+  border: "1px solid #E5D5A1",
+  borderRadius: "4px",
+  margin: "18px 0",
+  padding: "13px 15px",
+};
+const noticeTitle = {
+  color: "#69480F",
+  fontFamily: font,
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "0 0 4px",
+};
+const noticeText = {
+  color: "#55482D",
+  fontFamily: font,
+  fontSize: "13px",
+  lineHeight: "20px",
+  margin: 0,
+};
+const actionBlock = { margin: "22px 0 20px" };
+const button = {
+  backgroundColor: c.primary,
+  borderRadius: "5px",
+  color: "#FFF",
+  display: "inline-block",
+  fontFamily: font,
+  fontSize: "14px",
+  fontWeight: "700",
+  margin: "0 0 12px",
+  padding: "13px 22px",
+  textDecoration: "none",
+};
+const actionHelp = {
+  color: c.muted,
+  fontFamily: font,
+  fontSize: "11px",
+  lineHeight: "17px",
+  margin: "0 0 2px",
+};
+const fallbackLink = {
+  color: c.primary,
+  fontFamily: font,
+  fontSize: "11px",
+  lineHeight: "17px",
+  overflowWrap: "anywhere" as const,
+  textDecoration: "underline",
+};
+const secondaryLink = {
+  border: `1px solid ${c.primary}`,
+  borderRadius: "4px",
+  color: c.primary,
+  display: "inline-block",
+  fontFamily: font,
+  fontSize: "13px",
+  fontWeight: "700",
+  margin: "0 0 18px",
+  padding: "10px 14px",
+  textDecoration: "none",
+};
+const hr = { borderColor: c.border, margin: 0 };
+const footerSection = {
+  padding: "18px 38px 24px",
+  textAlign: "center" as const,
+};
+const footerStrong = {
+  color: c.dark,
+  fontFamily: font,
+  fontSize: "11px",
+  fontWeight: "700",
+  margin: "0 0 4px",
+};
+const footer = {
+  color: c.muted,
+  fontFamily: font,
+  fontSize: "10px",
+  lineHeight: "16px",
+  margin: "0 0 2px",
+};
+const legal = {
+  color: "#7A746F",
+  fontFamily: font,
+  fontSize: "10px",
+  margin: "10px 0 0",
+  textAlign: "center" as const,
+};

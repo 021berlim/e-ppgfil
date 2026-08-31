@@ -23,7 +23,17 @@ export async function recordEmailDelivery(input: {
           metadata,
           sent_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, CASE WHEN $6 = 'sent' THEN now() ELSE NULL END)
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6::varchar,
+          $7,
+          $8::jsonb,
+          CASE WHEN $6::varchar = 'sent'::varchar THEN now() ELSE NULL END
+        )
       `,
       [
         input.eventType,
