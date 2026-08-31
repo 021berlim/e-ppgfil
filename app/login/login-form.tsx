@@ -7,15 +7,18 @@ import { ArrowLeft, Lock, ShieldCheck } from 'lucide-react'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { Field, TextInput } from '@/components/form-field'
 import { login } from '@/lib/store'
+import type { ClientSession } from '@/lib/auth-types'
 
 export function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(false)
 
-  function handleSubmit(ev: React.FormEvent) {
+  async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
+    setErro('')
     if (!email.trim() || !senha.trim()) {
       setErro('Preencha e-mail e senha.')
       return
@@ -24,8 +27,25 @@ export function LoginForm() {
       setErro('Informe um e-mail válido.')
       return
     }
-    login(email.trim())
-    router.push('/admin/protocolos')
+
+    setCarregando(true)
+    try {
+      const resposta = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password: senha }),
+      })
+      const dados = await resposta.json().catch(() => null)
+      if (!resposta.ok) {
+        throw new Error(dados?.error ?? 'Não foi possível entrar.')
+      }
+      login(dados as ClientSession)
+      router.push('/admin/protocolos')
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : 'Não foi possível entrar.')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   return (
@@ -62,8 +82,7 @@ export function LoginForm() {
 
           <h1 className="mt-6 text-2xl font-extrabold text-foreground">Acesso restrito</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Uso exclusivo da secretaria e da coordenação. Neste protótipo qualquer credencial é
-            aceita.
+            Uso exclusivo da secretaria e da coordenação.
           </p>
 
           <form onSubmit={handleSubmit} noValidate className="mt-7 grid gap-5">
@@ -97,17 +116,18 @@ export function LoginForm() {
 
             <button
               type="submit"
+              disabled={carregando}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
             >
               <Lock className="size-4" aria-hidden="true" />
-              Entrar
+              {carregando ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
           <p className="mt-8 flex items-start gap-2 rounded-xl border border-border bg-secondary/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-            Autenticação simulada para fins de demonstração. Nenhuma credencial é transmitida ou
-            armazenada em servidor.
+            Autenticação própria do e-PPGFIL. As senhas são conferidas no servidor e armazenadas
+            apenas como hash.
           </p>
         </div>
       </main>

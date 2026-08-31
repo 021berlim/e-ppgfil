@@ -13,8 +13,10 @@ import {
   moverStatus,
   prazoPrevisto,
   recusarRespostaExigencia,
+  cargoAtual,
   usuarioAtual,
 } from '@/lib/store'
+import { isCoordinator } from '@/lib/auth-types'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from '@/lib/categorias'
 import {
@@ -118,6 +120,10 @@ export function ProtocoloDetalhes({
 
   function executarAcao(motivo: string) {
     if (!acaoPendente) return
+    if (coordenador && acaoPendente.tipo !== 'nota') {
+      setAcaoPendente(null)
+      return
+    }
     const autor = usuarioAtual()
     const nomeAutor = autor ? `Secretaria — ${autor}` : 'Secretaria'
 
@@ -147,6 +153,7 @@ export function ProtocoloDetalhes({
   const atrasado = estaAtrasado(protocolo)
   const prazo = prazoPrevisto(protocolo)
   const notas = protocolo.notasInternas ?? []
+  const coordenador = isCoordinator(cargoAtual())
 
   return (
     <section className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
@@ -231,7 +238,7 @@ export function ProtocoloDetalhes({
 
           {/* Controles administrativos */}
           {!protocolo.arquivado ? (
-          <div data-tour="detail-controls" className="mx-4 mt-4 grid gap-px overflow-hidden rounded-xl border border-border bg-border shadow-sm md:grid-cols-3 lg:mx-8">
+          <div data-tour="detail-controls" className={`mx-4 mt-4 grid gap-px overflow-hidden rounded-xl border border-border bg-border shadow-sm ${coordenador ? 'md:grid-cols-1' : 'md:grid-cols-3'} lg:mx-8`}>
             <div className="bg-card px-6 py-4">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Previsão de retorno
@@ -252,49 +259,53 @@ export function ProtocoloDetalhes({
                     'Prazo não especificado em fonte oficial'}
               </p>
             </div>
-            <div className="bg-card px-6 py-4">
-              <label
-                htmlFor="responsavel"
-                className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
-              >
-                Responsável
-              </label>
-              <Select
-                id="responsavel"
-                value={protocolo.responsavel ?? ''}
-                onChange={(e) =>
-                  setAcaoPendente({ tipo: 'responsavel', responsavel: e.target.value })
-                }
-                className="mt-1.5 py-2 text-sm"
-              >
-                <option value="">Sem responsável</option>
-                {RESPONSAVEIS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="bg-card px-6 py-4">
-              <label
-                htmlFor="mover-status"
-                className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
-              >
-                Mover etapa
-              </label>
-              <Select
-                id="mover-status"
-                value={protocolo.status}
-                onChange={(e) => handleStatus(e.target.value as Status)}
-                className="mt-1.5 py-2 text-sm"
-              >
-                {STATUS_LIST.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {!coordenador && (
+              <>
+                <div className="bg-card px-6 py-4">
+                  <label
+                    htmlFor="responsavel"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Responsável
+                  </label>
+                  <Select
+                    id="responsavel"
+                    value={protocolo.responsavel ?? ''}
+                    onChange={(e) =>
+                      setAcaoPendente({ tipo: 'responsavel', responsavel: e.target.value })
+                    }
+                    className="mt-1.5 py-2 text-sm"
+                  >
+                    <option value="">Sem responsável</option>
+                    {RESPONSAVEIS.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="bg-card px-6 py-4">
+                  <label
+                    htmlFor="mover-status"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Mover etapa
+                  </label>
+                  <Select
+                    id="mover-status"
+                    value={protocolo.status}
+                    onChange={(e) => handleStatus(e.target.value as Status)}
+                    className="mt-1.5 py-2 text-sm"
+                  >
+                    {STATUS_LIST.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
           ) : (
             <div className="mx-4 mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-secondary/40 px-6 py-4 shadow-sm lg:mx-8">
@@ -305,10 +316,12 @@ export function ProtocoloDetalhes({
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">Esta visualização é somente leitura.</p>
               </div>
-              <button type="button" onClick={() => setAcaoPendente({ tipo: 'desarquivar' })} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground hover:opacity-90">
-                <ArchiveRestore className="size-4" aria-hidden="true" />
-                Desarquivar
-              </button>
+              {!coordenador && (
+                <button type="button" onClick={() => setAcaoPendente({ tipo: 'desarquivar' })} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground hover:opacity-90">
+                  <ArchiveRestore className="size-4" aria-hidden="true" />
+                  Desarquivar
+                </button>
+              )}
             </div>
           )}
 
@@ -324,22 +337,26 @@ export function ProtocoloDetalhes({
                     nova correção ao aluno.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleRecusarExigencia}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#B7791F]/55 bg-card px-4 py-2.5 text-xs font-extrabold text-[#79500F] transition hover:bg-[#B7791F]/10"
-                >
-                  <RotateCcw className="size-4" aria-hidden="true" />
-                  Solicitar correção
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAcaoPendente({ tipo: 'status', status: 'Em tramitação' })}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground transition hover:opacity-90"
-                >
-                  <CircleCheckBig className="size-4" aria-hidden="true" />
-                  Aprovar documento
-                </button>
+                {!coordenador && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleRecusarExigencia}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#B7791F]/55 bg-card px-4 py-2.5 text-xs font-extrabold text-[#79500F] transition hover:bg-[#B7791F]/10"
+                    >
+                      <RotateCcw className="size-4" aria-hidden="true" />
+                      Solicitar correção
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAcaoPendente({ tipo: 'status', status: 'Em tramitação' })}
+                      className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground transition hover:opacity-90"
+                    >
+                      <CircleCheckBig className="size-4" aria-hidden="true" />
+                      Aprovar documento
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
@@ -359,8 +376,8 @@ export function ProtocoloDetalhes({
             <Timeline historico={protocolo.historico} />
           </div>
 
-          {!protocolo.arquivado && (
-          <div className="mx-4 mt-4 grid items-stretch gap-4 xl:grid-cols-2 lg:mx-8">
+          {(!protocolo.arquivado || coordenador) && (
+          <div className={`mx-4 mt-4 grid items-stretch gap-4 ${coordenador ? 'xl:grid-cols-1' : 'xl:grid-cols-2'} lg:mx-8`}>
           {/* Notas internas — visíveis apenas para a equipe */}
           <div data-tour="detail-internal-notes" className="flex h-full flex-col rounded-xl border border-border bg-card px-6 py-5 shadow-sm xl:h-[36rem]">
             <div className="min-h-20">
@@ -428,6 +445,7 @@ export function ProtocoloDetalhes({
             </div>
           </div>
 
+          {!coordenador && (
           <div data-tour="detail-manual-update" className="flex h-full flex-col rounded-xl border border-border bg-card px-6 py-5 shadow-sm xl:h-[36rem]">
             <div className="min-h-20">
               <h3 className="text-base font-extrabold text-foreground">
@@ -486,6 +504,7 @@ export function ProtocoloDetalhes({
               </button>
             </div>
           </div>
+          )}
           </div>
           )}
         </div>

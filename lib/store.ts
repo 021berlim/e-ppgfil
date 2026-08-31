@@ -10,6 +10,7 @@ import type {
   Status,
   TipoSolicitacao,
 } from './types'
+import type { ClientSession, DashboardRole } from './auth-types'
 import { RESPONSAVEIS, STATUS_FINAIS } from './types'
 import { obterPrazoSlaTipo, restaurarCategoriasDemo } from './categorias'
 
@@ -545,23 +546,44 @@ export function resetarDados() {
   emit()
 }
 
-/* auth simulada */
-export function login(email: string) {
-  window.localStorage.setItem(AUTH_KEY, JSON.stringify({ email, em: Date.now() }))
+/* auth propria */
+export function login(session: ClientSession | string) {
+  const payload =
+    typeof session === 'string'
+      ? { email: session, role: 'SECRETARY_ADMIN' as DashboardRole, em: Date.now() }
+      : session
+  window.localStorage.setItem(AUTH_KEY, JSON.stringify(payload))
 }
 
 export function logout() {
   window.localStorage.removeItem(AUTH_KEY)
+  void fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
 }
 
-export function usuarioAtual(): string | null {
+export function usuarioAtualInfo(): ClientSession | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = window.localStorage.getItem(AUTH_KEY)
     if (!raw) return null
-    const sessao = JSON.parse(raw) as { email?: string; usuario?: string }
-    return sessao.email ?? sessao.usuario ?? null
+    const sessao = JSON.parse(raw) as Partial<ClientSession> & { usuario?: string }
+    const email = sessao.email ?? sessao.usuario
+    if (!email) return null
+    return {
+      id: sessao.id,
+      email,
+      name: sessao.name,
+      role: sessao.role ?? 'SECRETARY_ADMIN',
+      em: sessao.em ?? Date.now(),
+    }
   } catch {
     return null
   }
+}
+
+export function usuarioAtual(): string | null {
+  return usuarioAtualInfo()?.email ?? null
+}
+
+export function cargoAtual(): DashboardRole | null {
+  return usuarioAtualInfo()?.role ?? null
 }

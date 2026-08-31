@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:migrate": "node scripts/apply-supabase-migration.cjs supabase/migrations/20260831141800_initial_schema.sql",
+    "db:seed": "node scripts/seed-institutional-data.cjs",
+    "db:verify": "node scripts/verify-supabase-schema.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -14,11 +17,13 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@vercel/analytics": "1.6.1",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.16.0",
     "next": "16.3.0",
+    "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "react": "^19",
     "react-dom": "^19",
@@ -29,6 +34,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",

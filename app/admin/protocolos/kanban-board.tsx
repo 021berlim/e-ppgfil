@@ -19,6 +19,7 @@ import { Archive, ChevronDown, GripVertical, Paperclip, Search, TriangleAlert } 
 import { cn } from '@/lib/utils'
 import {
   arquivarProtocolo,
+  cargoAtual,
   estaAtrasado,
   formatarCPF,
   formatarData,
@@ -26,6 +27,7 @@ import {
   soDigitos,
   usuarioAtual,
 } from '@/lib/store'
+import { isCoordinator } from '@/lib/auth-types'
 import {
   RESPONSAVEIS,
   STATUS_FINAIS,
@@ -258,24 +260,27 @@ const CardArrastavel = memo(function CardArrastavel({
   p,
   onOpen,
   onArchive,
+  readOnly,
 }: {
   p: Protocolo
   onOpen: (id: string) => void
   onArchive: (id: string) => void
+  readOnly: boolean
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: p.id })
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: p.id, disabled: readOnly })
 
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
+      {...(readOnly ? {} : listeners)}
+      {...(readOnly ? {} : attributes)}
       className={cn(
-        'w-full min-w-0 max-w-full cursor-grab touch-none rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-primary/25 active:cursor-grabbing',
+        'w-full min-w-0 max-w-full touch-none rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-primary/25',
+        readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing',
         isDragging && 'opacity-40',
       )}
     >
-      <CardConteudo p={p} onOpen={() => onOpen(p.id)} onArchive={() => onArchive(p.id)} />
+      <CardConteudo p={p} onOpen={() => onOpen(p.id)} onArchive={readOnly ? undefined : () => onArchive(p.id)} />
     </div>
   )
 })
@@ -286,12 +291,14 @@ const GrupoColuna = memo(function GrupoColuna({
   onToggle,
   onOpen,
   onArchive,
+  readOnly,
 }: {
   grupo: FaixaTempo
   aberto: boolean
   onToggle: (id: FaixaTempoId) => void
   onOpen: (id: string) => void
   onArchive: (id: string) => void
+  readOnly: boolean
 }) {
   const conteudoId = useId()
   const estilo = ESTILOS_FAIXA[grupo.id]
@@ -332,7 +339,7 @@ const GrupoColuna = memo(function GrupoColuna({
       {aberto && (
         <div id={conteudoId} className="mt-2.5 grid min-w-0 gap-2.5">
           {grupo.itens.map((p) => (
-            <CardArrastavel key={p.id} p={p} onOpen={onOpen} onArchive={onArchive} />
+            <CardArrastavel key={p.id} p={p} onOpen={onOpen} onArchive={onArchive} readOnly={readOnly} />
           ))}
         </div>
       )}
@@ -346,14 +353,16 @@ const Coluna = memo(function Coluna({
   onOpen,
   onArchive,
   mostrarCardTour,
+  readOnly,
 }: {
   status: Status
   itens: Protocolo[]
   onOpen: (id: string) => void
   onArchive: (id: string) => void
   mostrarCardTour: boolean
+  readOnly: boolean
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status })
+  const { setNodeRef, isOver } = useDroppable({ id: status, disabled: readOnly })
   const s = STATUS_STYLES[status]
   const grupos = useMemo(() => agruparPorTempo(itens), [itens])
   const [gruposAbertos, setGruposAbertos] = useState<Record<FaixaTempoId, boolean>>({
@@ -406,6 +415,7 @@ const Coluna = memo(function Coluna({
               onToggle={handleToggle}
               onOpen={onOpen}
               onArchive={onArchive}
+              readOnly={readOnly}
             />
           ))}
         {itens.length === 0 && (
@@ -433,6 +443,10 @@ export function KanbanBoard() {
   } | null>(null)
   const [arquivarId, setArquivarId] = useState<string | null>(null)
   const [tourAtivo, setTourAtivo] = useState(false)
+  const readOnly = isCoordinator(cargoAtual())
+  const passosTutorial = readOnly
+    ? PASSOS_TUTORIAL.filter((passo) => passo.animacao !== 'arrastar')
+    : PASSOS_TUTORIAL
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -507,6 +521,7 @@ export function KanbanBoard() {
   }, [])
 
   const handleEnd = useCallback((e: DragEndEvent) => {
+    if (readOnly) return
     setAtivoId(null)
     const destino = e.over?.id
     if (!destino) return
@@ -515,14 +530,18 @@ export function KanbanBoard() {
     const alvo = protocolos.find((p) => p.id === id)
     if (!alvo || alvo.status === destino) return
     setMovimentoPendente({ id, destino: destino as Status, nome: alvo.nome })
-  }, [protocolos])
+  }, [protocolos, readOnly])
 
   const confirmarMovimento = useCallback(() => {
     if (!movimentoPendente) return
+    if (readOnly) {
+      setMovimentoPendente(null)
+      return
+    }
     moverStatus(movimentoPendente.id, movimentoPendente.destino)
     notificarEmail(movimentoPendente.nome)
     setMovimentoPendente(null)
-  }, [movimentoPendente])
+  }, [movimentoPendente, readOnly])
 
   const handleOpen = useCallback(
     (id: string) => router.push(`/admin/protocolos/${encodeURIComponent(id)}`),
@@ -533,7 +552,7 @@ export function KanbanBoard() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <PageHeader
         titulo="Esteira de protocolos"
-        descricao="Arraste os cards entre as etapas. Cada movimentação gera automaticamente um registro no histórico e uma notificação ao solicitante."
+        descricao={readOnly ? 'Consulte os protocolos e seus detalhes.' : 'Arraste os cards entre as etapas. Cada movimentação gera automaticamente um registro no histórico e uma notificação ao solicitante.'}
       >
         <span className="rounded-full border border-border bg-card px-3.5 py-2.5 text-xs font-extrabold text-foreground">
           {filtrados.length} {filtrados.length === 1 ? 'protocolo' : 'protocolos'}
@@ -633,6 +652,7 @@ export function KanbanBoard() {
                   onOpen={handleOpen}
                   onArchive={setArquivarId}
                   mostrarCardTour={tourAtivo && s === colunaTour}
+                  readOnly={readOnly}
                 />
               ))}
             </div>
@@ -648,7 +668,7 @@ export function KanbanBoard() {
         onCancelar={() => setMovimentoPendente(null)}
         onConfirmar={confirmarMovimento}
       />
-      <TourGuiado aberto={tourAtivo} passos={PASSOS_TUTORIAL} onFinalizar={finalizarTour} />
+      <TourGuiado aberto={tourAtivo} passos={passosTutorial} onFinalizar={finalizarTour} />
       <ConfirmacaoModal
         aberto={arquivarId !== null}
         titulo="Arquivar protocolo?"
@@ -657,6 +677,7 @@ export function KanbanBoard() {
         onCancelar={() => setArquivarId(null)}
         onConfirmar={() => {
           if (!arquivarId) return
+          if (readOnly) return
           arquivarProtocolo(arquivarId, usuarioAtual() ?? 'Secretaria')
           setArquivarId(null)
         }}

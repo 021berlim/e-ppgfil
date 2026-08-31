@@ -22,7 +22,8 @@ import { cn } from '@/lib/utils'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { Toaster } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
-import { logout, resetarDados, usuarioAtual } from '@/lib/store'
+import { login, logout, resetarDados, usuarioAtualInfo } from '@/lib/store'
+import { canManageUsers, isCoordinator, type ClientSession } from '@/lib/auth-types'
 
 const NAV = [
   {
@@ -35,6 +36,7 @@ const NAV = [
   {
     grupo: 'Configuração',
     itens: [
+      { href: '/admin/usuarios', label: 'Usuários', icone: Users },
       { href: '/admin/categorias', label: 'Categorias e Serviços', icone: Tags },
     ],
   },
@@ -52,19 +54,27 @@ const NAV = [
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [usuario, setUsuario] = useState<string | null>(null)
+  const [sessao, setSessao] = useState<ClientSession | null>(null)
   const [pronto, setPronto] = useState(false)
   const [acaoPendente, setAcaoPendente] = useState<'resetar' | 'sair' | null>(null)
   const [sidebarRecolhida, setSidebarRecolhida] = useState(false)
 
   useEffect(() => {
-    const u = usuarioAtual()
-    if (!u) {
-      router.replace('/login')
-      return
-    }
-    setUsuario(u)
-    setPronto(true)
+    const local = usuarioAtualInfo()
+    if (local) setSessao(local)
+
+    fetch('/api/auth/me')
+      .then(async (resposta) => {
+        if (!resposta.ok) throw new Error('Nao autenticado.')
+        const atual = (await resposta.json()) as ClientSession
+        login(atual)
+        setSessao(atual)
+        setPronto(true)
+      })
+      .catch(() => {
+        logout()
+        router.replace('/login')
+      })
   }, [router])
 
   useEffect(() => {
@@ -88,6 +98,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       router.push('/admin/protocolos')
     }
   }
+
+  const nav = NAV.map((grupo) => ({
+    ...grupo,
+    itens: grupo.itens.filter((item) => {
+      if (item.href === '/admin/usuarios') return canManageUsers(sessao?.role)
+      if (item.href === '/admin/categorias') return !isCoordinator(sessao?.role)
+      return true
+    }),
+  })).filter((grupo) => grupo.itens.length > 0)
 
   if (!pronto) {
     return (
@@ -130,7 +149,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </button>
 
         <nav aria-label="Navegação interna" className={cn('flex-1 overflow-y-auto py-5', sidebarRecolhida ? 'lg:px-2' : 'px-3')}>
-          {NAV.map((g) => (
+          {nav.map((g) => (
             <div key={g.grupo} className="mb-5">
               <p className={cn('px-3 pb-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-sidebar-foreground/50', sidebarRecolhida && 'lg:sr-only')}>
                 {g.grupo}
@@ -165,8 +184,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <div className={cn('border-t border-sidebar-border py-4', sidebarRecolhida ? 'lg:px-2' : 'px-4')}>
           <div className={cn(sidebarRecolhida && 'lg:sr-only')}>
-            <p className="px-2 text-xs font-bold text-sidebar-foreground">{usuario}</p>
-            <p className="px-2 text-[11px] text-sidebar-foreground/60">Secretaria · PPGFIL</p>
+            <p className="px-2 text-xs font-bold text-sidebar-foreground">{sessao?.name ?? sessao?.email}</p>
+            <p className="px-2 text-[11px] text-sidebar-foreground/60">{sessao?.role ?? 'Dashboard'} · PPGFIL</p>
           </div>
           <div className="mt-3 grid gap-1.5">
             <button
@@ -178,15 +197,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <CircleHelp className="size-3.5" aria-hidden="true" />
               <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Ver tutorial</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setAcaoPendente('resetar')}
-              title={sidebarRecolhida ? 'Restaurar dados de exemplo' : undefined}
-              className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
-            >
-              <RotateCcw className="size-3.5" aria-hidden="true" />
-              <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Restaurar dados de exemplo</span>
-            </button>
+            {!isCoordinator(sessao?.role) && (
+              <button
+                type="button"
+                onClick={() => setAcaoPendente('resetar')}
+                title={sidebarRecolhida ? 'Restaurar dados de exemplo' : undefined}
+                className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
+              >
+                <RotateCcw className="size-3.5" aria-hidden="true" />
+                <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Restaurar dados de exemplo</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setAcaoPendente('sair')}

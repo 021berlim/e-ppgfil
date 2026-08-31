@@ -33,6 +33,8 @@ import {
   type DocumentoExigido,
   type TipoSolicitacaoItem,
 } from '@/lib/categorias'
+import { isCoordinator } from '@/lib/auth-types'
+import { cargoAtual } from '@/lib/store'
 
 function novoDocumentoExigido(): DocumentoExigido {
   return {
@@ -49,6 +51,7 @@ const FORMATOS_DISPONIVEIS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']
 export function CategoriasManager() {
   const { categorias, carregado } = useCategorias()
   const [busca, setBusca] = useState('')
+  const readOnly = isCoordinator(cargoAtual())
 
   // Modais de Categoria
   const [modalCategoriaAberta, setModalCategoriaAberta] = useState(false)
@@ -104,6 +107,7 @@ export function CategoriasManager() {
 
   // Handlers para Categoria
   function abrirNovaCategoria() {
+    if (readOnly) return
     setCategoriaEdicao(null)
     setNomeCategoria('')
     setDescCategoria('')
@@ -112,6 +116,7 @@ export function CategoriasManager() {
   }
 
   function abrirEditarCategoria(c: CategoriaItem) {
+    if (readOnly) return
     setCategoriaEdicao(c)
     setNomeCategoria(c.nome)
     setDescCategoria(c.descricao)
@@ -121,6 +126,7 @@ export function CategoriasManager() {
 
   function salvarCategoria(e: React.FormEvent) {
     e.preventDefault()
+    if (readOnly) return
     if (!nomeCategoria.trim()) {
       setErroCategoria('Informe o nome da categoria.')
       return
@@ -144,6 +150,7 @@ export function CategoriasManager() {
   }
 
   function executarExclusaoCategoria() {
+    if (readOnly) return
     if (!categoriaParaExcluir) return
     deletarCategoria(categoriaParaExcluir.id)
     toast(`Categoria "${categoriaParaExcluir.nome}" excluída com sucesso.`)
@@ -152,6 +159,7 @@ export function CategoriasManager() {
 
   // Handlers para Tipo de Solicitação
   function abrirNovoTipo(categoria: CategoriaItem) {
+    if (readOnly) return
     setCategoriaAlvoTipo(categoria)
     setTipoEdicao(null)
     setNomeTipo('')
@@ -164,6 +172,7 @@ export function CategoriasManager() {
   }
 
   function abrirEditarTipo(categoria: CategoriaItem, tipo: TipoSolicitacaoItem) {
+    if (readOnly) return
     setCategoriaAlvoTipo(categoria)
     setTipoEdicao(tipo)
     setNomeTipo(tipo.nome)
@@ -177,6 +186,7 @@ export function CategoriasManager() {
 
   function salvarTipo(e: React.FormEvent) {
     e.preventDefault()
+    if (readOnly) return
     if (!nomeTipo.trim()) {
       setErroTipo('Informe o nome do tipo de solicitação.')
       return
@@ -219,6 +229,7 @@ export function CategoriasManager() {
   }
 
   function atualizarDocumento(id: string, dados: Partial<DocumentoExigido>) {
+    if (readOnly) return
     setDocumentosExigidos((atuais) =>
       atuais.map((documento) =>
         documento.id === id ? { ...documento, ...dados } : documento,
@@ -228,6 +239,7 @@ export function CategoriasManager() {
   }
 
   function moverDocumento(indice: number, direcao: -1 | 1) {
+    if (readOnly) return
     const destino = indice + direcao
     if (destino < 0 || destino >= documentosExigidos.length) return
     setDocumentosExigidos((atuais) => {
@@ -241,6 +253,7 @@ export function CategoriasManager() {
   }
 
   function executarExclusaoTipo() {
+    if (readOnly) return
     if (!tipoParaExcluir) return
     deletarTipoSolicitacao(tipoParaExcluir.categoria.id, tipoParaExcluir.tipo.id)
     toast(`Tipo "${tipoParaExcluir.tipo.nome}" removido de ${tipoParaExcluir.categoria.nome}.`)
@@ -248,6 +261,7 @@ export function CategoriasManager() {
   }
 
   function executarReset() {
+    if (readOnly) return
     restaurarCategoriasPadrao()
     toast('Categorias e tipos de solicitação restaurados para o padrão inicial.')
     setConfirmarReset(false)
@@ -259,24 +273,26 @@ export function CategoriasManager() {
         titulo="Categorias e Tipos de Solicitação"
         descricao="Gerencie os perfis de solicitantes e configure quais tipos de solicitação estão disponíveis para cada categoria no sistema do PPGFIL."
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setConfirmarReset(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
-          >
-            <RotateCcw className="size-3.5" aria-hidden="true" />
-            Restaurar padrões
-          </button>
-          <button
-            type="button"
-            onClick={abrirNovaCategoria}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-            Nova Categoria
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setConfirmarReset(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:border-primary/40 hover:text-primary"
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              Restaurar padrões
+            </button>
+            <button
+              type="button"
+              onClick={abrirNovaCategoria}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Nova Categoria
+            </button>
+          </div>
+        )}
       </PageHeader>
 
       <div className="grid gap-6 px-6 py-6 lg:px-8">
@@ -379,6 +395,7 @@ export function CategoriasManager() {
                       <p className="mt-1 text-sm text-muted-foreground">{c.descricao}</p>
                     </div>
 
+                    {!readOnly && (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -405,6 +422,7 @@ export function CategoriasManager() {
                         <Trash2 className="size-3.5" aria-hidden="true" />
                       </button>
                     </div>
+                    )}
                   </div>
                 </div>
 
@@ -412,7 +430,7 @@ export function CategoriasManager() {
                 <div className="p-6">
                   {c.tiposSolicitacao.length === 0 ? (
                     <p className="text-xs italic text-muted-foreground">
-                      Nenhum tipo de solicitação cadastrado para esta categoria. Clique em &quot;Adicionar tipo&quot; para vincular serviços.
+                      Nenhum tipo de solicitação cadastrado para esta categoria.
                     </p>
                   ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -424,6 +442,7 @@ export function CategoriasManager() {
                           <div>
                             <div className="flex items-start justify-between gap-2">
                               <h3 className="text-sm font-bold text-foreground">{t.nome}</h3>
+                              {!readOnly && (
                               <div className="flex shrink-0 items-center gap-1 opacity-80 group-hover:opacity-100">
                                 <button
                                   type="button"
@@ -442,6 +461,7 @@ export function CategoriasManager() {
                                   <Trash2 className="size-3" aria-hidden="true" />
                                 </button>
                               </div>
+                              )}
                             </div>
                             {t.descricao && (
                               <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">
