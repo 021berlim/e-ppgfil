@@ -100,11 +100,12 @@ export function PerfilForm() {
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        updateField('avatar_url', reader.result)
+        void saveAvatarUrl(reader.result)
       }
     }
     reader.onerror = () => toast('Nao foi possivel ler a imagem.')
     reader.readAsDataURL(file)
+    event.target.value = ''
   }
 
   async function saveProfile(payload: Pick<FormState, 'email' | 'avatar_url'> & Partial<Pick<FormState, 'currentPassword' | 'newPassword'>>) {
@@ -126,16 +127,18 @@ export function PerfilForm() {
     return updated
   }
 
-  async function saveAvatar(event: React.FormEvent) {
-    event.preventDefault()
+  async function saveAvatarUrl(avatarUrl: string | null) {
+    const avatarAnterior = form.avatar_url
+    updateField('avatar_url', avatarUrl)
     setSavingAvatar(true)
     try {
       await saveProfile({
         email: form.email,
-        avatar_url: form.avatar_url,
+        avatar_url: avatarUrl,
       })
       toast('Foto de perfil atualizada.')
     } catch (error) {
+      updateField('avatar_url', avatarAnterior)
       toast(error instanceof Error ? error.message : 'Erro ao salvar foto.')
     } finally {
       setSavingAvatar(false)
@@ -195,7 +198,6 @@ export function PerfilForm() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="relative grid min-h-52 place-items-center bg-[#601a27] px-5 py-7 sm:px-7">
             <EpfilLogo variant="light" size="md" className="w-full max-w-xs justify-center opacity-95 sm:max-w-sm" />
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-card to-transparent" />
           </div>
 
           <div className="relative px-5 pb-6 sm:px-7">
@@ -242,34 +244,28 @@ export function PerfilForm() {
                 </div>
               </div>
 
-              <form onSubmit={saveAvatar} className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90">
                   <Camera className="size-4" aria-hidden="true" />
-                  Alterar foto
+                  {savingAvatar ? 'Salvando...' : 'Alterar foto'}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp,image/gif"
                     onChange={handleAvatarChange}
+                    disabled={savingAvatar}
                     className="sr-only"
                   />
                 </label>
                 <button
                   type="button"
-                  onClick={() => updateField('avatar_url', null)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-bold text-foreground transition hover:border-primary/40"
+                  onClick={() => void saveAvatarUrl(null)}
+                  disabled={savingAvatar}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-bold text-foreground transition hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
                   Remover foto
                 </button>
-                <button
-                  type="submit"
-                  disabled={savingAvatar}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <Save className="size-4" aria-hidden="true" />
-                  {savingAvatar ? 'Salvando...' : 'Salvar foto'}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>
@@ -277,7 +273,7 @@ export function PerfilForm() {
         <div className="grid gap-6">
           <form onSubmit={saveEmail} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
             <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-              <div className="mb-5 flex items-center gap-3">
+              <div className="flex self-start text-left items-start gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <Mail className="size-5" aria-hidden="true" />
                 </span>
@@ -325,7 +321,7 @@ export function PerfilForm() {
 
           <form onSubmit={savePassword} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
             <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-              <div className="mb-5 flex items-center gap-3">
+              <div className="flex self-start text-left items-start gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <KeyRound className="size-5" aria-hidden="true" />
                 </span>
