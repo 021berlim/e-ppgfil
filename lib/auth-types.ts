@@ -19,8 +19,8 @@ export type ClientSession = {
 export const DASHBOARD_ROLE_LABELS: Record<DashboardRole, string> = {
   ROOT: 'Administrador do Sistema',
   SECRETARY_ADMIN: 'Chefe de secretaria',
-  SECRETARY_OPERATOR: 'Secretario',
-  COORDINATOR: 'Coordenador',
+  SECRETARY_OPERATOR: 'Secretario(a)',
+  COORDINATOR: 'Coordenador(a)',
 }
 
 export function isCoordinator(role?: string | null) {

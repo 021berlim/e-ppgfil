@@ -65,6 +65,7 @@ type ResponsavelAtribuivel = {
   id: string
   name: string
   email: string
+  avatar_url: string | null
   role: 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR'
 }
 
@@ -151,14 +152,17 @@ function CardConteudo({
   dragging,
   onOpen,
   onArchive,
+  responsaveisPorNome,
 }: {
   p: Protocolo
   dragging?: boolean
   onOpen?: () => void
   onArchive?: () => void
+  responsaveisPorNome?: Record<string, string | null>
 }) {
   const anexos = contarAnexos(p)
   const atrasado = estaAtrasado(p)
+  const avatarResponsavel = p.responsavel ? responsaveisPorNome?.[p.responsavel] : null
   return (
     <div
       data-tour="protocol-card"
@@ -249,9 +253,18 @@ function CardConteudo({
               {p.responsavel && (
                 <span
                   title={`Responsável: ${p.responsavel}`}
-                  className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/12 text-[10px] font-extrabold text-primary"
+                  className="grid size-6 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/12 text-[10px] font-extrabold text-primary"
                 >
-                  {iniciais(p.responsavel)}
+                  {avatarResponsavel ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarResponsavel}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    iniciais(p.responsavel)
+                  )}
                 </span>
               )}
             </div>
@@ -267,11 +280,13 @@ const CardArrastavel = memo(function CardArrastavel({
   onOpen,
   onArchive,
   readOnly,
+  responsaveisPorNome,
 }: {
   p: Protocolo
   onOpen: (id: string) => void
   onArchive: (id: string) => void
   readOnly: boolean
+  responsaveisPorNome: Record<string, string | null>
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: p.id, disabled: readOnly })
 
@@ -286,7 +301,12 @@ const CardArrastavel = memo(function CardArrastavel({
         isDragging && 'opacity-40',
       )}
     >
-      <CardConteudo p={p} onOpen={() => onOpen(p.id)} onArchive={readOnly ? undefined : () => onArchive(p.id)} />
+      <CardConteudo
+        p={p}
+        onOpen={() => onOpen(p.id)}
+        onArchive={readOnly ? undefined : () => onArchive(p.id)}
+        responsaveisPorNome={responsaveisPorNome}
+      />
     </div>
   )
 })
@@ -298,6 +318,7 @@ const GrupoColuna = memo(function GrupoColuna({
   onOpen,
   onArchive,
   readOnly,
+  responsaveisPorNome,
 }: {
   grupo: FaixaTempo
   aberto: boolean
@@ -305,6 +326,7 @@ const GrupoColuna = memo(function GrupoColuna({
   onOpen: (id: string) => void
   onArchive: (id: string) => void
   readOnly: boolean
+  responsaveisPorNome: Record<string, string | null>
 }) {
   const conteudoId = useId()
   const estilo = ESTILOS_FAIXA[grupo.id]
@@ -345,7 +367,14 @@ const GrupoColuna = memo(function GrupoColuna({
       {aberto && (
         <div id={conteudoId} className="mt-2.5 grid min-w-0 gap-2.5">
           {grupo.itens.map((p) => (
-            <CardArrastavel key={p.id} p={p} onOpen={onOpen} onArchive={onArchive} readOnly={readOnly} />
+            <CardArrastavel
+              key={p.id}
+              p={p}
+              onOpen={onOpen}
+              onArchive={onArchive}
+              readOnly={readOnly}
+              responsaveisPorNome={responsaveisPorNome}
+            />
           ))}
         </div>
       )}
@@ -360,6 +389,7 @@ const Coluna = memo(function Coluna({
   onArchive,
   mostrarCardTour,
   readOnly,
+  responsaveisPorNome,
 }: {
   status: Status
   itens: Protocolo[]
@@ -367,6 +397,7 @@ const Coluna = memo(function Coluna({
   onArchive: (id: string) => void
   mostrarCardTour: boolean
   readOnly: boolean
+  responsaveisPorNome: Record<string, string | null>
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status, disabled: readOnly })
   const s = STATUS_STYLES[status]
@@ -422,6 +453,7 @@ const Coluna = memo(function Coluna({
               onOpen={onOpen}
               onArchive={onArchive}
               readOnly={readOnly}
+              responsaveisPorNome={responsaveisPorNome}
             />
           ))}
         {itens.length === 0 && (
@@ -514,6 +546,12 @@ export function KanbanBoard() {
 
   const responsaveisDisponiveis = useMemo(() => {
     return responsaveis.map((responsavel) => responsavel.name).sort()
+  }, [responsaveis])
+
+  const responsaveisPorNome = useMemo(() => {
+    return Object.fromEntries(
+      responsaveis.map((responsavel) => [responsavel.name, responsavel.avatar_url]),
+    )
   }, [responsaveis])
 
   const porStatus = useMemo(() => {
@@ -699,11 +737,14 @@ export function KanbanBoard() {
                   onArchive={setArquivarId}
                   mostrarCardTour={tourAtivo && s === colunaTour}
                   readOnly={readOnly}
+                  responsaveisPorNome={responsaveisPorNome}
                 />
               ))}
             </div>
 
-            <DragOverlay>{ativo ? <CardConteudo p={ativo} dragging /> : null}</DragOverlay>
+            <DragOverlay>
+              {ativo ? <CardConteudo p={ativo} dragging responsaveisPorNome={responsaveisPorNome} /> : null}
+            </DragOverlay>
           </DndContext>
         )}
       </div>

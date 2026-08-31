@@ -22,6 +22,7 @@ type DashboardUser = {
   id: string
   name: string
   email: string
+  avatar_url: string | null
   role: RoleSlug | null
   role_name: string | null
   is_active: boolean
@@ -219,9 +220,18 @@ export function UsuariosManager() {
                   <tr key={user.id} className="align-top transition hover:bg-secondary/35">
                     <td className="px-5 py-4">
                       <div className="flex items-start gap-3">
-                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                          <UserRound className="size-4" aria-hidden="true" />
-                        </span>
+                        {user.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={user.avatar_url}
+                            alt=""
+                            className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+                          />
+                        ) : (
+                          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                            <UserRound className="size-4" aria-hidden="true" />
+                          </span>
+                        )}
                         <div className="min-w-0">
                           <p className="font-extrabold text-foreground">{user.name}</p>
                           <p className="mt-0.5 text-xs font-semibold text-muted-foreground">{user.email}</p>

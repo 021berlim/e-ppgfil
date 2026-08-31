@@ -64,6 +64,7 @@ export async function listDashboardUsers() {
       u.id,
       u.name,
       u.email,
+      u.avatar_url,
       u.is_active,
       u.last_login_at,
       u.created_at,
@@ -86,6 +87,7 @@ export async function listProtocolAssignees() {
         u.id,
         u.name,
         u.email,
+        u.avatar_url,
         r.slug AS role
       FROM public.users u
       JOIN public.user_roles ur ON ur.user_id = u.id
