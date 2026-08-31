@@ -16,7 +16,7 @@ export type ClientSession = {
 }
 
 export const DASHBOARD_ROLE_LABELS: Record<DashboardRole, string> = {
-  ROOT: 'ROOT',
+  ROOT: 'Administrador do Sistema',
   SECRETARY_ADMIN: 'Chefe de secretaria',
   SECRETARY_OPERATOR: 'Secretario',
   COORDINATOR: 'Coordenador',
