@@ -9,7 +9,7 @@ Politica sugerida para desenvolvimento e producao:
   {
     "AllowedOrigins": [
       "http://localhost:3000",
-      "https://SEU-DOMINIO-DE-PRODUCAO"
+      "https://e-ppgfil.vercel.app"
     ],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
     "AllowedHeaders": ["Content-Type"],
@@ -25,7 +25,7 @@ No dashboard da Cloudflare:
 2. Selecione o bucket usado em `R2_BUCKET_NAME`.
 3. Entre em Settings.
 4. Em CORS Policy, adicione a politica JSON acima.
-5. Troque `https://SEU-DOMINIO-DE-PRODUCAO` pela origem exata do sistema, sem barra no final.
+5. Use a origem exata do sistema, sem barra no final e sem formato de link Markdown.
 
 Tambem e possivel aplicar via Wrangler:
 
@@ -37,6 +37,7 @@ npx wrangler r2 bucket cors list <BUCKET_NAME>
 Observacoes importantes:
 
 - `AllowedOrigins` precisa bater exatamente com a origem do navegador, por exemplo `http://localhost:3000` ou `https://app.exemplo.com`.
+- Nao use valores como `[https://e-ppgfil.vercel.app/](https://e-ppgfil.vercel.app/)`: a origem correta e `https://e-ppgfil.vercel.app`.
 - `AllowedMethods` precisa incluir `PUT`, porque o frontend envia o arquivo com esse metodo.
 - `AllowedHeaders` precisa incluir `Content-Type`, porque o frontend envia esse header no `PUT`.
 - Alteracoes de CORS podem levar alguns segundos para propagar.

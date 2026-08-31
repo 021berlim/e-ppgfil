@@ -26,7 +26,6 @@ type ResearchLine = {
   summary: string | null
   disciplines: string[]
   source_url: string | null
-  is_active: boolean
 }
 
 type FacultyMember = {
@@ -48,7 +47,6 @@ type Procedure = {
   deadline_text: string | null
   steps: string[]
   source_url: string | null
-  is_active: boolean
 }
 
 type InstitutionalForm = {
@@ -69,7 +67,6 @@ const EMPTY: Record<EntityName, FormState> = {
     summary: '',
     disciplines: '',
     source_url: '',
-    is_active: true,
   },
   'faculty-members': {
     full_name: '',
@@ -87,7 +84,6 @@ const EMPTY: Record<EntityName, FormState> = {
     deadline_text: '',
     steps: '',
     source_url: '',
-    is_active: true,
   },
   'institutional-forms': {
     name: '',
@@ -125,6 +121,7 @@ const TITLES: Record<EntityName, { singular: string; plural: string; created: st
 }
 
 const RESTRICTED_CATALOGS = new Set<EntityName>([
+  'research-lines',
   'faculty-members',
   'procedures',
   'institutional-forms',
@@ -256,7 +253,6 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
         summary: item.summary ?? '',
         disciplines: arrayToLines(item.disciplines),
         source_url: item.source_url ?? '',
-        is_active: item.is_active,
       })
     } else if (entity === 'faculty-members') {
       const item = row as FacultyMember
@@ -278,7 +274,6 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
         deadline_text: item.deadline_text ?? '',
         steps: arrayToLines(item.steps),
         source_url: item.source_url ?? '',
-        is_active: item.is_active,
       })
     } else {
       const item = row as InstitutionalForm
@@ -485,7 +480,6 @@ function ResearchLineFields({
       <Field label="Fonte oficial" htmlFor="source_url">
         <TextInput id="source_url" value={String(form.source_url)} onChange={(event) => updateField('source_url', event.target.value)} />
       </Field>
-      <BooleanField label="Linha ativa" checked={Boolean(form.is_active)} onChange={(value) => updateField('is_active', value)} />
     </>
   )
 }
@@ -584,7 +578,6 @@ function ProcedureFields({
       <Field label="Fonte oficial" htmlFor="source_url">
         <TextInput id="source_url" value={String(form.source_url)} onChange={(event) => updateField('source_url', event.target.value)} />
       </Field>
-      <BooleanField label="Procedimento ativo" checked={Boolean(form.is_active)} onChange={(value) => updateField('is_active', value)} />
     </>
   )
 }
@@ -683,14 +676,13 @@ function ResearchLinesTable({
 }) {
   return (
     <table className="w-full min-w-[860px] text-left text-sm">
-      <TableHead labels={readOnly ? ['Linha', 'Resumo', 'Disciplinas', 'Status'] : ['Linha', 'Resumo', 'Disciplinas', 'Status', '']} />
+      <TableHead labels={readOnly ? ['Linha', 'Resumo', 'Disciplinas'] : ['Linha', 'Resumo', 'Disciplinas', '']} />
       <tbody className="divide-y divide-border">
         {rows.map((row) => (
           <tr key={row.id} className="align-top transition hover:bg-secondary/35">
             <td className="px-5 py-4 font-extrabold text-foreground">{row.title}</td>
             <td className="max-w-md px-5 py-4 text-muted-foreground">{row.summary ?? 'Sem resumo'}</td>
             <td className="px-5 py-4 text-xs font-semibold text-muted-foreground">{row.disciplines.join(', ') || 'Sem disciplinas'}</td>
-            <StatusCell active={row.is_active} />
             {!readOnly && <RowActions row={row} onEdit={onEdit} onDelete={onDelete} />}
           </tr>
         ))}
@@ -750,7 +742,7 @@ function ProceduresTable({
 }) {
   return (
     <table className="w-full min-w-[920px] text-left text-sm">
-      <TableHead labels={readOnly ? ['Procedimento', 'Prazo', 'Passos', 'Fonte', 'Status'] : ['Procedimento', 'Prazo', 'Passos', 'Fonte', 'Status', '']} />
+      <TableHead labels={readOnly ? ['Procedimento', 'Prazo', 'Passos', 'Fonte'] : ['Procedimento', 'Prazo', 'Passos', 'Fonte', '']} />
       <tbody className="divide-y divide-border">
         {rows.map((row) => (
           <tr key={row.id} className="align-top transition hover:bg-secondary/35">
@@ -760,7 +752,6 @@ function ProceduresTable({
             <td className="px-5 py-4">
               <LinkList links={[['Fonte', row.source_url]]} />
             </td>
-            <StatusCell active={row.is_active} />
             {!readOnly && <RowActions row={row} onEdit={onEdit} onDelete={onDelete} />}
           </tr>
         ))}
@@ -875,7 +866,6 @@ function normalizePayload(entity: EntityName, form: FormState) {
       summary: form.summary,
       disciplines: linesToArray(form.disciplines),
       source_url: form.source_url,
-      is_active: form.is_active,
     }
   }
 
@@ -899,7 +889,6 @@ function normalizePayload(entity: EntityName, form: FormState) {
       deadline_text: form.deadline_text,
       steps: linesToArray(form.steps),
       source_url: form.source_url,
-      is_active: form.is_active,
     }
   }
 

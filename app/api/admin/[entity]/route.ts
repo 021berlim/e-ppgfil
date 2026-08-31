@@ -28,7 +28,12 @@ function errorResponse(error: unknown) {
 }
 
 async function requireEntityWrite(entity: EntityName) {
-  if (entity === 'faculty-members' || entity === 'procedures' || entity === 'institutional-forms') {
+  if (
+    entity === 'research-lines' ||
+    entity === 'faculty-members' ||
+    entity === 'procedures' ||
+    entity === 'institutional-forms'
+  ) {
     return requireManageAdministrativeCatalogs()
   }
   return requireWriteAdmin()

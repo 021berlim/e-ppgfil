@@ -7,7 +7,6 @@ export type ResearchLinePayload = {
   summary?: string | null
   disciplines?: string[]
   source_url?: string | null
-  is_active?: boolean
 }
 
 export type FacultyPayload = {
@@ -27,7 +26,6 @@ export type ProcedurePayload = {
   deadline_text?: string | null
   steps?: string[]
   source_url?: string | null
-  is_active?: boolean
 }
 
 export type InstitutionalFormPayload = {
@@ -69,7 +67,7 @@ function nullableInteger(value: unknown) {
 export async function listEntity(entity: EntityName) {
   if (entity === 'research-lines') {
     const result = await db.query(`
-      SELECT id, title, summary, disciplines, source_url, is_active, created_at, updated_at
+      SELECT id, title, summary, disciplines, source_url, created_at, updated_at
       FROM public.research_lines
       ORDER BY title
     `)
@@ -108,7 +106,7 @@ export async function listEntity(entity: EntityName) {
 
   if (entity === 'procedures') {
     const result = await db.query(`
-      SELECT id, title, deadline_text, steps, source_url, is_active, created_at, updated_at
+      SELECT id, title, deadline_text, steps, source_url, created_at, updated_at
       FROM public.procedures
       ORDER BY title
     `)
@@ -127,8 +125,8 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
   if (entity === 'research-lines') {
     const result = await db.query(
       `
-        INSERT INTO public.research_lines (title, summary, disciplines, source_url, is_active)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO public.research_lines (title, summary, disciplines, source_url)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
       `,
       [
@@ -136,7 +134,6 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
         nullableString(payload.summary),
         stringArray(payload.disciplines),
         nullableString(payload.source_url),
-        booleanValue(payload.is_active),
       ],
     )
     return result.rows[0]
@@ -180,8 +177,8 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
   if (entity === 'procedures') {
     const result = await db.query(
       `
-        INSERT INTO public.procedures (title, deadline_text, steps, source_url, is_active)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO public.procedures (title, deadline_text, steps, source_url)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
       `,
       [
@@ -189,7 +186,6 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
         nullableString(payload.deadline_text),
         stringArray(payload.steps),
         nullableString(payload.source_url),
-        booleanValue(payload.is_active),
       ],
     )
     return result.rows[0]
@@ -219,8 +215,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
         SET title = $2,
             summary = $3,
             disciplines = $4,
-            source_url = $5,
-            is_active = $6
+            source_url = $5
         WHERE id = $1
         RETURNING *
       `,
@@ -230,7 +225,6 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
         nullableString(payload.summary),
         stringArray(payload.disciplines),
         nullableString(payload.source_url),
-        booleanValue(payload.is_active),
       ],
     )
     return result.rows[0]
@@ -284,8 +278,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
         SET title = $2,
             deadline_text = $3,
             steps = $4,
-            source_url = $5,
-            is_active = $6
+            source_url = $5
         WHERE id = $1
         RETURNING *
       `,
@@ -295,7 +288,6 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
         nullableString(payload.deadline_text),
         stringArray(payload.steps),
         nullableString(payload.source_url),
-        booleanValue(payload.is_active),
       ],
     )
     return result.rows[0]

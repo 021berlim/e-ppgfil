@@ -79,6 +79,26 @@ export async function listDashboardUsers() {
   return result.rows
 }
 
+export async function listProtocolAssignees() {
+  const result = await db.query(
+    `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        r.slug AS role
+      FROM public.users u
+      JOIN public.user_roles ur ON ur.user_id = u.id
+      JOIN public.roles r ON r.id = ur.role_id
+      WHERE u.is_active = true
+        AND r.slug = ANY($1::text[])
+      ORDER BY u.name
+    `,
+    [['SECRETARY_ADMIN', 'SECRETARY_OPERATOR']],
+  )
+  return result.rows
+}
+
 export async function createDashboardUser(payload: Record<string, unknown>) {
   const name = requiredString(payload.name, 'name')
   const email = validateEmail(payload.email)

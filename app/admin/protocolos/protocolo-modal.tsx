@@ -21,7 +21,6 @@ import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from '@/lib/categorias'
 import {
   MODELOS_RESPOSTA,
-  RESPONSAVEIS,
   STATUS_FINAIS,
   STATUS_LIST,
   type Anexo,
@@ -50,6 +49,13 @@ const PASSOS_DETALHES_ARQUIVADO = PASSOS_DETALHES.filter((passo) =>
   ['[data-tour="detail-header"]', '[data-tour="detail-identity"]', '[data-tour="detail-data"]', '[data-tour="detail-history"]'].includes(passo.alvo),
 )
 
+type ResponsavelAtribuivel = {
+  id: string
+  name: string
+  email: string
+  role: 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR'
+}
+
 type AcaoPendente =
   | { tipo: 'andamento' }
   | { tipo: 'nota' }
@@ -71,6 +77,8 @@ export function ProtocoloDetalhes({
   const [modelo, setModelo] = useState('')
   const [nota, setNota] = useState('')
   const [acaoPendente, setAcaoPendente] = useState<AcaoPendente | null>(null)
+  const [responsaveis, setResponsaveis] = useState<ResponsavelAtribuivel[]>([])
+  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
   const [tourAtivo, setTourAtivo] = useState(false)
 
   useEffect(() => {
@@ -82,6 +90,35 @@ export function ProtocoloDetalhes({
     window.addEventListener('epfil:start-tour', iniciar)
     return () => window.removeEventListener('epfil:start-tour', iniciar)
   }, [protocolo.arquivado])
+
+  useEffect(() => {
+    let ativo = true
+    async function carregarResponsaveis() {
+      if (isCoordinator(cargoAtual())) {
+        setCarregandoResponsaveis(false)
+        return
+      }
+
+      setCarregandoResponsaveis(true)
+      try {
+        const resposta = await fetch('/api/admin/protocol-assignees', { cache: 'no-store' })
+        const dados = await resposta.json().catch(() => null)
+        if (!resposta.ok) {
+          throw new Error(dados?.error ?? 'Nao foi possivel carregar responsaveis.')
+        }
+        if (ativo) setResponsaveis(Array.isArray(dados) ? dados : [])
+      } catch {
+        if (ativo) setResponsaveis([])
+      } finally {
+        if (ativo) setCarregandoResponsaveis(false)
+      }
+    }
+
+    void carregarResponsaveis()
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   const finalizarTour = useCallback(() => {
     const usuario = usuarioAtual() ?? 'usuario'
@@ -154,6 +191,9 @@ export function ProtocoloDetalhes({
   const prazo = prazoPrevisto(protocolo)
   const notas = protocolo.notasInternas ?? []
   const coordenador = isCoordinator(cargoAtual())
+  const responsavelAtualForaDaLista =
+    protocolo.responsavel &&
+    !responsaveis.some((responsavel) => responsavel.name === protocolo.responsavel)
 
   return (
     <section className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
@@ -276,12 +316,24 @@ export function ProtocoloDetalhes({
                     }
                     className="mt-1.5 py-2 text-sm"
                   >
-                    <option value="">Sem responsável</option>
-                    {RESPONSAVEIS.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
+                    <option value="">
+                      {carregandoResponsaveis ? 'Carregando responsáveis...' : 'Sem responsável'}
+                    </option>
+                    {responsavelAtualForaDaLista && (
+                      <option value={protocolo.responsavel}>
+                        {protocolo.responsavel} (fora da lista atual)
+                      </option>
+                    )}
+                    {responsaveis.map((responsavel) => (
+                      <option key={responsavel.id} value={responsavel.name}>
+                        {responsavel.name}
                       </option>
                     ))}
+                    {!carregandoResponsaveis && responsaveis.length === 0 && (
+                      <option value="" disabled>
+                        Nenhum responsável disponível
+                      </option>
+                    )}
                   </Select>
                 </div>
                 <div className="bg-card px-6 py-4">
