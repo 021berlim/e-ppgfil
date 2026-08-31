@@ -101,16 +101,38 @@ export function lerCategorias(): CategoriaItem[] {
   }
 }
 
+/** Substitui a cópia local pelos dados persistidos no servidor. */
+export function hidratarCategorias(lista: CategoriaItem[]) {
+  const serializado = JSON.stringify(lista)
+  categoriasCache = lista
+  storageCache = serializado
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem(CATEGORIAS_STORAGE_KEY, serializado)
+    } catch (e) {
+      console.warn('[Storage] Não foi possível atualizar o cache local de categorias.', e)
+    }
+  }
+  emit()
+}
+
 export function salvarCategorias(lista: CategoriaItem[]) {
   if (typeof window === 'undefined') return
+  const serializado = JSON.stringify(lista)
   try {
-    const serializado = JSON.stringify(lista)
     window.localStorage.setItem(CATEGORIAS_STORAGE_KEY, serializado)
     categoriasCache = lista
     storageCache = serializado
   } catch (e) {
     console.error('[Storage] Erro ao salvar categorias:', e)
     categoriasCache = lista
+  }
+  if (typeof window !== 'undefined') {
+    void fetch('/api/categorias', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: serializado,
+    }).catch((erro) => console.error('[API] Erro ao persistir categorias globalmente:', erro))
   }
   emit()
 }
@@ -273,19 +295,19 @@ export function deletarTipoSolicitacao(categoriaId: string, tipoId: string): boo
 }
 
 export function restaurarCategoriasPadrao(): CategoriaItem[] {
-  if (typeof window !== 'undefined') {
-    window.localStorage.removeItem(CATEGORIAS_STORAGE_KEY)
-  }
-  categoriasCache = null
-  storageCache = null
-  const resetadas = lerCategorias()
-  emit()
-  return resetadas
+  salvarCategorias(CATEGORIAS_PADRAO)
+  return CATEGORIAS_PADRAO
 }
 
 export function restaurarCategoriasDemo(): CategoriaItem[] {
   if (typeof window === 'undefined') return CATEGORIAS_DEMO
-  salvarCategorias(CATEGORIAS_DEMO)
+  // O reset de demonstração é deliberadamente local: não deve sobrescrever
+  // o cadastro global oficial no JSON do projeto.
+  const serializado = JSON.stringify(CATEGORIAS_DEMO)
+  window.localStorage.setItem(CATEGORIAS_STORAGE_KEY, serializado)
+  categoriasCache = CATEGORIAS_DEMO
+  storageCache = serializado
+  emit()
   return CATEGORIAS_DEMO
 }
 

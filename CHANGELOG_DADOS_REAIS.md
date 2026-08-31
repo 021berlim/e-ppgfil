@@ -34,6 +34,7 @@ Atualização baseada em consulta ao site oficial do PPGFIL/UERJ em 30/08/2026.
 - `data/categorias-solicitacoes.json`: categorias e tipos alinhados aos formulários oficiais, sem prazos numéricos inventados.
 - `data/categorias-demo.json`: cópia dos dados genéricos anteriores para a restauração de demonstração.
 - `lib/categorias.ts` e `lib/store.ts`: separação entre dados reais e restauração demo; prazos não confirmados agora são nulos/descritivos.
+- `app/api/categorias/route.ts` e `hooks/use-categorias.ts`: leitura/gravação do cadastro oficial no JSON do projeto, compartilhada entre contas; o reset de demonstração permanece local e não sobrescreve o cadastro global.
 - `app/admin/corpo-docente`, `app/admin/categorias`, `app/admin/procedimentos`: exibição/edição dos dados reais e links para fontes.
 - `app/solicitacao`, `app/consulta`, `app/admin/protocolos`: tratamento de prazos sem SLA confirmado.
 - `components/public-shell.tsx` e `app/suporte/page.tsx`: contatos, IFCH, Filosofia, Ouvidoria e SIC.

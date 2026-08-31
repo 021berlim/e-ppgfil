@@ -10,32 +10,25 @@
     ]
   },
   {
-    "id": "discente-mestrado",
-    "nome": "Discente (Mestrado)",
-    "descricao": "Alunos regularmente matriculados no Mestrado em Filosofia.",
+    "id": "discente",
+    "nome": "Discente",
+    "descricao": "Alunos regularmente matriculados no Mestrado ou Doutorado em Filosofia.",
     "tiposSolicitacao": [
-      { "id": "matricula-mestrado", "nome": "Matrícula", "descricao": "Envio do formulário oficial de matrícula.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
+      { "id": "matricula-mestrado", "nome": "Matrícula — Mestrado", "descricao": "Envio do formulário oficial de matrícula do Mestrado.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
       { "id": "inscricao-disciplinas-mestrado", "nome": "Inscrição em disciplina — Mestrado", "descricao": "Inscrição semestral por meio do formulário oficial.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
       { "id": "alteracao-disciplinas-mestrado", "nome": "Alteração de inscrição em disciplina", "descricao": "Cancelamento, troca ou inclusão de disciplina.", "prazoDescricao": "Durante as quatro primeiras semanas de aula" },
       { "id": "aproveitamento-creditos-mestrado", "nome": "Aproveitamento de créditos", "descricao": "Pedido de validação de créditos cursados em programa reconhecido.", "prazoDescricao": "Prazo de solicitação não especificado no regimento/manual" },
       { "id": "estagio-docente-mestrado", "nome": "Estágio docente — Mestrado", "descricao": "Registro do estágio docente de 15 horas em um semestre.", "prazoDescricao": "Período de envio não especificado no regimento/manual" },
       { "id": "prorrogacao-conclusao-mestrado", "nome": "Prorrogação de prazo de conclusão do curso", "descricao": "Requerimento oficial de prorrogação do prazo de conclusão.", "prazoDescricao": "Prazo de solicitação não especificado no regimento/manual" },
-      { "id": "requerimento-diploma-mestrado", "nome": "Requerimento de diploma", "descricao": "Envio do formulário oficial de requerimento de diploma.", "prazoDescricao": "Prazo não especificado no regimento/manual" }
-    ]
-  },
-  {
-    "id": "discente-doutorado",
-    "nome": "Discente (Doutorado)",
-    "descricao": "Alunos regularmente matriculados no Doutorado em Filosofia.",
-    "tiposSolicitacao": [
-      { "id": "matricula-doutorado", "nome": "Matrícula", "descricao": "Envio do formulário oficial de matrícula.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
+      { "id": "requerimento-diploma-mestrado", "nome": "Requerimento de diploma — Mestrado", "descricao": "Envio do formulário oficial de requerimento de diploma do Mestrado.", "prazoDescricao": "Prazo não especificado no regimento/manual" },
+      { "id": "matricula-doutorado", "nome": "Matrícula — Doutorado", "descricao": "Envio do formulário oficial de matrícula do Doutorado.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
       { "id": "inscricao-disciplinas-doutorado", "nome": "Inscrição em disciplina — Doutorado", "descricao": "Inscrição semestral por meio do formulário oficial.", "prazoDescricao": "Conforme o calendário acadêmico do período" },
       { "id": "alteracao-disciplinas-doutorado", "nome": "Alteração de inscrição em disciplina", "descricao": "Cancelamento, troca ou inclusão de disciplina.", "prazoDescricao": "Durante as quatro primeiras semanas de aula" },
       { "id": "aproveitamento-creditos-doutorado", "nome": "Aproveitamento de créditos", "descricao": "Pedido de validação de créditos cursados em programa reconhecido.", "prazoDescricao": "Prazo de solicitação não especificado no regimento/manual" },
       { "id": "estagio-docente-doutorado", "nome": "Estágio docente — Doutorado", "descricao": "Registro do estágio docente de 30 horas em dois semestres.", "prazoDescricao": "Período de envio não especificado no regimento/manual" },
       { "id": "prorrogacao-conclusao-doutorado", "nome": "Prorrogação de prazo de conclusão do curso", "descricao": "Requerimento oficial de prorrogação do prazo de conclusão.", "prazoDescricao": "Prazo de solicitação não especificado no regimento/manual" },
       { "id": "homologacao-banca-doutorado", "nome": "Requerimento de homologação de banca", "descricao": "Submissão do formulário oficial para análise e homologação de banca.", "prazoDescricao": "Prazo administrativo não especificado no regimento/manual" },
-      { "id": "requerimento-diploma-doutorado", "nome": "Requerimento de diploma", "descricao": "Envio do formulário oficial de requerimento de diploma.", "prazoDescricao": "Prazo não especificado no regimento/manual" }
+      { "id": "requerimento-diploma-doutorado", "nome": "Requerimento de diploma — Doutorado", "descricao": "Envio do formulário oficial de requerimento de diploma do Doutorado.", "prazoDescricao": "Prazo não especificado no regimento/manual" }
     ]
   },
   {
