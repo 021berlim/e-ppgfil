@@ -2,9 +2,10 @@
 
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { BadgeCheck, Camera, KeyRound, Mail, Save, ShieldCheck, Trash2, UserCircle } from 'lucide-react'
+import { BadgeCheck, Camera, Eye, EyeOff, KeyRound, Mail, Save, Trash2, UserCircle } from 'lucide-react'
 import { Field, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
+import { EpfilLogo } from '@/components/epfil-logo'
 import { login, usuarioAtualInfo } from '@/lib/store'
 import { DASHBOARD_ROLE_LABELS, type ClientSession } from '@/lib/auth-types'
 
@@ -46,7 +47,12 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 export function PerfilForm() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [savingAvatar, setSavingAvatar] = useState(false)
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     const local = usuarioAtualInfo()
@@ -101,45 +107,77 @@ export function PerfilForm() {
     reader.readAsDataURL(file)
   }
 
-  async function save(event: React.FormEvent) {
+  async function saveProfile(payload: Pick<FormState, 'email' | 'avatar_url'> & Partial<Pick<FormState, 'currentPassword' | 'newPassword'>>) {
+    const updated = await requestJson<ClientSession>('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
+    login(updated)
+    setForm((current) => ({
+      ...current,
+      name: updated.name ?? '',
+      email: updated.email,
+      avatar_url: updated.avatar_url ?? null,
+      role: updated.role,
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    }))
+    return updated
+  }
+
+  async function saveAvatar(event: React.FormEvent) {
     event.preventDefault()
-    if (form.newPassword || form.confirmPassword || form.currentPassword) {
-      if (form.newPassword !== form.confirmPassword) {
-        toast('A confirmacao da nova senha nao confere.')
-        return
-      }
-      if (!form.currentPassword) {
-        toast('Informe a senha atual para alterar a senha.')
-        return
-      }
+    setSavingAvatar(true)
+    try {
+      await saveProfile({
+        email: form.email,
+        avatar_url: form.avatar_url,
+      })
+      toast('Foto de perfil atualizada.')
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Erro ao salvar foto.')
+    } finally {
+      setSavingAvatar(false)
+    }
+  }
+
+  async function saveEmail(event: React.FormEvent) {
+    event.preventDefault()
+    setSavingEmail(true)
+    try {
+      await saveProfile({
+        email: form.email,
+        avatar_url: form.avatar_url,
+      })
+      toast('E-mail atualizado.')
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Erro ao salvar e-mail.')
+    } finally {
+      setSavingEmail(false)
+    }
+  }
+
+  async function savePassword(event: React.FormEvent) {
+    event.preventDefault()
+    if (form.newPassword !== form.confirmPassword) {
+      toast('A confirmacao da nova senha nao confere.')
+      return
     }
 
-    setSaving(true)
+    setSavingPassword(true)
     try {
-      const updated = await requestJson<ClientSession>('/api/profile', {
-        method: 'PUT',
-        body: JSON.stringify({
-          email: form.email,
-          avatar_url: form.avatar_url,
-          currentPassword: form.currentPassword,
-          newPassword: form.newPassword,
-        }),
+      await saveProfile({
+        email: form.email,
+        avatar_url: form.avatar_url,
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
       })
-      login(updated)
-      setForm((current) => ({
-        ...current,
-        name: updated.name ?? '',
-        email: updated.email,
-        avatar_url: updated.avatar_url ?? null,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      }))
-      toast('Perfil atualizado.')
+      toast('Senha atualizada.')
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Erro ao salvar perfil.')
+      toast(error instanceof Error ? error.message : 'Erro ao alterar senha.')
     } finally {
-      setSaving(false)
+      setSavingPassword(false)
     }
   }
 
@@ -153,16 +191,11 @@ export function PerfilForm() {
 
   return (
     <section className="px-6 py-6 lg:px-8">
-      <form onSubmit={save} className="mx-auto grid max-w-6xl gap-6">
+      <div className="mx-auto grid w-full max-w-7xl gap-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="relative min-h-52 bg-[radial-gradient(circle_at_15%_15%,rgba(201,162,39,0.34),transparent_32%),linear-gradient(135deg,#551724_0%,#7d2a3a_48%,#c9a227_100%)] px-5 py-5 sm:px-7">
+          <div className="relative grid min-h-52 place-items-center bg-[#601a27] px-5 py-7 sm:px-7">
+            <EpfilLogo variant="light" size="md" className="w-full max-w-xs justify-center opacity-95 sm:max-w-sm" />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-card to-transparent" />
-            <div className="relative flex justify-end">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm backdrop-blur-md">
-                <ShieldCheck className="size-3.5" aria-hidden="true" />
-                Conta protegida
-              </span>
-            </div>
           </div>
 
           <div className="relative px-5 pb-6 sm:px-7">
@@ -205,14 +238,11 @@ export function PerfilForm() {
                     <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
                       {form.role ? DASHBOARD_ROLE_LABELS[form.role] : 'Dashboard'}
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs font-bold text-muted-foreground">
-                      PPGFIL
-                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <form onSubmit={saveAvatar} className="flex flex-wrap gap-2">
                 <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90">
                   <Camera className="size-4" aria-hidden="true" />
                   Alterar foto
@@ -231,141 +261,155 @@ export function PerfilForm() {
                   <Trash2 className="size-4" aria-hidden="true" />
                   Remover foto
                 </button>
-              </div>
+                <button
+                  type="submit"
+                  disabled={savingAvatar}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Save className="size-4" aria-hidden="true" />
+                  {savingAvatar ? 'Salvando...' : 'Salvar foto'}
+                </button>
+              </form>
             </div>
-            <p className="mt-4 text-xs font-semibold text-muted-foreground">
-              O nome do usuario e administrado pela secretaria. Nesta area voce pode atualizar foto, e-mail e senha.
-            </p>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-          <div className="grid gap-6">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="grid gap-6">
+          <form onSubmit={saveEmail} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
               <div className="mb-5 flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <Mail className="size-5" aria-hidden="true" />
                 </span>
                 <div>
                   <h2 className="text-base font-extrabold text-foreground">Dados de acesso</h2>
-                  <p className="text-xs font-semibold text-muted-foreground">E-mail usado para entrar no painel.</p>
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-                <Field label="Nome" htmlFor="profile-name" hint="Este campo nao pode ser alterado pelo proprio usuario.">
-                  <TextInput
-                    id="profile-name"
-                    value={form.name}
-                    disabled
-                    className="bg-secondary/70 text-muted-foreground disabled:cursor-not-allowed disabled:opacity-100"
-                  />
-                </Field>
-                <Field label="E-mail" required htmlFor="profile-email">
-                  <TextInput
-                    id="profile-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(event) => updateField('email', event.target.value)}
-                    autoComplete="email"
-                  />
-                </Field>
+
+              <div className="grid gap-4">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <label htmlFor="profile-name" className="block truncate text-sm font-bold leading-snug text-foreground">
+                      Nome
+                    </label>
+                    <TextInput
+                      id="profile-name"
+                      value={form.name}
+                      disabled
+                      className="bg-secondary/70 text-muted-foreground disabled:cursor-not-allowed disabled:opacity-100"
+                    />
+                  </div>
+                  <Field label="E-mail" required htmlFor="profile-email">
+                    <TextInput
+                      id="profile-email"
+                      type="email"
+                      value={form.email}
+                      onChange={(event) => updateField('email', event.target.value)}
+                      autoComplete="email"
+                    />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingEmail}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Save className="size-4" aria-hidden="true" />
+                    {savingEmail ? 'Salvando...' : 'Salvar e-mail'}
+                  </button>
+                </div>
               </div>
             </div>
+          </form>
 
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <form onSubmit={savePassword} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
               <div className="mb-5 flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <KeyRound className="size-5" aria-hidden="true" />
                 </span>
                 <div>
                   <h2 className="text-base font-extrabold text-foreground">Seguranca</h2>
-                  <p className="text-xs font-semibold text-muted-foreground">A senha atual confirma que a alteracao e sua.</p>
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <Field label="Senha atual" htmlFor="current-password">
-                  <TextInput
+
+              <div className="grid max-w-2xl gap-4">
+                <Field label="Senha atual" required htmlFor="current-password">
+                  <PasswordInput
                     id="current-password"
-                    type="password"
                     value={form.currentPassword}
                     onChange={(event) => updateField('currentPassword', event.target.value)}
+                    show={showCurrentPassword}
+                    onToggle={() => setShowCurrentPassword((current) => !current)}
                     autoComplete="current-password"
+                    required
                   />
                 </Field>
-                <Field label="Nova senha" htmlFor="new-password" hint="Use pelo menos 8 caracteres.">
-                  <TextInput
+                <Field label="Nova senha" required htmlFor="new-password" hint="Use pelo menos 8 caracteres.">
+                  <PasswordInput
                     id="new-password"
-                    type="password"
                     value={form.newPassword}
                     onChange={(event) => updateField('newPassword', event.target.value)}
+                    show={showNewPassword}
+                    onToggle={() => setShowNewPassword((current) => !current)}
                     autoComplete="new-password"
+                    required
                   />
                 </Field>
-                <Field label="Confirmar nova senha" htmlFor="confirm-password">
-                  <TextInput
+                <Field label="Confirmar nova senha" required htmlFor="confirm-password">
+                  <PasswordInput
                     id="confirm-password"
-                    type="password"
                     value={form.confirmPassword}
                     onChange={(event) => updateField('confirmPassword', event.target.value)}
+                    show={showConfirmPassword}
+                    onToggle={() => setShowConfirmPassword((current) => !current)}
                     autoComplete="new-password"
+                    required
                   />
                 </Field>
-              </div>
-            </div>
-          </div>
-
-          <aside className="grid gap-4 content-start">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h2 className="text-sm font-extrabold text-foreground">Resumo da conta</h2>
-              <dl className="mt-4 grid gap-3 text-sm">
-                <div className="rounded-xl bg-secondary/70 p-3">
-                  <dt className="text-xs font-bold uppercase text-muted-foreground">Usuario</dt>
-                  <dd className="mt-1 truncate font-extrabold text-foreground">{form.name || 'Nao informado'}</dd>
-                </div>
-                <div className="rounded-xl bg-secondary/70 p-3">
-                  <dt className="text-xs font-bold uppercase text-muted-foreground">Cargo</dt>
-                  <dd className="mt-1 font-extrabold text-foreground">
-                    {form.role ? DASHBOARD_ROLE_LABELS[form.role] : 'Dashboard'}
-                  </dd>
-                </div>
-                <div className="rounded-xl bg-secondary/70 p-3">
-                  <dt className="text-xs font-bold uppercase text-muted-foreground">Foto</dt>
-                  <dd className="mt-1 font-extrabold text-foreground">
-                    {form.avatar_url ? 'Personalizada' : 'Padrao do sistema'}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="rounded-2xl border border-primary/20 bg-primary/8 p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-                  <ShieldCheck className="size-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2 className="text-sm font-extrabold text-foreground">Privacidade</h2>
-                  <p className="text-xs font-semibold leading-relaxed text-muted-foreground">
-                    Sua senha e salva somente como hash bcrypt.
-                  </p>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingPassword}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Save className="size-4" aria-hidden="true" />
+                    {savingPassword ? 'Salvando...' : 'Alterar senha'}
+                  </button>
                 </div>
               </div>
             </div>
-          </aside>
+          </form>
         </div>
-
-        <div className="sticky bottom-0 z-10 -mx-6 border-t border-border bg-background/90 px-6 py-4 backdrop-blur-md lg:-mx-8 lg:px-8">
-          <div className="mx-auto flex max-w-6xl justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Save className="size-4" aria-hidden="true" />
-              {saving ? 'Salvando...' : 'Salvar perfil'}
-            </button>
-          </div>
-        </div>
-      </form>
+      </div>
     </section>
+  )
+}
+
+function PasswordInput({
+  show,
+  onToggle,
+  ...props
+}: React.ComponentProps<'input'> & {
+  show: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="relative">
+      <TextInput
+        {...props}
+        type={show ? 'text' : 'password'}
+        className="pr-12"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+        aria-label={show ? 'Ocultar senha' : 'Visualizar senha'}
+      >
+        {show ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+      </button>
+    </div>
   )
 }

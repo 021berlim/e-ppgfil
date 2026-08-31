@@ -41,7 +41,6 @@ const NAV = [
   {
     grupo: 'Configuração',
     itens: [
-      { href: '/admin/perfil', label: 'Perfil', icone: UserCircle },
       { href: '/admin/usuarios', label: 'Usuários', icone: Users },
       { href: '/admin/categorias', label: 'Categorias e Serviços', icone: Tags },
     ],
@@ -212,11 +211,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <span className={cn('min-w-0', sidebarRecolhida && 'lg:sr-only')}>
               <span className="block truncate text-xs font-bold">{sessao?.name ?? sessao?.email}</span>
               <span className="block truncate text-[11px] text-sidebar-foreground/60">
-                {sessao?.role ? DASHBOARD_ROLE_LABELS[sessao.role] : 'Dashboard'} · PPGFIL
+                {sessao?.role ? DASHBOARD_ROLE_LABELS[sessao.role] : 'Dashboard'}
               </span>
             </span>
           </Link>
           <div className="mt-3 grid gap-1.5">
+            <Link
+              href="/admin/perfil"
+              title={sidebarRecolhida ? 'Perfil' : undefined}
+              className={cn('flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-bold text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground', sidebarRecolhida && 'lg:justify-center lg:px-2')}
+            >
+              <UserCircle className="size-3.5" aria-hidden="true" />
+              <span className={cn(sidebarRecolhida && 'lg:sr-only')}>Perfil</span>
+            </Link>
             <button
               type="button"
               onClick={iniciarTutorial}
