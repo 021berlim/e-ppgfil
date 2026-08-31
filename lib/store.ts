@@ -88,8 +88,8 @@ export function formatarTamanho(bytes: number) {
 export function gerarNumeroProtocolo(existentes: Protocolo[]) {
   const ano = new Date().getFullYear()
   const doAno = existentes.filter((p) => p.numero.includes(`/${ano}`)).length
-  const seq = String(doAno + 1).padStart(5, '0')
-  return `PFIL-${seq}/${ano}`
+  const seq = String(doAno + 1).padStart(6, '0')
+  return `PPGFIL-${seq}/${ano}`
 }
 
 export function arquivoParaAnexo(file: File): Anexo {
@@ -126,7 +126,7 @@ export function gerarMassaProtocolos(quantidade = 20000): Protocolo[] {
   const lista: Protocolo[] = new Array(quantidade)
 
   for (let i = 0; i < quantidade; i++) {
-    const seq = String(i + 1).padStart(5, '0')
+    const seq = String(i + 1).padStart(6, '0')
     const status = STATUS_MOCK[i % STATUS_MOCK.length]
     const cpfNum = String(10000000000 + (i % 89999999999))
     const dias = Math.floor(Math.random() * 60) + 1
@@ -165,7 +165,7 @@ export function gerarMassaProtocolos(quantidade = 20000): Protocolo[] {
 
     lista[i] = {
       id: uid(),
-      numero: `PFIL-${seq}/${ano}`,
+      numero: `PPGFIL-${seq}/${ano}`,
       cpf: cpfNum,
       nome: NOMES_MOCK[i % NOMES_MOCK.length],
       email: `usuario${i}@exemplo.com`,

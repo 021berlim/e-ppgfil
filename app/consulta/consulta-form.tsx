@@ -112,7 +112,7 @@ export function ConsultaForm() {
               id="numero-consulta"
               value={numero}
               onChange={(e) => setNumero(e.target.value)}
-              placeholder="PFIL-00001/2026"
+              placeholder="PPGFIL-000001/2026"
               className="font-mono"
             />
           </Field>
