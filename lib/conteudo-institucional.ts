@@ -33,6 +33,8 @@ type Docente = {
   atuacao: string | null
   orientacoes: number | null
   url: string
+  formacao?: string | null
+  lattes?: string | null
 }
 
 // A página oficial não informa explicitamente a linha de vinculação dos docentes.
@@ -74,6 +76,45 @@ export const CORPO_DOCENTE: Docente[] = [
   { nome: 'Regina Helena Sarpa Schopke', cargo: 'Professora', linha: null, atuacao: 'Filosofia da diferença, Deleuze, tempo, movimento, resistência e ética animal', orientacoes: null, url: 'https://ppgfil.uerj.br/reginahelenasarpaschopke' },
   { nome: 'Tiago de Castro Alves', cargo: 'Professor', linha: null, atuacao: 'Lógica, identidade de provas, sinonímia, normalização e hipóteses', orientacoes: null, url: 'https://ppgfil.uerj.br/tiagodecastroalves' },
 ]
+
+/** Formação de maior nível identificada nas biografias oficiais; TODO indica ausência de confirmação pública. */
+export const FORMACAO_DOCENTE: Record<string, { posGraduacao: string | null; lattes: string | null }> = {
+  'Alexandre Marques Cabral': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/1769889347003096' },
+  'Daniel de Vasconcelos Costa': { posGraduacao: 'Doutorado em Filosofia — Goethe-Universität Frankfurt am Main', lattes: 'http://lattes.cnpq.br/3525714695869938' },
+  'Fabiano de Lemos Britto': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/6441173133501487' },
+  'Izabela Aquino Bocayuva': { posGraduacao: 'Doutorado em Filosofia — Universidade Federal do Rio de Janeiro (UFRJ)', lattes: 'http://lattes.cnpq.br/1912942814740549' },
+  'Marcelo de Araujo': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/2379951820482310' },
+  'Marcos André Gleizer': { posGraduacao: 'Doutorado em Filosofia — Université de Paris IV (Sorbonne)', lattes: 'http://lattes.cnpq.br/6183354843509348' },
+  'Paulo Cesar Gil Ferreira Junior': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/6402410885346401' },
+  'Ricardo José Correa Barbosa': { posGraduacao: 'Doutorado em Filosofia — Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)', lattes: 'http://lattes.cnpq.br/0546360463436776' },
+  'Tito Marques Palmeiro': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/0278164595656451' },
+  'Antonio Augusto Passos Videira': { posGraduacao: 'Doutorado em Filosofia — Université Paris VII (Denis Diderot)', lattes: 'http://lattes.cnpq.br/1855174964691600' },
+  'Danillo de Jesus Ferreira Leite': { posGraduacao: 'Doutorado em Filosofia — UFRJ (Programa de Pós-Graduação em Lógica e Metafísica)', lattes: 'http://lattes.cnpq.br/1723036844993070' },
+  'Felipe Ramos Gall': { posGraduacao: 'Doutorado em Filosofia — Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)', lattes: 'http://lattes.cnpq.br/2338217895232988' },
+  'Luiz Bernardo Leite Araujo': { posGraduacao: 'Doutorado em Filosofia — Université Catholique de Louvain', lattes: 'http://lattes.cnpq.br/7734537285998313' },
+  'Márcia Cristina Ferreira Gonçalves': { posGraduacao: 'Doutorado em Filosofia — Freie Universität Berlin', lattes: 'http://lattes.cnpq.br/3242552423805410' },
+  'Marcos Henrique da Silva Rosa': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/3856420415182009' },
+  'Pedro Thyago dos Santos Ferreira': { posGraduacao: 'Doutorado em Filosofia — UFRJ (Programa de Pós-Graduação em Lógica e Metafísica)', lattes: null },
+  'Rodrigo Gueron': { posGraduacao: 'Doutorado em Filosofia — TODO: instituição não informada na biografia oficial consultada', lattes: 'http://lattes.cnpq.br/7403941651097693' },
+  'Ulysses Pinheiro': { posGraduacao: 'Doutorado em Filosofia — Universidade Federal do Rio de Janeiro (UFRJ)', lattes: 'http://lattes.cnpq.br/8793951581697655' },
+  'Camila Rodrigues Jourdan': { posGraduacao: 'Doutorado em Filosofia — Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)', lattes: 'http://lattes.cnpq.br/3659855873286126' },
+  'Dirce Eleonora Nigro Solis': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/7985596381827103' },
+  'Fernando Maia Freire Ribeiro': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: 'http://lattes.cnpq.br/3037164682984821' },
+  'Luiz Carlos Pinheiro Dias Pereira': { posGraduacao: 'Doutorado em Filosofia — Universidade de Estocolmo', lattes: 'http://lattes.cnpq.br/8418729116626386' },
+  'Marcio Francisco T. Oliveira': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: null },
+  'Maria Helena Lisboa da Cunha': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/6791769143433034' },
+  'Rafael Haddock Lobo': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/5393663349640485' },
+  'Rosa Maria Dias': { posGraduacao: 'Doutorado em Filosofia — Universidade Federal do Rio de Janeiro (UFRJ)', lattes: 'http://lattes.cnpq.br/1602571505425562' },
+  'Vera Maria Portocarrero': { posGraduacao: 'Mestrado em Filosofia — Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio); doutorado: TODO', lattes: 'http://lattes.cnpq.br/9436574047648562' },
+  'Carlos Cardozo Coelho': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/6091310866668714' },
+  'Edgar da Rocha Marques': { posGraduacao: 'Doutorado em Filosofia — Universität Konstanz', lattes: 'http://lattes.cnpq.br/6575628569660162' },
+  'Ivair Coelho Lisboa Rademaker de Nogueira Itagiba Filho': { posGraduacao: 'Doutorado em Filosofia — Universidade Federal do Rio de Janeiro (UFRJ)', lattes: 'http://lattes.cnpq.br/3991940646843712' },
+  'Marcela Figueiredo Cibella de Oliveira': { posGraduacao: 'Doutorado em Filosofia — Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)', lattes: 'http://lattes.cnpq.br/1587027724745056' },
+  'Marco Antonio dos Santos Casa Nova': { posGraduacao: null, lattes: 'http://lattes.cnpq.br/3409704326617178' },
+  'Naiara Paula Eugenio': { posGraduacao: 'Doutorado em Filosofia — Universidade do Estado do Rio de Janeiro (UERJ)', lattes: null },
+  'Regina Helena Sarpa Schopke': { posGraduacao: 'Doutorado em Filosofia — Universidade Estadual de Campinas (UNICAMP)', lattes: 'http://lattes.cnpq.br/7437184868462725' },
+  'Tiago de Castro Alves': { posGraduacao: 'Doutorado em Filosofia — Universität Tübingen', lattes: 'http://lattes.cnpq.br/1862264938795608' },
+}
 
 export const PROCEDIMENTOS = [
   { titulo: 'Matrícula e inscrição em disciplinas', prazo: 'Conforme o calendário acadêmico de cada período', passos: ['Consultar previamente o quadro de horários e as ementas publicados pelo PPGFIL.', 'Preencher o formulário de inscrição disponibilizado no site e enviado pela secretaria.', 'Enviar o formulário pelo canal específico de inscrições dentro do período divulgado.', 'Manter inscrição em disciplinas em todos os períodos letivos enquanto houver vínculo com o Programa.'], fonte: FONTES_OFICIAIS.manual },
