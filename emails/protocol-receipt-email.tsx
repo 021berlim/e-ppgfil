@@ -1,10 +1,14 @@
-import { Section, Text } from '@react-email/components'
+import { Text } from '@react-email/components'
 import {
+  ActionBlock,
+  Content,
   EmailShell,
+  InfoPanel,
   InfoRow,
-  PrimaryButton,
+  Notice,
+  ProtocolReference,
+  SecondaryLink,
   mutedTextStyle,
-  panelStyle,
   textStyle,
 } from './components'
 
@@ -38,41 +42,43 @@ export function ProtocolReceiptEmail({
   return (
     <EmailShell
       preview={`Protocolo ${protocolNumber} registrado no e-PPGFIL.`}
-      title="Protocolo registrado"
+      title="Comprovante de protocolização"
+      description="Confirmação de recebimento e registro da solicitação."
+      reference={protocolNumber}
     >
-      <Section style={{ padding: '8px 28px 0' }}>
-        <Text style={textStyle}>Ola, {requesterName}.</Text>
+      <Content>
+        <Text style={textStyle}>Olá, <strong>{requesterName}</strong>.</Text>
         <Text style={textStyle}>
-          Sua solicitacao foi registrada com sucesso. Guarde o numero abaixo para
-          acompanhar o andamento.
+          Sua solicitação foi recebida e registrada no e-PPGFIL. Este e-mail funciona
+          como comprovante eletrônico de protocolização.
         </Text>
-        <Section style={panelStyle}>
-          <InfoRow label="Numero do protocolo" value={protocolNumber} />
+        <ProtocolReference number={protocolNumber} status={status} />
+        <Notice title="Guarde este número">
+          Ele será solicitado sempre que você consultar ou complementar a solicitação.
+        </Notice>
+        <InfoPanel>
           <InfoRow label="Data de abertura" value={createdAt} />
           <InfoRow label="Categoria" value={categoryName} />
-          <InfoRow label="Tipo de solicitacao" value={requestTypeName} />
-          <InfoRow label="Situacao inicial" value={status} />
-        </Section>
+          <InfoRow label="Tipo de solicitação" value={requestTypeName} />
+        </InfoPanel>
         <Text style={textStyle}>
           <strong>Resumo enviado:</strong> {summary || 'Nenhum detalhamento adicional informado.'}
         </Text>
         {attachmentsSummary.length > 0 ? (
           <Text style={mutedTextStyle}>
-            Documentos informados: {attachmentsSummary.map((item) => `${item.filename} (${item.sizeLabel})`).join(', ')}.
+            Documentos recebidos: {attachmentsSummary.map((item) => `${item.filename} (${item.sizeLabel})`).join(', ')}.
           </Text>
         ) : (
-          <Text style={mutedTextStyle}>Nenhum documento foi anexado na abertura.</Text>
+          <Text style={mutedTextStyle}>Não houve documento anexado na abertura.</Text>
         )}
         {receiptPdfUrl ? (
-          <PrimaryButton href={receiptPdfUrl}>Baixar comprovante em PDF</PrimaryButton>
+          <ActionBlock href={receiptPdfUrl} label="Baixar comprovante em PDF" />
         ) : null}
         {receiptAttached ? (
-          <Text style={mutedTextStyle}>O comprovante oficial tambem segue anexado a este e-mail.</Text>
+          <Text style={mutedTextStyle}>O comprovante oficial segue anexado a esta mensagem.</Text>
         ) : null}
-        <Text style={mutedTextStyle}>
-          Para consultar o andamento, acesse: {consultationUrl}
-        </Text>
-      </Section>
+        {receiptPdfUrl ? <SecondaryLink href={consultationUrl}>Consultar andamento no e-PPGFIL</SecondaryLink> : <ActionBlock href={consultationUrl} label="Consultar andamento" />}
+      </Content>
     </EmailShell>
   )
 }

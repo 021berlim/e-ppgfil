@@ -1,5 +1,5 @@
-import { Section, Text } from '@react-email/components'
-import { EmailShell, PrimaryButton, mutedTextStyle, textStyle } from './components'
+import { Text } from '@react-email/components'
+import { ActionBlock, Content, EmailShell, InfoPanel, InfoRow, mutedTextStyle, textStyle } from './components'
 
 export type WelcomeEmailProps = {
   userName: string
@@ -10,19 +10,19 @@ export function WelcomeEmail({ userName, loginUrl }: WelcomeEmailProps) {
   return (
     <EmailShell
       preview="Sua conta administrativa no e-PPGFIL foi criada."
-      title="Bem-vindo ao e-PPGFIL"
+      title="Credencial de acesso criada"
+      description="Cadastro concluído para acesso ao ambiente administrativo."
     >
-      <Section style={{ padding: '8px 28px 0' }}>
-        <Text style={textStyle}>Ola, {userName}.</Text>
+      <Content>
+        <Text style={textStyle}>Olá, <strong>{userName}</strong>.</Text>
         <Text style={textStyle}>
-          Sua conta administrativa foi criada no e-PPGFIL. Voce ja pode acessar o
-          painel com as credenciais cadastradas pela administracao.
+          Sua conta administrativa foi cadastrada. Você já pode acessar o painel com
+          as credenciais definidas pela administração.
         </Text>
-        <PrimaryButton href={loginUrl}>Acessar painel</PrimaryButton>
-        <Text style={mutedTextStyle}>
-          Este fluxo nao exige validacao ou ativacao de conta por e-mail.
-        </Text>
-      </Section>
+        <InfoPanel title="Dados do acesso"><InfoRow label="Sistema" value="e-PPGFIL" /><InfoRow label="Perfil" value="Usuário administrativo" /></InfoPanel>
+        <ActionBlock href={loginUrl} label="Acessar painel administrativo" />
+        <Text style={mutedTextStyle}>O acesso não exige ativação por e-mail. Em caso de dúvida, procure a administração do PPGFIL.</Text>
+      </Content>
     </EmailShell>
   )
 }

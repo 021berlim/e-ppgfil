@@ -1,5 +1,13 @@
-import { Section, Text } from '@react-email/components'
-import { EmailShell, InfoRow, PrimaryButton, panelStyle, textStyle } from './components'
+import { Text } from '@react-email/components'
+import {
+  ActionBlock,
+  Content,
+  EmailShell,
+  InfoPanel,
+  InfoRow,
+  ProtocolReference,
+  textStyle,
+} from './components'
 
 export type ProtocolStatusUpdateEmailProps = {
   requesterName: string
@@ -23,22 +31,24 @@ export function ProtocolStatusUpdateEmail({
   return (
     <EmailShell
       preview={`Atualizacao do protocolo ${protocolNumber}: ${currentStatus}.`}
-      title="Atualizacao de protocolo"
+      title="Movimentação processual"
+      description="O andamento da sua solicitação foi atualizado."
+      reference={protocolNumber}
     >
-      <Section style={{ padding: '8px 28px 0' }}>
-        <Text style={textStyle}>Ola, {requesterName}.</Text>
-        <Text style={textStyle}>Houve uma atualizacao no andamento da sua solicitacao.</Text>
-        <Section style={panelStyle}>
-          <InfoRow label="Numero do protocolo" value={protocolNumber} />
-          <InfoRow label="Etapa anterior" value={previousStatus} />
-          <InfoRow label="Nova etapa" value={currentStatus} />
-          <InfoRow label="Atualizado em" value={updatedAt} />
-        </Section>
+      <Content>
+        <Text style={textStyle}>Olá, <strong>{requesterName}</strong>.</Text>
+        <Text style={textStyle}>Foi registrada uma nova movimentação na sua solicitação.</Text>
+        <ProtocolReference number={protocolNumber} status={currentStatus} />
+        <InfoPanel title="Dados da movimentação">
+          <InfoRow label="Situação anterior" value={previousStatus} />
+          <InfoRow label="Nova situação" value={currentStatus} />
+          <InfoRow label="Data da movimentação" value={updatedAt} />
+        </InfoPanel>
         <Text style={textStyle}>
-          <strong>Parecer/observacoes:</strong> {observation || 'Sem observacoes adicionais.'}
+          <strong>Despacho/observação:</strong> {observation || 'Sem observações adicionais.'}
         </Text>
-        <PrimaryButton href={consultationUrl}>Acompanhar protocolo</PrimaryButton>
-      </Section>
+        <ActionBlock href={consultationUrl} label="Consultar protocolo" />
+      </Content>
     </EmailShell>
   )
 }
