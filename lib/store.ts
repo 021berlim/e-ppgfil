@@ -239,8 +239,8 @@ export function lerProtocolos(): Protocolo[] {
 
 export function lerAuditoria(): RegistroAuditoria[] {
   return lerProtocolos()
-    .flatMap((protocolo) =>
-      protocolo.historico.map((entrada) => ({
+    .flatMap((protocolo) => [
+      ...protocolo.historico.map((entrada) => ({
         id: `${protocolo.id}:${entrada.id}`,
         data: entrada.data,
         ator: entrada.autor,
@@ -249,7 +249,16 @@ export function lerAuditoria(): RegistroAuditoria[] {
         protocoloNumero: protocolo.numero,
         detalhes: entrada.mensagem,
       })),
-    )
+      ...(protocolo.notasInternas ?? []).map((nota) => ({
+        id: `${protocolo.id}:nota:${nota.id}`,
+        data: nota.data,
+        ator: nota.autor,
+        acao: 'Nota interna',
+        categoria: 'protocolo' as const,
+        protocoloNumero: protocolo.numero,
+        detalhes: nota.mensagem,
+      })),
+    ])
     .sort((a, b) => b.data.localeCompare(a.data))
 }
 
@@ -297,10 +306,10 @@ export function criarProtocolo(dados: {
       {
         id: uid(),
         data: agora,
-        autor: 'Sistema',
-        origem: 'sistema',
+        autor: dados.nome.trim(),
+        origem: 'solicitante',
         status: 'Gerado',
-        mensagem: 'Protocolo gerado e registrado na secretaria do PPGFIL.',
+        mensagem: 'Protocolo criado pelo solicitante e registrado na secretaria do PPGFIL.',
         anexos: dados.anexos,
       },
     ],
@@ -309,12 +318,30 @@ export function criarProtocolo(dados: {
   return novo
 }
 
-export function atribuirResponsavel(id: string, responsavel: string) {
+export function atribuirResponsavel(id: string, responsavel: string, autor = 'Secretaria') {
   const lista = lerProtocolos()
+  const agora = new Date().toISOString()
   salvar(
-    lista.map((p) =>
-      p.id === id ? { ...p, responsavel: responsavel || undefined } : p,
-    ),
+    lista.map((p) => {
+      if (p.id !== id) return p
+      const novoResponsavel = responsavel || undefined
+      if (p.responsavel === novoResponsavel) return p
+      const entrada: EntradaHistorico = {
+        id: uid(),
+        data: agora,
+        autor,
+        origem: 'secretaria',
+        status: p.status,
+        mensagem: `Responsável alterado de ${p.responsavel ?? 'Sem responsável'} para ${novoResponsavel ?? 'Sem responsável'}.`,
+        anexos: [],
+      }
+      return {
+        ...p,
+        responsavel: novoResponsavel,
+        atualizadoEm: agora,
+        historico: [...p.historico, entrada],
+      }
+    }),
   )
 }
 
@@ -332,7 +359,7 @@ export function adicionarNotaInterna(id: string, mensagem: string, autor = 'Secr
   )
 }
 
-export function moverStatus(id: string, status: Status) {
+export function moverStatus(id: string, status: Status, autor = 'Secretaria') {
   const lista = lerProtocolos()
   const agora = new Date().toISOString()
   salvar(
@@ -341,8 +368,8 @@ export function moverStatus(id: string, status: Status) {
       const entrada: EntradaHistorico = {
         id: uid(),
         data: agora,
-        autor: 'Sistema',
-        origem: 'sistema',
+        autor,
+        origem: 'secretaria',
         status,
         mensagem: `Processo movido para: ${status}`,
         anexos: [],
@@ -396,7 +423,7 @@ export function adicionarAnexosSolicitante(id: string, anexos: Anexo[]) {
         autor: p.nome,
         origem: 'solicitante',
         status: p.status,
-        mensagem: 'Documento enviado pelo aluno',
+        mensagem: `Documento enviado pelo solicitante (${anexos.length} anexo(s)).`,
         anexos,
       }
       return {
@@ -573,6 +600,11 @@ export function usuarioAtualInfo(): ClientSession | null {
 
 export function usuarioAtual(): string | null {
   return usuarioAtualInfo()?.email ?? null
+}
+
+export function nomeUsuarioAtual(): string | null {
+  const sessao = usuarioAtualInfo()
+  return sessao?.name || sessao?.email || null
 }
 
 export function cargoAtual(): DashboardRole | null {

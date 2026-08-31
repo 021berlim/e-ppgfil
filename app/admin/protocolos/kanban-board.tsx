@@ -24,6 +24,7 @@ import {
   formatarCPF,
   formatarData,
   moverStatus,
+  nomeUsuarioAtual,
   soDigitos,
   usuarioAtual,
 } from '@/lib/store'
@@ -612,7 +613,7 @@ export function KanbanBoard() {
       setMovimentoPendente(null)
       return
     }
-    moverStatus(movimentoPendente.id, movimentoPendente.destino)
+    moverStatus(movimentoPendente.id, movimentoPendente.destino, nomeUsuarioAtual() ?? 'Secretaria')
     notificarEmail(movimentoPendente.nome)
     setMovimentoPendente(null)
   }, [movimentoPendente, readOnly])
@@ -762,7 +763,7 @@ export function KanbanBoard() {
         onConfirmar={() => {
           if (!arquivarId) return
           if (readOnly) return
-          arquivarProtocolo(arquivarId, usuarioAtual() ?? 'Secretaria')
+          arquivarProtocolo(arquivarId, nomeUsuarioAtual() ?? 'Secretaria')
           setArquivarId(null)
         }}
       />

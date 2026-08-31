@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { NextResponse } from 'next/server'
 import { requireManageAdministrativeCatalogs } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 
 export const runtime = 'nodejs'
 
@@ -23,13 +24,19 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    await requireManageAdministrativeCatalogs()
+    const actor = await requireManageAdministrativeCatalogs()
     const dados: unknown = await request.json()
     if (!Array.isArray(dados)) return respostaErro('O corpo deve ser uma lista de categorias.', 400)
     if (dados.some((item) => !item || typeof item !== 'object' || !('id' in item) || !('tiposSolicitacao' in item))) {
       return respostaErro('Categoria inválida.', 400)
     }
     await fs.writeFile(arquivoCategorias, `${JSON.stringify(dados, null, 2)}\n`, 'utf8')
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'categorias_atualizadas',
+      details: { totalCategorias: dados.length },
+    })
     return NextResponse.json(dados)
   } catch (erro) {
     console.error('[API categorias] Erro ao gravar JSON:', erro)

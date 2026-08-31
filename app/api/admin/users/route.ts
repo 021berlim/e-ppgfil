@@ -6,6 +6,7 @@ import {
   updateDashboardUser,
 } from '@/lib/users-admin'
 import { requireCreateUsers, requireManageUsers } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : 'Erro inesperado.'
@@ -24,9 +25,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireCreateUsers()
+    const actor = await requireCreateUsers()
     const payload = await request.json()
     const row = await createDashboardUser(payload)
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'usuario_criado',
+      details: { userId: row.id, name: row.name, email: row.email, role: row.role },
+    })
     return NextResponse.json(row, { status: 201 })
   } catch (error) {
     return errorResponse(error)
@@ -35,7 +42,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    await requireManageUsers()
+    const actor = await requireManageUsers()
     const payload = await request.json()
     if (typeof payload.id !== 'string') {
       throw new Error('ID ausente para atualizacao.')
@@ -44,6 +51,19 @@ export async function PUT(request: Request) {
     if (!row) {
       return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 })
     }
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'usuario_atualizado',
+      details: {
+        userId: row.id,
+        name: row.name,
+        email: row.email,
+        role: row.role,
+        isActive: row.is_active,
+        passwordChanged: Boolean(payload.password),
+      },
+    })
     return NextResponse.json(row)
   } catch (error) {
     return errorResponse(error)
@@ -52,7 +72,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await requireManageUsers()
+    const actor = await requireManageUsers()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     if (!id) {
@@ -62,6 +82,16 @@ export async function DELETE(request: Request) {
     if (!deleted) {
       return NextResponse.json({ error: 'Usuario nao encontrado.' }, { status: 404 })
     }
+    const auditActor =
+      actor.id === id
+        ? ({ type: 'requester' as const, label: actor.name || actor.email })
+        : ({ type: 'user' as const, user: actor })
+    await registrarAuditoria({
+      actor: auditActor,
+      category: 'sistema',
+      action: 'usuario_excluido',
+      details: { userId: id },
+    })
     return NextResponse.json({ ok: true })
   } catch (error) {
     return errorResponse(error)

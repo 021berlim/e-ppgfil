@@ -14,9 +14,37 @@ export function AuditoriaLista() {
   const [pagina, setPagina] = useState(1)
 
   useEffect(() => {
-    const atualizar = () => setRegistros(lerAuditoria())
+    let cancelado = false
+
+    const ordenar = (itens: RegistroAuditoria[]) =>
+      [...itens].sort((a, b) => b.data.localeCompare(a.data))
+
+    const carregarRemotos = async () => {
+      try {
+        const resposta = await fetch('/api/admin/audit-logs', { cache: 'no-store' })
+        if (!resposta.ok) return []
+        const dados = (await resposta.json()) as RegistroAuditoria[]
+        return Array.isArray(dados) ? dados : []
+      } catch (erro) {
+        console.error('[Auditoria] Erro ao carregar logs remotos:', erro)
+        return []
+      }
+    }
+
+    const atualizar = async () => {
+      const locais = lerAuditoria()
+      const remotos = await carregarRemotos()
+      if (!cancelado) setRegistros(ordenar([...remotos, ...locais]))
+    }
+
     atualizar()
-    return subscribeAuditoria(atualizar)
+    const unsubscribe = subscribeAuditoria(() => {
+      void atualizar()
+    })
+    return () => {
+      cancelado = true
+      unsubscribe()
+    }
   }, [])
 
   const filtrados = useMemo(() => {
@@ -67,6 +95,7 @@ export function AuditoriaLista() {
             <option value="todas">Todas as categorias</option>
             <option value="protocolo">Protocolos</option>
             <option value="autenticacao">Autenticação</option>
+            <option value="documento">Documentos</option>
             <option value="sistema">Sistema</option>
           </select>
         </label>

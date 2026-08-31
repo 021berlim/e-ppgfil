@@ -200,9 +200,9 @@ export function PerfilForm() {
             <EpfilLogo variant="light" size="md" className="w-full max-w-xs justify-center opacity-95 sm:max-w-sm" />
           </div>
 
-          <div className="relative px-5 pb-6 sm:px-7">
-            <div className="-mt-20 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="relative px-5 pb-7 sm:px-7">
+            <div className="-mt-20 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="relative w-fit">
                   {form.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -228,15 +228,15 @@ export function PerfilForm() {
                   </label>
                 </div>
 
-                <div className="min-w-0 pb-1">
+                <div className="min-w-0 pt-1 sm:pt-14">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="max-w-full truncate text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                    <h2 className="max-w-full break-words text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
                       {form.name || 'Seu perfil'}
                     </h2>
                     <BadgeCheck className="size-5 shrink-0 text-accent" aria-hidden="true" />
                   </div>
-                  <p className="mt-1 break-all text-sm font-bold text-muted-foreground">{form.email}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <p className="mt-1 break-all text-sm font-bold leading-relaxed text-muted-foreground">{form.email}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
                       {form.role ? DASHBOARD_ROLE_LABELS[form.role] : 'Dashboard'}
                     </span>
@@ -272,8 +272,8 @@ export function PerfilForm() {
 
         <div className="grid gap-6">
           <form onSubmit={saveEmail} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-              <div className="flex self-start text-left items-start gap-3">
+            <div className="grid gap-6">
+              <div className="flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <Mail className="size-5" aria-hidden="true" />
                 </span>
@@ -282,8 +282,8 @@ export function PerfilForm() {
                 </div>
               </div>
 
-              <div className="grid gap-4">
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+              <div className="grid max-w-4xl gap-4">
+                <div className="grid gap-4">
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <label htmlFor="profile-name" className="block truncate text-sm font-bold leading-snug text-foreground">
                       Nome
@@ -320,8 +320,8 @@ export function PerfilForm() {
           </form>
 
           <form onSubmit={savePassword} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-            <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
-              <div className="flex self-start text-left items-start gap-3">
+            <div className="grid gap-6">
+              <div className="flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
                   <KeyRound className="size-5" aria-hidden="true" />
                 </span>
@@ -330,7 +330,7 @@ export function PerfilForm() {
                 </div>
               </div>
 
-              <div className="grid max-w-2xl gap-4">
+              <div className="grid max-w-4xl gap-4">
                 <Field label="Senha atual" required htmlFor="current-password">
                   <PasswordInput
                     id="current-password"

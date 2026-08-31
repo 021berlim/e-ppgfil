@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 import { db } from '@/lib/db'
 import { isDocumentAccessTokenValid } from '@/lib/document-token'
 import { headR2Object } from '@/lib/r2'
@@ -41,6 +42,13 @@ export async function POST(request: Request) {
     await db.query(`UPDATE public.document_files SET status = 'available' WHERE id = $1`, [
       documentFileId,
     ])
+    await registrarAuditoria({
+      actor: user ? { type: 'user', user } : { type: 'requester', label: 'Solicitante externo' },
+      category: 'documento',
+      action: 'upload_documento_concluido',
+      documentFileId,
+      details: { r2Key: file.r2_key },
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

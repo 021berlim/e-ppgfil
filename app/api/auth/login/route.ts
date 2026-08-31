@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { authenticateDashboardUser } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 
 export async function POST(request: Request) {
   try {
@@ -13,8 +14,21 @@ export async function POST(request: Request) {
 
     const session = await authenticateDashboardUser(email, password)
     if (!session) {
+      await registrarAuditoria({
+        actor: { type: 'requester', label: email.toLowerCase() },
+        category: 'autenticacao',
+        action: 'login_recusado',
+        details: { email: email.toLowerCase() },
+      })
       return NextResponse.json({ error: 'Credenciais invalidas.' }, { status: 401 })
     }
+
+    await registrarAuditoria({
+      actor: { type: 'user', user: session },
+      category: 'autenticacao',
+      action: 'login_realizado',
+      details: { email: session.email, role: session.role },
+    })
 
     return NextResponse.json(session)
   } catch (error) {

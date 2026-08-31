@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireWriteAdmin } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 import { db } from '@/lib/db'
 import { deleteR2Object } from '@/lib/r2'
 
@@ -15,7 +16,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireWriteAdmin()
+    const actor = await requireWriteAdmin()
     const { id } = await context.params
     const result = await db.query(
       `
@@ -33,6 +34,13 @@ export async function DELETE(
 
     await deleteR2Object(file.r2_key)
     await db.query(`UPDATE public.document_files SET status = 'deleted' WHERE id = $1`, [id])
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'documento',
+      action: 'documento_excluido',
+      documentFileId: id,
+      details: { r2Key: file.r2_key },
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

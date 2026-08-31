@@ -7,6 +7,7 @@ import {
   type EntityName,
 } from '@/lib/institutional-admin'
 import { requireManageAdministrativeCatalogs, requireWriteAdmin } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 
 const ENTITIES = new Set<EntityName>([
   'research-lines',
@@ -54,9 +55,15 @@ export async function POST(request: Request, context: { params: Promise<{ entity
   try {
     const params = await context.params
     const entity = parseEntity(params.entity)
-    await requireEntityWrite(entity)
+    const actor = await requireEntityWrite(entity)
     const payload = await request.json()
     const row = await createEntity(entity, payload)
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'cadastro_administrativo_criado',
+      details: { entity, id: row.id, title: row.title ?? row.full_name ?? row.name },
+    })
     return NextResponse.json(row, { status: 201 })
   } catch (error) {
     return errorResponse(error)
@@ -67,7 +74,7 @@ export async function PUT(request: Request, context: { params: Promise<{ entity:
   try {
     const params = await context.params
     const entity = parseEntity(params.entity)
-    await requireEntityWrite(entity)
+    const actor = await requireEntityWrite(entity)
     const payload = await request.json()
     if (typeof payload.id !== 'string') {
       throw new Error('ID ausente para atualizacao.')
@@ -76,6 +83,12 @@ export async function PUT(request: Request, context: { params: Promise<{ entity:
     if (!row) {
       return NextResponse.json({ error: 'Registro nao encontrado.' }, { status: 404 })
     }
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'cadastro_administrativo_atualizado',
+      details: { entity, id: row.id, title: row.title ?? row.full_name ?? row.name },
+    })
     return NextResponse.json(row)
   } catch (error) {
     return errorResponse(error)
@@ -86,7 +99,7 @@ export async function DELETE(request: Request, context: { params: Promise<{ enti
   try {
     const params = await context.params
     const entity = parseEntity(params.entity)
-    await requireEntityWrite(entity)
+    const actor = await requireEntityWrite(entity)
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     if (!id) {
@@ -96,6 +109,12 @@ export async function DELETE(request: Request, context: { params: Promise<{ enti
     if (!deleted) {
       return NextResponse.json({ error: 'Registro nao encontrado.' }, { status: 404 })
     }
+    await registrarAuditoria({
+      actor: { type: 'user', user: actor },
+      category: 'sistema',
+      action: 'cadastro_administrativo_excluido',
+      details: { entity, id },
+    })
     return NextResponse.json({ ok: true })
   } catch (error) {
     return errorResponse(error)

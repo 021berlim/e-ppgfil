@@ -6,6 +6,7 @@ import {
   canManageAdministrativeCatalogs,
   canCreateUsers,
   canManageUsers,
+  canViewAuditLogs,
   canWriteAdmin,
   type ClientSession,
   type DashboardRole,
@@ -209,6 +210,14 @@ export async function requireCreateUsers() {
   const user = await getCurrentUser()
   if (!canCreateUsers(user?.role)) {
     throw new Error('Apenas ROOT pode cadastrar novos usuarios.')
+  }
+  return user
+}
+
+export async function requireViewAuditLogs() {
+  const user = await getCurrentUser()
+  if (!canViewAuditLogs(user?.role)) {
+    throw new Error('Apenas ROOT pode consultar auditoria.')
   }
   return user
 }

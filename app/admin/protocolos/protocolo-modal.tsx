@@ -11,6 +11,7 @@ import {
   formatarCPF,
   formatarData,
   moverStatus,
+  nomeUsuarioAtual,
   prazoPrevisto,
   recusarRespostaExigencia,
   cargoAtual,
@@ -161,27 +162,26 @@ export function ProtocoloDetalhes({
       setAcaoPendente(null)
       return
     }
-    const autor = usuarioAtual()
-    const nomeAutor = autor ? `Secretaria — ${autor}` : 'Secretaria'
+    const autor = nomeUsuarioAtual() ?? 'Secretaria'
 
     if (acaoPendente.tipo === 'andamento') {
-      adicionarEntradaManual(protocolo.id, mensagem, anexos, nomeAutor)
+      adicionarEntradaManual(protocolo.id, mensagem, anexos, autor)
       setMensagem('')
       setAnexos([])
       setModelo('')
       notificarEmail(protocolo.nome)
     } else if (acaoPendente.tipo === 'nota') {
-      adicionarNotaInterna(protocolo.id, nota, autor ?? 'Secretaria')
+      adicionarNotaInterna(protocolo.id, nota, autor)
       setNota('')
     } else if (acaoPendente.tipo === 'status') {
-      moverStatus(protocolo.id, acaoPendente.status)
+      moverStatus(protocolo.id, acaoPendente.status, autor)
       notificarEmail(protocolo.nome)
     } else if (acaoPendente.tipo === 'responsavel') {
-      atribuirResponsavel(protocolo.id, acaoPendente.responsavel)
+      atribuirResponsavel(protocolo.id, acaoPendente.responsavel, autor)
     } else if (acaoPendente.tipo === 'desarquivar') {
-      desarquivarProtocolo(protocolo.id, autor ?? 'Secretaria')
+      desarquivarProtocolo(protocolo.id, autor)
     } else {
-      recusarRespostaExigencia(protocolo.id, motivo, nomeAutor)
+      recusarRespostaExigencia(protocolo.id, motivo, autor)
       notificarEmail(protocolo.nome)
     }
     setAcaoPendente(null)

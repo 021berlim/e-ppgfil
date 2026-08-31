@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 import { db } from '@/lib/db'
 import { createDocumentAccessToken, hashDocumentAccessToken } from '@/lib/document-token'
 import { createPresignedUploadUrl, getR2Bucket } from '@/lib/r2'
@@ -80,6 +81,14 @@ export async function POST(request: Request) {
         hashDocumentAccessToken(downloadToken),
       ],
     )
+
+    await registrarAuditoria({
+      actor: user ? { type: 'user', user } : { type: 'requester', label: 'Solicitante externo' },
+      category: 'documento',
+      action: 'upload_documento_iniciado',
+      documentFileId,
+      details: { filename, contentType, sizeBytes },
+    })
 
     const uploadUrl = await createPresignedUploadUrl({
       key,

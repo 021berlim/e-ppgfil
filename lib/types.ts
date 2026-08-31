@@ -84,7 +84,7 @@ export type RegistroAuditoria = {
   data: string
   ator: string
   acao: string
-  categoria: 'protocolo' | 'autenticacao' | 'sistema'
+  categoria: 'protocolo' | 'autenticacao' | 'sistema' | 'documento'
   protocoloNumero?: string
   detalhes: string
 }

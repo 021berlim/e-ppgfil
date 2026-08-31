@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth-server'
+import { registrarAuditoria } from '@/lib/audit-server'
 import { db } from '@/lib/db'
 import { isDocumentAccessTokenValid } from '@/lib/document-token'
 import { createPresignedDownloadUrl } from '@/lib/r2'
@@ -62,6 +63,15 @@ export async function GET(
       `,
       [file.id, file.protocol_id ?? null, user?.id ?? null],
     )
+
+    await registrarAuditoria({
+      actor: user ? { type: 'user', user } : { type: 'requester', label: 'Solicitante externo' },
+      category: 'documento',
+      action: 'documento_download_autorizado',
+      protocolId: file.protocol_id ?? null,
+      documentFileId: file.id,
+      details: { filename: file.original_filename },
+    })
 
     return NextResponse.json({
       url,
