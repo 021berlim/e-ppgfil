@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import {
+  canCreateUsers,
   canManageUsers,
   canWriteAdmin,
   type ClientSession,
@@ -186,6 +187,14 @@ export async function requireManageUsers() {
   const user = await getCurrentUser()
   if (!canManageUsers(user?.role)) {
     throw new Error('Apenas ROOT ou SECRETARY_ADMIN podem gerenciar usuarios.')
+  }
+  return user
+}
+
+export async function requireCreateUsers() {
+  const user = await getCurrentUser()
+  if (!canCreateUsers(user?.role)) {
+    throw new Error('Apenas ROOT pode cadastrar novos usuarios.')
   }
   return user
 }

@@ -33,3 +33,7 @@ export function canWriteAdmin(role?: string | null) {
 export function canManageUsers(role?: string | null) {
   return role === 'ROOT' || role === 'SECRETARY_ADMIN'
 }
+
+export function canCreateUsers(role?: string | null) {
+  return role === 'ROOT'
+}

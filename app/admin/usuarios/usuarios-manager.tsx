@@ -6,7 +6,8 @@ import { Edit2, Plus, Search, Shield, Trash2, UserRound, X } from 'lucide-react'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { Field, Select, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
-import { DASHBOARD_ROLE_LABELS } from '@/lib/auth-types'
+import { cargoAtual } from '@/lib/store'
+import { DASHBOARD_ROLE_LABELS, canCreateUsers } from '@/lib/auth-types'
 
 type RoleSlug = 'ROOT' | 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR' | 'COORDINATOR'
 
@@ -70,6 +71,8 @@ export function UsuariosManager() {
   const [editing, setEditing] = useState<DashboardUser | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [deleteTarget, setDeleteTarget] = useState<DashboardUser | null>(null)
+  const [currentRole, setCurrentRole] = useState<RoleSlug | null>(null)
+  const allowCreate = canCreateUsers(currentRole)
 
   async function load() {
     setLoading(true)
@@ -88,6 +91,7 @@ export function UsuariosManager() {
   }
 
   useEffect(() => {
+    setCurrentRole(cargoAtual())
     void load()
   }, [])
 
@@ -102,6 +106,7 @@ export function UsuariosManager() {
   }, [search, users])
 
   function openCreate() {
+    if (!allowCreate) return
     setEditing(null)
     setForm(EMPTY_FORM)
     setModalOpen(true)
@@ -177,14 +182,16 @@ export function UsuariosManager() {
             className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm font-semibold outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
           />
         </label>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
-        >
-          <Plus className="size-4" aria-hidden="true" />
-          Novo usuario
-        </button>
+        {allowCreate && (
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            Novo usuario
+          </button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

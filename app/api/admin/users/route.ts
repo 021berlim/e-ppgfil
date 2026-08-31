@@ -5,7 +5,7 @@ import {
   listDashboardUsers,
   updateDashboardUser,
 } from '@/lib/users-admin'
-import { requireManageUsers } from '@/lib/auth-server'
+import { requireCreateUsers, requireManageUsers } from '@/lib/auth-server'
 
 function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : 'Erro inesperado.'
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireManageUsers()
+    await requireCreateUsers()
     const payload = await request.json()
     const row = await createDashboardUser(payload)
     return NextResponse.json(row, { status: 201 })
