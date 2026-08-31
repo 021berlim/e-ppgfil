@@ -91,8 +91,8 @@ export function EmailShell({
                 secretaria.
               </Text>
             </Section>
+            <Text style={legal}>© {new Date().getFullYear()} PPGFIL/UERJ</Text>
           </Container>
-          <Text style={legal}>© {new Date().getFullYear()} PPGFIL/UERJ</Text>
         </Container>
       </Body>
     </Html>
