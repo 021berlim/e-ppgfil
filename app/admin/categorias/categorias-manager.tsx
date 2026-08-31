@@ -33,7 +33,7 @@ import {
   type DocumentoExigido,
   type TipoSolicitacaoItem,
 } from '@/lib/categorias'
-import { isCoordinator } from '@/lib/auth-types'
+import { canManageAdministrativeCatalogs } from '@/lib/auth-types'
 import { cargoAtual } from '@/lib/store'
 
 function novoDocumentoExigido(): DocumentoExigido {
@@ -51,7 +51,7 @@ const FORMATOS_DISPONIVEIS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']
 export function CategoriasManager() {
   const { categorias, carregado } = useCategorias()
   const [busca, setBusca] = useState('')
-  const readOnly = isCoordinator(cargoAtual())
+  const readOnly = !canManageAdministrativeCatalogs(cargoAtual())
 
   // Modais de Categoria
   const [modalCategoriaAberta, setModalCategoriaAberta] = useState(false)

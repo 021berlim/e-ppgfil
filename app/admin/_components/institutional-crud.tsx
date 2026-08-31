@@ -15,7 +15,7 @@ import {
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
-import { isCoordinator } from '@/lib/auth-types'
+import { canManageAdministrativeCatalogs, isCoordinator } from '@/lib/auth-types'
 import { cargoAtual } from '@/lib/store'
 
 type EntityName = 'research-lines' | 'faculty-members' | 'procedures' | 'institutional-forms'
@@ -124,6 +124,12 @@ const TITLES: Record<EntityName, { singular: string; plural: string; created: st
   },
 }
 
+const RESTRICTED_CATALOGS = new Set<EntityName>([
+  'faculty-members',
+  'procedures',
+  'institutional-forms',
+])
+
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
@@ -201,7 +207,10 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
   const [form, setForm] = useState<FormState>(EMPTY[entity])
   const [deleteTarget, setDeleteTarget] = useState<Row | null>(null)
   const meta = TITLES[entity]
-  const readOnly = isCoordinator(cargoAtual())
+  const currentRole = cargoAtual()
+  const readOnly = RESTRICTED_CATALOGS.has(entity)
+    ? !canManageAdministrativeCatalogs(currentRole)
+    : isCoordinator(currentRole)
 
   async function load() {
     setLoading(true)

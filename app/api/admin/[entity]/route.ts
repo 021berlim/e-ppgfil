@@ -6,7 +6,7 @@ import {
   updateEntity,
   type EntityName,
 } from '@/lib/institutional-admin'
-import { requireWriteAdmin } from '@/lib/auth-server'
+import { requireManageAdministrativeCatalogs, requireWriteAdmin } from '@/lib/auth-server'
 
 const ENTITIES = new Set<EntityName>([
   'research-lines',
@@ -27,6 +27,13 @@ function errorResponse(error: unknown) {
   return NextResponse.json({ error: message }, { status: 400 })
 }
 
+async function requireEntityWrite(entity: EntityName) {
+  if (entity === 'faculty-members' || entity === 'procedures' || entity === 'institutional-forms') {
+    return requireManageAdministrativeCatalogs()
+  }
+  return requireWriteAdmin()
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ entity: string }> }) {
   try {
     const params = await context.params
@@ -40,9 +47,9 @@ export async function GET(_request: Request, context: { params: Promise<{ entity
 
 export async function POST(request: Request, context: { params: Promise<{ entity: string }> }) {
   try {
-    await requireWriteAdmin()
     const params = await context.params
     const entity = parseEntity(params.entity)
+    await requireEntityWrite(entity)
     const payload = await request.json()
     const row = await createEntity(entity, payload)
     return NextResponse.json(row, { status: 201 })
@@ -53,9 +60,9 @@ export async function POST(request: Request, context: { params: Promise<{ entity
 
 export async function PUT(request: Request, context: { params: Promise<{ entity: string }> }) {
   try {
-    await requireWriteAdmin()
     const params = await context.params
     const entity = parseEntity(params.entity)
+    await requireEntityWrite(entity)
     const payload = await request.json()
     if (typeof payload.id !== 'string') {
       throw new Error('ID ausente para atualizacao.')
@@ -72,9 +79,9 @@ export async function PUT(request: Request, context: { params: Promise<{ entity:
 
 export async function DELETE(request: Request, context: { params: Promise<{ entity: string }> }) {
   try {
-    await requireWriteAdmin()
     const params = await context.params
     const entity = parseEntity(params.entity)
+    await requireEntityWrite(entity)
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     if (!id) {

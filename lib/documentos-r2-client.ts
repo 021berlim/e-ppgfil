@@ -25,14 +25,23 @@ export async function enviarDocumentoR2(file: File): Promise<Anexo> {
     throw new Error(uploadData.error ?? 'Nao foi possivel preparar o envio do arquivo.')
   }
 
-  const putResponse = await fetch(uploadData.uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
-  })
+  let putResponse: Response
+  try {
+    putResponse = await fetch(uploadData.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    })
+  } catch {
+    throw new Error(
+      'Falha ao enviar para o Cloudflare R2. Verifique a politica CORS do bucket: a origem do sistema deve estar permitida para PUT com o header Content-Type.',
+    )
+  }
 
   if (!putResponse.ok) {
-    throw new Error('Nao foi possivel enviar o arquivo para o armazenamento.')
+    throw new Error(
+      `Nao foi possivel enviar o arquivo para o armazenamento. R2 respondeu HTTP ${putResponse.status}.`,
+    )
   }
 
   const completeResponse = await fetch('/api/documents/complete', {

@@ -22,7 +22,12 @@ import { EpfilLogo } from '@/components/epfil-logo'
 import { Toaster } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { login, logout, usuarioAtualInfo } from '@/lib/store'
-import { DASHBOARD_ROLE_LABELS, canManageUsers, isCoordinator, type ClientSession } from '@/lib/auth-types'
+import {
+  DASHBOARD_ROLE_LABELS,
+  canManageAdministrativeCatalogs,
+  canManageUsers,
+  type ClientSession,
+} from '@/lib/auth-types'
 
 const NAV = [
   {
@@ -102,7 +107,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     ...grupo,
     itens: grupo.itens.filter((item) => {
       if (item.href === '/admin/usuarios') return canManageUsers(sessao?.role)
-      if (item.href === '/admin/categorias') return !isCoordinator(sessao?.role)
+      if (item.href === '/admin/categorias') return canManageAdministrativeCatalogs(sessao?.role)
       return true
     }),
   })).filter((grupo) => grupo.itens.length > 0)

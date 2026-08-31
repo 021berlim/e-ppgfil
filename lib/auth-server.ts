@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import {
+  canManageAdministrativeCatalogs,
   canCreateUsers,
   canManageUsers,
   canWriteAdmin,
@@ -187,6 +188,14 @@ export async function requireManageUsers() {
   const user = await getCurrentUser()
   if (!canManageUsers(user?.role)) {
     throw new Error('Apenas ROOT ou SECRETARY_ADMIN podem gerenciar usuarios.')
+  }
+  return user
+}
+
+export async function requireManageAdministrativeCatalogs() {
+  const user = await getCurrentUser()
+  if (!canManageAdministrativeCatalogs(user?.role)) {
+    throw new Error('Apenas ROOT ou SECRETARY_ADMIN podem gerenciar estes cadastros.')
   }
   return user
 }
