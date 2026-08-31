@@ -2,6 +2,7 @@ import type React from 'react'
 import Link from 'next/link'
 import { Lock } from 'lucide-react'
 import { EpfilLogo } from '@/components/epfil-logo'
+import { CONTATO_PPGFIL } from '@/lib/conteudo-institucional'
 
 type PublicShellProps = {
   children: React.ReactNode
@@ -59,18 +60,18 @@ export function PublicShell({
             <p className="font-bold text-foreground">
               PPGFIL — Programa de Pós-Graduação em Filosofia · UERJ
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
               <span>
                 Contato:{' '}
                 <a
-                  href="mailto:posfil@gmail.com"
+                  href={`mailto:${CONTATO_PPGFIL.email}`}
                   className="font-semibold text-primary underline-offset-2 hover:underline"
                 >
-                  posfil@gmail.com
+                  {CONTATO_PPGFIL.email}
                 </a>
               </span>
-              <span className="hidden text-muted-foreground/40 sm:inline">|</span>
-              <span className="hidden sm:inline">Protótipo de interface (dados locais)</span>
+              <a href={CONTATO_PPGFIL.ouvidoria} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Ouvidoria</a>
+              <a href={CONTATO_PPGFIL.sic} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">SIC</a>
             </div>
           </div>
         ) : (
@@ -79,15 +80,22 @@ export function PublicShell({
               PPGFIL — Programa de Pós-Graduação em Filosofia
             </p>
             <p>
-              Universidade do Estado do Rio de Janeiro · Contato:{' '}
+              Universidade do Estado do Rio de Janeiro · IFCH · {CONTATO_PPGFIL.telefone} ·{' '}
               <a
-                href="mailto:posfil@gmail.com"
+                href={`mailto:${CONTATO_PPGFIL.email}`}
                 className="font-semibold text-primary underline-offset-2 hover:underline"
               >
-                posfil@gmail.com
+                {CONTATO_PPGFIL.email}
               </a>
             </p>
-            <p className="mt-2">Protótipo de interface — dados armazenados apenas neste navegador.</p>
+            <p>{CONTATO_PPGFIL.endereco}</p>
+            <p>Atendimento: {CONTATO_PPGFIL.atendimento}</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <a href={CONTATO_PPGFIL.ifch} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">IFCH</a>
+              <a href={CONTATO_PPGFIL.filosofia} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Filosofia UERJ</a>
+              <a href={CONTATO_PPGFIL.ouvidoria} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Ouvidoria-Geral da UERJ</a>
+              <a href={CONTATO_PPGFIL.sic} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">Serviço de Informação ao Cidadão (SIC)</a>
+            </div>
           </div>
         )}
       </footer>

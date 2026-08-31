@@ -19,6 +19,7 @@ import {
 } from '@/lib/store'
 import { STATUS_FINAIS, type Anexo, type Protocolo } from '@/lib/types'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
+import { obterPrazoDescricaoTipo } from '@/lib/categorias'
 
 export function ConsultaForm() {
   const [cpf, setCpf] = useState('')
@@ -78,6 +79,8 @@ export function ConsultaForm() {
     setErroAnexos('')
     setConfirmarEnvio(false)
   }
+
+  const previsaoRetorno = resultado ? prazoPrevisto(resultado) : null
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -189,16 +192,19 @@ export function ConsultaForm() {
               </span>
               <div>
                 <p className="text-sm font-extrabold text-foreground">
-                  Previsão de retorno:{' '}
-                  {prazoPrevisto(resultado).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
+                  {previsaoRetorno
+                    ? `Previsão de retorno: ${previsaoRetorno.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}`
+                    : obterPrazoDescricaoTipo(resultado.tipo) ??
+                      'Prazo não especificado em fonte oficial'}
                 </p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Estimativa com base no prazo padrão para este tipo de solicitação. A data pode
-                  variar conforme a análise da secretaria.
+                  {previsaoRetorno
+                    ? 'Estimativa calculada com base no prazo configurado para este tipo de solicitação.'
+                    : 'Consulte a secretaria ou o calendário acadêmico quando aplicável.'}
                 </p>
               </div>
             </div>

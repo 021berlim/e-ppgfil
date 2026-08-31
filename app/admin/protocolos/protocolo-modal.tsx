@@ -16,9 +16,9 @@ import {
   usuarioAtual,
 } from '@/lib/store'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
+import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from '@/lib/categorias'
 import {
   MODELOS_RESPOSTA,
-  PRAZO_SLA_DIAS,
   RESPONSAVEIS,
   STATUS_FINAIS,
   STATUS_LIST,
@@ -236,14 +236,20 @@ export function ProtocoloDetalhes({
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Previsão de retorno
               </p>
-              <p className={cnPrazo(atrasado)}>{formatarData(prazo.toISOString())}</p>
+              <p className={cnPrazo(atrasado)}>
+                {prazo ? formatarData(prazo.toISOString()) : 'Sem previsão calculada'}
+              </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {PRAZO_SLA_DIAS[protocolo.tipo]} dias úteis ·{' '}
-                {STATUS_FINAIS.includes(protocolo.status)
-                  ? 'protocolo concluído'
-                  : atrasado
-                    ? 'prazo estourado'
-                    : 'dentro do prazo'}
+                {prazo
+                  ? `${obterPrazoSlaTipo(protocolo.tipo)} dias úteis · ${
+                      STATUS_FINAIS.includes(protocolo.status)
+                        ? 'protocolo concluído'
+                        : atrasado
+                          ? 'prazo estourado'
+                          : 'dentro do prazo'
+                    }`
+                  : obterPrazoDescricaoTipo(protocolo.tipo) ??
+                    'Prazo não especificado em fonte oficial'}
               </p>
             </div>
             <div className="bg-card px-6 py-4">

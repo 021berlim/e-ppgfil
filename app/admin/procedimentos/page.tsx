@@ -29,6 +29,9 @@ export default function ProcedimentosPage() {
                 </li>
               ))}
             </ol>
+            <a href={p.fonte} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-bold text-primary hover:underline">
+              Consultar fonte oficial
+            </a>
           </article>
         ))}
       </div>

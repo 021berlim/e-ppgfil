@@ -3,7 +3,7 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
 import { formatarData, formatarTamanho, prazoPrevisto } from './store'
-import { obterPrazoSlaTipo } from './categorias'
+import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from './categorias'
 import type { Protocolo } from './types'
 
 export function mascararCPF(cpf: string): string {
@@ -35,6 +35,8 @@ export async function baixarComprovantePDF(protocolo: Protocolo) {
     unit: 'mm',
     format: 'a4',
   })
+  const prazoDias = obterPrazoSlaTipo(protocolo.tipo)
+  const previsao = prazoPrevisto(protocolo)
 
   const pageWidth = 210
   const pageHeight = 297
@@ -146,7 +148,10 @@ export async function baixarComprovantePDF(protocolo: Protocolo) {
     { rotulo: 'Tipo de Solicitação:', valor: protocolo.tipo },
     {
       rotulo: 'Previsão de Análise (SLA):',
-      valor: `${obterPrazoSlaTipo(protocolo.tipo)} dias úteis · previsão ${prazoPrevisto(protocolo).toLocaleDateString('pt-BR')}`,
+      valor:
+        prazoDias && previsao
+          ? `${prazoDias} dias úteis · previsão ${previsao.toLocaleDateString('pt-BR')}`
+          : obterPrazoDescricaoTipo(protocolo.tipo) ?? 'Prazo não especificado em fonte oficial',
     },
   ]
 

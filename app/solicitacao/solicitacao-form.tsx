@@ -280,7 +280,11 @@ export function SolicitacaoForm() {
               error={erros.tipo}
               hint={
                 tipoSelecionado
-                  ? `${tipoSelecionado.descricao ? `${tipoSelecionado.descricao} ` : ''}(Prazo estimado: ${tipoSelecionado.prazoDias ?? 7} dias úteis)`
+                  ? `${tipoSelecionado.descricao ? `${tipoSelecionado.descricao} ` : ''}(${
+                      tipoSelecionado.prazoDias
+                        ? `Prazo: ${tipoSelecionado.prazoDias} dias úteis`
+                        : tipoSelecionado.prazoDescricao ?? 'Prazo não especificado'
+                    })`
                   : categoria
                   ? 'Selecione o tipo de serviço desejado.'
                   : 'Escolha uma categoria primeiro.'
@@ -310,7 +314,12 @@ export function SolicitacaoForm() {
                 </option>
                 {tiposDisponiveis.map((t) => (
                   <option key={t.id} value={t.nome}>
-                    {t.nome} {t.prazoDias ? `(${t.prazoDias} dias)` : ''}
+                    {t.nome}{' '}
+                    {t.prazoDias
+                      ? `(${t.prazoDias} dias)`
+                      : t.prazoDescricao
+                        ? `(${t.prazoDescricao})`
+                        : ''}
                   </option>
                 ))}
               </Select>

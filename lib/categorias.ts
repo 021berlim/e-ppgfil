@@ -1,6 +1,7 @@
 'use client'
 
 import categoriasIniciais from '@/data/categorias-solicitacoes.json'
+import categoriasDemo from '@/data/categorias-demo.json'
 
 export type DocumentoExigido = {
   id: string
@@ -16,6 +17,7 @@ export type TipoSolicitacaoItem = {
   nome: string
   descricao?: string
   prazoDias?: number
+  prazoDescricao?: string
   documentosExigidos?: DocumentoExigido[]
 }
 
@@ -26,8 +28,9 @@ export type CategoriaItem = {
   tiposSolicitacao: TipoSolicitacaoItem[]
 }
 
-export const CATEGORIAS_STORAGE_KEY = 'epfil:categorias'
+export const CATEGORIAS_STORAGE_KEY = 'epfil:categorias:v2'
 export const CATEGORIAS_PADRAO: CategoriaItem[] = categoriasIniciais as CategoriaItem[]
+export const CATEGORIAS_DEMO: CategoriaItem[] = categoriasDemo as CategoriaItem[]
 
 const LISTENERS = new Set<() => void>()
 let categoriasCache: CategoriaItem[] | null = null
@@ -180,6 +183,7 @@ export function adicionarTipoSolicitacao(
     nome: string
     descricao?: string
     prazoDias?: number
+    prazoDescricao?: string
     documentosExigidos?: DocumentoExigido[]
   },
 ): TipoSolicitacaoItem | null {
@@ -198,7 +202,8 @@ export function adicionarTipoSolicitacao(
     id: idFinal,
     nome: tipo.nome.trim(),
     descricao: tipo.descricao?.trim() || undefined,
-    prazoDias: tipo.prazoDias || 7,
+    prazoDias: tipo.prazoDias,
+    prazoDescricao: tipo.prazoDescricao?.trim() || undefined,
     documentosExigidos: tipo.documentosExigidos ?? [],
   }
 
@@ -215,7 +220,8 @@ export function editarTipoSolicitacao(
   dados: {
     nome?: string
     descricao?: string
-    prazoDias?: number
+    prazoDias?: number | null
+    prazoDescricao?: string
     documentosExigidos?: DocumentoExigido[]
   },
 ): TipoSolicitacaoItem | null {
@@ -231,7 +237,14 @@ export function editarTipoSolicitacao(
       ...t,
       nome: dados.nome !== undefined ? dados.nome.trim() : t.nome,
       descricao: dados.descricao !== undefined ? dados.descricao.trim() : t.descricao,
-      prazoDias: dados.prazoDias !== undefined ? dados.prazoDias : t.prazoDias,
+      prazoDias:
+        dados.prazoDias === null
+          ? undefined
+          : dados.prazoDias !== undefined
+            ? dados.prazoDias
+            : t.prazoDias,
+      prazoDescricao:
+        dados.prazoDescricao !== undefined ? dados.prazoDescricao.trim() : t.prazoDescricao,
       documentosExigidos:
         dados.documentosExigidos !== undefined
           ? dados.documentosExigidos
@@ -270,6 +283,12 @@ export function restaurarCategoriasPadrao(): CategoriaItem[] {
   return resetadas
 }
 
+export function restaurarCategoriasDemo(): CategoriaItem[] {
+  if (typeof window === 'undefined') return CATEGORIAS_DEMO
+  salvarCategorias(CATEGORIAS_DEMO)
+  return CATEGORIAS_DEMO
+}
+
 export function obterTiposPorCategoria(categoriaNomeOuId: string): TipoSolicitacaoItem[] {
   if (!categoriaNomeOuId) return []
   const lista = lerCategorias()
@@ -281,7 +300,7 @@ export function obterTiposPorCategoria(categoriaNomeOuId: string): TipoSolicitac
   return cat?.tiposSolicitacao ?? []
 }
 
-export function obterPrazoSlaTipo(tipoNomeOuId: string): number {
+export function obterPrazoSlaTipo(tipoNomeOuId: string): number | undefined {
   const lista = lerCategorias()
   for (const cat of lista) {
     const t = cat.tiposSolicitacao.find(
@@ -291,5 +310,18 @@ export function obterPrazoSlaTipo(tipoNomeOuId: string): number {
     )
     if (t?.prazoDias) return t.prazoDias
   }
-  return 7
+  return undefined
+}
+
+export function obterPrazoDescricaoTipo(tipoNomeOuId: string): string | undefined {
+  const lista = lerCategorias()
+  for (const cat of lista) {
+    const tipo = cat.tiposSolicitacao.find(
+      (item) =>
+        item.id.toLowerCase() === tipoNomeOuId.toLowerCase() ||
+        item.nome.toLowerCase() === tipoNomeOuId.toLowerCase(),
+    )
+    if (tipo) return tipo.prazoDescricao
+  }
+  return undefined
 }

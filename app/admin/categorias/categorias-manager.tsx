@@ -63,7 +63,8 @@ export function CategoriasManager() {
   const [tipoEdicao, setTipoEdicao] = useState<TipoSolicitacaoItem | null>(null)
   const [nomeTipo, setNomeTipo] = useState('')
   const [descTipo, setDescTipo] = useState('')
-  const [prazoDias, setPrazoDias] = useState(7)
+  const [prazoDias, setPrazoDias] = useState<number | ''>('')
+  const [prazoDescricao, setPrazoDescricao] = useState('')
   const [documentosExigidos, setDocumentosExigidos] = useState<DocumentoExigido[]>([])
   const [erroTipo, setErroTipo] = useState('')
 
@@ -155,7 +156,8 @@ export function CategoriasManager() {
     setTipoEdicao(null)
     setNomeTipo('')
     setDescTipo('')
-    setPrazoDias(7)
+    setPrazoDias('')
+    setPrazoDescricao('Prazo não especificado no regimento/manual')
     setDocumentosExigidos([])
     setErroTipo('')
     setModalTipoAberta(true)
@@ -166,7 +168,8 @@ export function CategoriasManager() {
     setTipoEdicao(tipo)
     setNomeTipo(tipo.nome)
     setDescTipo(tipo.descricao || '')
-    setPrazoDias(tipo.prazoDias || 7)
+    setPrazoDias(tipo.prazoDias ?? '')
+    setPrazoDescricao(tipo.prazoDescricao ?? '')
     setDocumentosExigidos(tipo.documentosExigidos ?? [])
     setErroTipo('')
     setModalTipoAberta(true)
@@ -196,7 +199,8 @@ export function CategoriasManager() {
       editarTipoSolicitacao(categoriaAlvoTipo.id, tipoEdicao.id, {
         nome: nomeTipo,
         descricao: descTipo,
-        prazoDias: Number(prazoDias) || 7,
+        prazoDias: prazoDias === '' ? null : Number(prazoDias),
+        prazoDescricao,
         documentosExigidos,
       })
       toast(`Tipo "${nomeTipo}" atualizado com sucesso.`)
@@ -204,7 +208,8 @@ export function CategoriasManager() {
       adicionarTipoSolicitacao(categoriaAlvoTipo.id, {
         nome: nomeTipo,
         descricao: descTipo,
-        prazoDias: Number(prazoDias) || 7,
+        prazoDias: prazoDias === '' ? undefined : Number(prazoDias),
+        prazoDescricao,
         documentosExigidos,
       })
       toast(`Novo tipo "${nomeTipo}" adicionado a ${categoriaAlvoTipo.nome}.`)
@@ -447,7 +452,11 @@ export function CategoriasManager() {
 
                           <div className="mt-3 flex items-center gap-1.5 text-[11px] font-bold text-primary">
                             <Clock className="size-3 shrink-0" aria-hidden="true" />
-                            <span>Prazo SLA: {t.prazoDias ?? 7} dias úteis</span>
+                            <span>
+                              {t.prazoDias
+                                ? `Prazo SLA: ${t.prazoDias} dias úteis`
+                                : t.prazoDescricao ?? 'Prazo não especificado'}
+                            </span>
                           </div>
                           {(t.documentosExigidos?.length ?? 0) > 0 && (
                             <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
@@ -607,9 +616,9 @@ export function CategoriasManager() {
               </Field>
 
               <Field
-                label="Prazo padrão estimado (dias úteis)"
+                label="Prazo oficial em dias úteis"
                 htmlFor="tipo-prazo"
-                hint="Utilizado para o cálculo de previsão e alerta de atraso na esteira."
+                hint="Preencha apenas quando houver prazo oficial confirmado; caso contrário, deixe vazio."
               >
                 <TextInput
                   id="tipo-prazo"
@@ -617,7 +626,21 @@ export function CategoriasManager() {
                   min={1}
                   max={90}
                   value={prazoDias}
-                  onChange={(e) => setPrazoDias(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) =>
+                    setPrazoDias(e.target.value ? Math.max(1, parseInt(e.target.value)) : '')
+                  }
+                />
+              </Field>
+
+              <Field
+                label="Observação sobre o prazo"
+                htmlFor="tipo-prazo-descricao"
+                hint="Ex.: Conforme calendário acadêmico ou prazo não especificado no regimento."
+              >
+                <TextInput
+                  id="tipo-prazo-descricao"
+                  value={prazoDescricao}
+                  onChange={(e) => setPrazoDescricao(e.target.value)}
                 />
               </Field>
 
