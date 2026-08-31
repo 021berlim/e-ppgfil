@@ -64,6 +64,22 @@ export async function moverStatusRemoto(id: string, status: Status, observation?
   return payload
 }
 
+export async function gerenciarProtocoloRemoto(
+  id: string,
+  action: 'assign' | 'note' | 'archive' | 'unarchive' | 'reject_requirement',
+  value?: string,
+) {
+  const resposta = await fetch(`/api/protocolos/${id}/manage`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, value }),
+  })
+  const payload = await resposta.json()
+  if (!resposta.ok) throw new Error(payload.error ?? 'Nao foi possivel atualizar o protocolo.')
+  window.dispatchEvent(new Event('epfil:protocolos-refresh'))
+  return payload
+}
+
 export async function adicionarAndamentoRemoto(input: {
   id: string
   message: string

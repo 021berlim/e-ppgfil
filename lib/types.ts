@@ -32,29 +32,10 @@ export type Anexo = {
   status?: 'pending_upload' | 'available' | 'quarantined' | 'deleted'
 }
 
-// Prazo padrão (em dias úteis) por tipo de solicitação. Mockado, porém configurável.
-export const PRAZO_SLA_DIAS: Record<string, number> = {
-  'Matrícula': 3,
-  'Trancamento': 5,
-  'Aproveitamento de disciplina': 10,
-  'Solicitação de documento': 5,
-  'Outros': 7,
-}
-
 // Etapas finais: quando alcançadas, o protocolo é considerado concluído.
 export const STATUS_FINAIS: Status[] = ['Deferido', 'Indeferido']
 
-// Funcionários da secretaria disponíveis para atribuição (mock).
-export const RESPONSAVEIS = [
-  'Carla Nogueira',
-  'Marcos Vinícius Prado',
-  'Renata Bicalho',
-  'Otávio Lins',
-  'Sônia Meireles',
-] as const
-export type Responsavel = (typeof RESPONSAVEIS)[number]
-
-// Modelos de resposta rápida para o histórico (mock, editáveis antes de salvar).
+// Modelos de resposta rápida para o histórico, editáveis antes de salvar.
 export const MODELOS_RESPOSTA = [
   'Documentação recebida, seguindo para análise.',
   'Aguardando retorno do solicitante para dar continuidade ao processo.',

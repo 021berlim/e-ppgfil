@@ -9,7 +9,7 @@ import { useProtocolos } from '@/hooks/use-protocolos'
 import { formatarCPF, formatarData, soDigitos } from '@/lib/store'
 
 export function ProtocolosArquivados() {
-  const { protocolos, carregado } = useProtocolos({ incluirArquivados: true })
+  const { protocolos, carregado, erro } = useProtocolos({ incluirArquivados: true })
   const [busca, setBusca] = useState('')
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
@@ -72,6 +72,8 @@ export function ProtocolosArquivados() {
       <main className="px-6 py-6 lg:px-8">
         {!carregado ? (
           <p className="text-sm font-bold text-muted-foreground">Carregando arquivados…</p>
+        ) : erro ? (
+          <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/8 p-5 text-sm font-bold text-destructive">{erro}</div>
         ) : arquivados.length === 0 ? (
           <div className="grid min-h-64 place-items-center rounded-2xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
             <div>

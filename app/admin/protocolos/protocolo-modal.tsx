@@ -3,15 +3,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArchiveRestore, ArrowLeft, CircleCheckBig, Download, EyeOff, Lock, Plus, RotateCcw, TriangleAlert } from 'lucide-react'
 import {
-  adicionarNotaInterna,
-  atribuirResponsavel,
-  desarquivarProtocolo,
   estaAtrasado,
   formatarCPF,
   formatarData,
   nomeUsuarioAtual,
   prazoPrevisto,
-  recusarRespostaExigencia,
   cargoAtual,
   usuarioAtual,
 } from '@/lib/store'
@@ -33,7 +29,7 @@ import { Select, TextArea } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
-import { adicionarAndamentoRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
+import { adicionarAndamentoRemoto, gerenciarProtocoloRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_DETALHES: TourStep[] = [
   { alvo: '[data-tour="detail-header"]', titulo: 'Detalhes do protocolo', texto: 'Esta página reúne todas as informações e ações de um protocolo.', posicao: 'bottom' },
@@ -60,7 +56,7 @@ type AcaoPendente =
   | { tipo: 'andamento' }
   | { tipo: 'nota' }
   | { tipo: 'status'; status: Status }
-  | { tipo: 'responsavel'; responsavel: string }
+  | { tipo: 'responsavel'; responsavelId: string; responsavelNome: string }
   | { tipo: 'recusar' }
   | { tipo: 'desarquivar' }
 
@@ -180,8 +176,12 @@ export function ProtocoloDetalhes({
         toast(error instanceof Error ? error.message : 'Nao foi possivel registrar o andamento.')
       }
     } else if (acaoPendente.tipo === 'nota') {
-      adicionarNotaInterna(protocolo.id, nota, autor)
-      setNota('')
+      try {
+        await gerenciarProtocoloRemoto(protocolo.id, 'note', nota)
+        setNota('')
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel registrar a nota.')
+      }
     } else if (acaoPendente.tipo === 'status') {
       try {
         await moverStatusRemoto(protocolo.id, acaoPendente.status)
@@ -190,12 +190,24 @@ export function ProtocoloDetalhes({
         toast(error instanceof Error ? error.message : 'Nao foi possivel atualizar o protocolo.')
       }
     } else if (acaoPendente.tipo === 'responsavel') {
-      atribuirResponsavel(protocolo.id, acaoPendente.responsavel, autor)
+      try {
+        await gerenciarProtocoloRemoto(protocolo.id, 'assign', acaoPendente.responsavelId)
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel atribuir o responsavel.')
+      }
     } else if (acaoPendente.tipo === 'desarquivar') {
-      desarquivarProtocolo(protocolo.id, autor)
+      try {
+        await gerenciarProtocoloRemoto(protocolo.id, 'unarchive')
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel desarquivar o protocolo.')
+      }
     } else {
-      recusarRespostaExigencia(protocolo.id, motivo, autor)
-      toast(`Resposta recusada. Envie um andamento para notificar ${protocolo.nome}.`)
+      try {
+        await gerenciarProtocoloRemoto(protocolo.id, 'reject_requirement', motivo)
+        toast(`Resposta recusada. Envie um andamento para notificar ${protocolo.nome}.`)
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Nao foi possivel recusar a resposta.')
+      }
     }
     setAcaoPendente(null)
   }
@@ -323,22 +335,27 @@ export function ProtocoloDetalhes({
                   </label>
                   <Select
                     id="responsavel"
-                    value={protocolo.responsavel ?? ''}
-                    onChange={(e) =>
-                      setAcaoPendente({ tipo: 'responsavel', responsavel: e.target.value })
-                    }
+                    value={responsaveis.find((item) => item.name === protocolo.responsavel)?.id ?? ''}
+                    onChange={(e) => {
+                      const escolhido = responsaveis.find((item) => item.id === e.target.value)
+                      setAcaoPendente({
+                        tipo: 'responsavel',
+                        responsavelId: e.target.value,
+                        responsavelNome: escolhido?.name ?? '',
+                      })
+                    }}
                     className="mt-1.5 py-2 text-sm"
                   >
                     <option value="">
                       {carregandoResponsaveis ? 'Carregando responsáveis...' : 'Sem responsável'}
                     </option>
                     {responsavelAtualForaDaLista && (
-                      <option value={protocolo.responsavel}>
+                      <option value="" disabled>
                         {protocolo.responsavel} (fora da lista atual)
                       </option>
                     )}
                     {responsaveis.map((responsavel) => (
-                      <option key={responsavel.id} value={responsavel.name}>
+                      <option key={responsavel.id} value={responsavel.id}>
                         {responsavel.name}
                       </option>
                     ))}
@@ -613,7 +630,7 @@ function tituloConfirmacao(acao: AcaoPendente | null) {
 function descricaoConfirmacao(acao: AcaoPendente | null) {
   if (acao?.tipo === 'recusar') return 'O aluno será notificado e deverá enviar uma nova documentação.'
   if (acao?.tipo === 'status') return `O protocolo será movido para “${acao.status}”.`
-  if (acao?.tipo === 'responsavel') return `O responsável será alterado para “${acao.responsavel || 'Sem responsável'}”.`
+  if (acao?.tipo === 'responsavel') return `O responsável será alterado para “${acao.responsavelNome || 'Sem responsável'}”.`
   if (acao?.tipo === 'desarquivar') return 'O protocolo voltará para a coluna correspondente à sua última etapa.'
   if (acao?.tipo === 'nota') return 'A nota ficará visível somente para a equipe administrativa.'
   return 'O andamento será registrado e ficará visível ao solicitante.'

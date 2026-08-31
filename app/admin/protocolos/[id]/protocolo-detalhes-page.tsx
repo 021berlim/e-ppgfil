@@ -7,7 +7,7 @@ import { ProtocoloDetalhes } from '../protocolo-modal'
 
 export function DetalhesProtocoloPage({ id }: { id: string }) {
   const router = useRouter()
-  const { protocolos, carregado } = useProtocolos({ incluirArquivados: true })
+  const { protocolos, carregado, erro } = useProtocolos({ incluirArquivados: true })
   const protocolo = protocolos.find((item) => item.id === id)
   const voltar = () =>
     router.push(protocolo?.arquivado ? '/admin/protocolos/arquivados' : '/admin/protocolos')
@@ -20,13 +20,13 @@ export function DetalhesProtocoloPage({ id }: { id: string }) {
     )
   }
 
-  if (!protocolo) {
+  if (erro || !protocolo) {
     return (
       <main className="grid min-h-[60dvh] place-items-center px-6 py-10">
         <div className="max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <h1 className="text-xl font-extrabold text-foreground">Protocolo não encontrado</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Este protocolo pode ter sido removido ou o endereço informado está incorreto.
+            {erro ?? 'Este protocolo pode ter sido removido ou o endereço informado está incorreto.'}
           </p>
           <button
             type="button"

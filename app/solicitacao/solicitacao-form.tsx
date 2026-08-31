@@ -1,12 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, CircleCheckBig, Copy, Download, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
 import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { ChecklistDocumentos, UploadAnexos } from '@/components/anexos'
-import { CaptchaMock, type CaptchaHandle } from '@/components/captcha-mock'
 import { formatarCPF, soDigitos } from '@/lib/store'
 import type { Anexo, Protocolo } from '@/lib/types'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
@@ -40,7 +39,6 @@ export function SolicitacaoForm() {
   const [copiado, setCopiado] = useState(false)
   const [confirmarCriacao, setConfirmarCriacao] = useState(false)
   const [enviando, setEnviando] = useState(false)
-  const captchaRef = useRef<CaptchaHandle>(null)
 
   const categoriaSelecionada = categorias.find(
     (c) => c.id === categoria || c.nome === categoria,
@@ -89,8 +87,7 @@ export function SolicitacaoForm() {
   function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
     const camposOk = validar()
-    const captchaOk = captchaRef.current?.validar() ?? false
-    if (!camposOk || !captchaOk) return
+    if (!camposOk) return
     setConfirmarCriacao(true)
   }
 
@@ -404,7 +401,6 @@ export function SolicitacaoForm() {
             />
           )}
 
-          <CaptchaMock ref={captchaRef} />
 
           <button
             type="submit"

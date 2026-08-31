@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, ScrollText } from 'lucide-react'
 import type { RegistroAuditoria } from '@/lib/types'
-import { formatarData, lerAuditoria, subscribeAuditoria } from '@/lib/store'
+import { formatarData } from '@/lib/store'
 
 const REGISTROS_POR_PAGINA = 100
 
@@ -32,18 +32,13 @@ export function AuditoriaLista() {
     }
 
     const atualizar = async () => {
-      const locais = lerAuditoria()
       const remotos = await carregarRemotos()
-      if (!cancelado) setRegistros(ordenar([...remotos, ...locais]))
+      if (!cancelado) setRegistros(ordenar(remotos))
     }
 
-    atualizar()
-    const unsubscribe = subscribeAuditoria(() => {
-      void atualizar()
-    })
+    void atualizar()
     return () => {
       cancelado = true
-      unsubscribe()
     }
   }, [])
 

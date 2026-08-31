@@ -18,12 +18,10 @@ import {
 import { Archive, ChevronDown, GripVertical, Paperclip, Search, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  arquivarProtocolo,
   cargoAtual,
   estaAtrasado,
   formatarCPF,
   formatarData,
-  nomeUsuarioAtual,
   soDigitos,
   usuarioAtual,
 } from '@/lib/store'
@@ -32,7 +30,6 @@ import {
   STATUS_FINAIS,
   STATUS_LIST,
   STATUS_STYLES,
-  TIPOS_SOLICITACAO,
   type Protocolo,
   type Status,
 } from '@/lib/types'
@@ -42,7 +39,7 @@ import { Select, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
-import { moverStatusRemoto } from '@/lib/protocolos-client'
+import { gerenciarProtocoloRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_TUTORIAL: TourStep[] = [
   { alvo: '[data-tour="admin-sidebar"]', titulo: 'Navegação principal', texto: 'Use este menu para acessar a esteira, o painel e os conteúdos administrativos.', posicao: 'right' },
@@ -469,7 +466,7 @@ const Coluna = memo(function Coluna({
 
 export function KanbanBoard() {
   const router = useRouter()
-  const { protocolos, carregado } = useProtocolos()
+  const { protocolos, carregado, erro } = useProtocolos()
   const [filtro, setFiltro] = useState('')
   const [filtroResp, setFiltroResp] = useState('')
   const [busca, setBusca] = useState('')
@@ -726,6 +723,10 @@ export function KanbanBoard() {
       <div className="min-h-0 flex-1 px-6 py-6 lg:px-8">
         {!carregado ? (
           <p className="text-sm font-bold text-muted-foreground">Carregando protocolos…</p>
+        ) : erro ? (
+          <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/8 p-5 text-sm font-bold text-destructive">
+            {erro}
+          </div>
         ) : (
           <DndContext sensors={sensors} onDragStart={handleStart} onDragEnd={handleEnd}>
             <div data-tour="kanban-columns" className="grid h-full min-h-0 min-w-0 auto-rows-[32rem] grid-cols-1 gap-4 overflow-x-hidden overflow-y-auto pb-4 sm:grid-cols-2 lg:grid-cols-3 xl:auto-rows-fr xl:grid-cols-5 xl:overflow-y-hidden">
@@ -766,7 +767,9 @@ export function KanbanBoard() {
         onConfirmar={() => {
           if (!arquivarId) return
           if (readOnly) return
-          arquivarProtocolo(arquivarId, nomeUsuarioAtual() ?? 'Secretaria')
+          void gerenciarProtocoloRemoto(arquivarId, 'archive').catch((error) =>
+            toast(error instanceof Error ? error.message : 'Nao foi possivel arquivar o protocolo.'),
+          )
           setArquivarId(null)
         }}
       />

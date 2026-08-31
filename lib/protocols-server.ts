@@ -1,7 +1,6 @@
 import type { PoolClient } from 'pg'
 import { db } from './db'
 import { isDocumentAccessTokenValid } from './document-token'
-import { formatarTamanho } from './store'
 import type { Anexo, Protocolo, Status } from './types'
 import { STATUS_LIST } from './types'
 
@@ -38,7 +37,12 @@ export function formatDateTime(iso: string) {
 export function formatAttachmentSummaries(anexos: Anexo[]) {
   return anexos.map((anexo) => ({
     filename: anexo.nome,
-    sizeLabel: formatarTamanho(anexo.tamanho),
+    sizeLabel:
+      anexo.tamanho < 1024
+        ? `${anexo.tamanho} B`
+        : anexo.tamanho < 1024 * 1024
+          ? `${(anexo.tamanho / 1024).toFixed(0)} KB`
+          : `${(anexo.tamanho / (1024 * 1024)).toFixed(1)} MB`,
   }))
 }
 
@@ -74,6 +78,7 @@ function validateStatus(value: string): Status {
 
 function mapProtocolRow(row: Record<string, any>): Protocolo {
   const historyRows = Array.isArray(row.history) ? row.history : []
+  const noteRows = Array.isArray(row.internal_notes) ? row.internal_notes : []
   return {
     id: row.id,
     numero: row.number,
@@ -91,7 +96,12 @@ function mapProtocolRow(row: Record<string, any>): Protocolo {
     criadoEm: new Date(row.created_at).toISOString(),
     atualizadoEm: new Date(row.updated_at).toISOString(),
     responsavel: row.assigned_to_name ?? undefined,
-    notasInternas: [],
+    notasInternas: noteRows.map((note: Record<string, any>) => ({
+      id: note.id,
+      data: new Date(note.created_at).toISOString(),
+      autor: note.author_name,
+      mensagem: note.message,
+    })),
     historico: historyRows.map((history: Record<string, any>) => ({
       id: history.id,
       data: new Date(history.created_at).toISOString(),
@@ -104,7 +114,7 @@ function mapProtocolRow(row: Record<string, any>): Protocolo {
   }
 }
 
-async function queryProtocols(whereSql: string, values: unknown[]) {
+async function queryProtocols(whereSql: string, values: unknown[], includePrivate = false) {
   const result = await db.query(
     `
       SELECT
@@ -124,6 +134,22 @@ async function queryProtocols(whereSql: string, values: unknown[]) {
         req.email AS requester_email,
         assigned.name AS assigned_to_name,
         archived_user.name AS archived_by_name,
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'id', n.id,
+                'created_at', n.created_at,
+                'author_name', n.author_name,
+                'message', n.message
+              ) ORDER BY n.created_at
+            )
+            FROM public.internal_notes n
+            WHERE n.protocol_id = p.id
+              ${includePrivate ? '' : 'AND false'}
+          ),
+          '[]'::jsonb
+        ) AS internal_notes,
         COALESCE(
           (
             SELECT jsonb_agg(
@@ -158,6 +184,7 @@ async function queryProtocols(whereSql: string, values: unknown[]) {
             )
             FROM public.protocol_history h
             WHERE h.protocol_id = p.id
+              ${includePrivate ? '' : 'AND h.visible_to_requester = true'}
           ),
           '[]'::jsonb
         ) AS history
@@ -175,7 +202,7 @@ async function queryProtocols(whereSql: string, values: unknown[]) {
 }
 
 export async function listProtocols({ includeArchived = false }: { includeArchived?: boolean } = {}) {
-  return queryProtocols(includeArchived ? '' : 'WHERE p.archived = false', [])
+  return queryProtocols(includeArchived ? '' : 'WHERE p.archived = false', [], true)
 }
 
 export async function getProtocolByPublicLookup(cpf: string, number: string) {
@@ -187,7 +214,7 @@ export async function getProtocolByPublicLookup(cpf: string, number: string) {
 }
 
 export async function getProtocolById(id: string) {
-  const protocols = await queryProtocols('WHERE p.id = $1 LIMIT 1', [id])
+  const protocols = await queryProtocols('WHERE p.id = $1 LIMIT 1', [id], true)
   return protocols[0] ?? null
 }
 
@@ -490,6 +517,96 @@ export async function addProtocolHistoryEntry({
       observation: text,
       updatedAt: new Date().toISOString(),
     }
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
+export async function manageProtocol({
+  id,
+  action,
+  value,
+  authorUserId,
+  authorName,
+}: {
+  id: string
+  action: 'assign' | 'note' | 'archive' | 'unarchive' | 'reject_requirement'
+  value?: string
+  authorUserId: string
+  authorName: string
+}) {
+  const client = await db.connect()
+  try {
+    await client.query('BEGIN')
+    const result = await client.query(
+      `SELECT id, number, status, requirement_substage, assigned_to, archived
+       FROM public.protocols WHERE id = $1 FOR UPDATE`,
+      [id],
+    )
+    const protocol = result.rows[0]
+    if (!protocol) throw new Error('Protocolo nao encontrado.')
+
+    let message = ''
+    if (action === 'note') {
+      const note = value?.trim()
+      if (!note) throw new Error('Informe a nota interna.')
+      await client.query(
+        `INSERT INTO public.internal_notes (protocol_id, author_user_id, author_name, message)
+         VALUES ($1, $2, $3, $4)`,
+        [id, authorUserId, authorName, note],
+      )
+      message = 'Nota interna registrada.'
+    } else if (action === 'assign') {
+      const assigneeId = value?.trim() || null
+      if (assigneeId) {
+        const assignee = await client.query(
+          `SELECT id, name FROM public.users WHERE id = $1 AND is_active = true LIMIT 1`,
+          [assigneeId],
+        )
+        if (!assignee.rows[0]) throw new Error('Responsavel invalido.')
+        message = `Responsavel alterado para ${assignee.rows[0].name}.`
+      } else {
+        message = 'Responsavel removido.'
+      }
+      await client.query('UPDATE public.protocols SET assigned_to = $2 WHERE id = $1', [id, assigneeId])
+    } else if (action === 'archive') {
+      if (!['Deferido', 'Indeferido'].includes(protocol.status)) {
+        throw new Error('Apenas protocolos finalizados podem ser arquivados.')
+      }
+      await client.query(
+        `UPDATE public.protocols SET archived = true, archived_at = now(), archived_by = $2 WHERE id = $1`,
+        [id, authorUserId],
+      )
+      message = `Protocolo arquivado por ${authorName}.`
+    } else if (action === 'unarchive') {
+      await client.query(
+        `UPDATE public.protocols SET archived = false, archived_at = NULL, archived_by = NULL WHERE id = $1`,
+        [id],
+      )
+      message = `Protocolo desarquivado por ${authorName}.`
+    } else {
+      const reason = value?.trim()
+      if (!reason) throw new Error('Informe o motivo da recusa.')
+      if (protocol.status !== 'Com exigência' || protocol.requirement_substage !== 'respondida') {
+        throw new Error('Nao ha resposta de exigencia aguardando conferencia.')
+      }
+      await client.query('UPDATE public.protocols SET requirement_substage = NULL WHERE id = $1', [id])
+      message = `Documento recusado ou insuficiente. Motivo: ${reason}`
+    }
+
+    if (action !== 'note') {
+      await client.query(
+        `INSERT INTO public.protocol_history
+           (protocol_id, author_user_id, author_name, origin, status, message, visible_to_requester)
+         VALUES ($1, $2, $3, 'secretaria', $4, $5, $6)`,
+        [id, authorUserId, authorName, protocol.status, message, action !== 'assign'],
+      )
+    }
+    await client.query('COMMIT')
+    return { protocolId: id, protocolNumber: protocol.number as string, action, message }
   } catch (error) {
     await client.query('ROLLBACK')
     throw error

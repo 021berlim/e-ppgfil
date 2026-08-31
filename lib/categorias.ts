@@ -1,7 +1,6 @@
 'use client'
 
 import categoriasIniciais from '@/data/categorias-solicitacoes.json'
-import categoriasDemo from '@/data/categorias-demo.json'
 
 export type DocumentoExigido = {
   id: string
@@ -30,7 +29,6 @@ export type CategoriaItem = {
 
 export const CATEGORIAS_STORAGE_KEY = 'epfil:categorias:v2'
 export const CATEGORIAS_PADRAO: CategoriaItem[] = categoriasIniciais as CategoriaItem[]
-export const CATEGORIAS_DEMO: CategoriaItem[] = categoriasDemo as CategoriaItem[]
 
 const LISTENERS = new Set<() => void>()
 let categoriasCache: CategoriaItem[] | null = null
@@ -297,18 +295,6 @@ export function deletarTipoSolicitacao(categoriaId: string, tipoId: string): boo
 export function restaurarCategoriasPadrao(): CategoriaItem[] {
   salvarCategorias(CATEGORIAS_PADRAO)
   return CATEGORIAS_PADRAO
-}
-
-export function restaurarCategoriasDemo(): CategoriaItem[] {
-  if (typeof window === 'undefined') return CATEGORIAS_DEMO
-  // O reset de demonstração é deliberadamente local: não deve sobrescrever
-  // o cadastro global oficial no JSON do projeto.
-  const serializado = JSON.stringify(CATEGORIAS_DEMO)
-  window.localStorage.setItem(CATEGORIAS_STORAGE_KEY, serializado)
-  categoriasCache = CATEGORIAS_DEMO
-  storageCache = serializado
-  emit()
-  return CATEGORIAS_DEMO
 }
 
 export function obterTiposPorCategoria(categoriaNomeOuId: string): TipoSolicitacaoItem[] {
