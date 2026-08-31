@@ -111,7 +111,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <EpfilLogo
               variant="light"
               size="sm"
-              className={cn(sidebarRecolhida && 'lg:[&>div:last-child]:hidden')}
             />
           </Link>
         </div>
