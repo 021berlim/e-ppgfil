@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   name varchar(180) NOT NULL,
   email citext NOT NULL UNIQUE,
   password_hash text NOT NULL,
+  avatar_url text,
   is_active boolean NOT NULL DEFAULT true,
   last_login_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),

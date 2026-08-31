@@ -68,6 +68,7 @@ export async function getCurrentUser(): Promise<ClientSession | null> {
         u.id,
         u.name,
         u.email,
+        u.avatar_url,
         r.slug AS role
       FROM public.user_sessions s
       JOIN public.users u ON u.id = s.user_id
@@ -89,6 +90,7 @@ export async function getCurrentUser(): Promise<ClientSession | null> {
     id: user.id,
     email: user.email,
     name: user.name,
+    avatar_url: user.avatar_url,
     role: user.role as DashboardRole,
     em: Date.now(),
   }
@@ -101,6 +103,7 @@ export async function authenticateDashboardUser(email: string, password: string)
         u.id,
         u.name,
         u.email,
+        u.avatar_url,
         u.password_hash,
         r.slug AS role
       FROM public.users u
@@ -124,6 +127,7 @@ export async function authenticateDashboardUser(email: string, password: string)
       id: created.id,
       email: created.email,
       name: created.name,
+      avatar_url: created.avatar_url,
       role: 'ROOT',
       em: Date.now(),
     } satisfies ClientSession
@@ -139,6 +143,7 @@ export async function authenticateDashboardUser(email: string, password: string)
     id: user.id,
     email: user.email,
     name: user.name,
+    avatar_url: user.avatar_url,
     role: user.role as DashboardRole,
     em: Date.now(),
   } satisfies ClientSession
@@ -153,7 +158,7 @@ async function bootstrapRootUser(email: string, password: string) {
       `
         INSERT INTO public.users (name, email, password_hash, is_active, last_login_at)
         VALUES ($1, $2, $3, true, now())
-        RETURNING id, name, email
+        RETURNING id, name, email, avatar_url
       `,
       [email.split('@')[0] || 'ROOT', email.toLowerCase(), passwordHash],
     )

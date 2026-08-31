@@ -11,6 +11,7 @@ export type ClientSession = {
   id?: string
   email: string
   name?: string
+  avatar_url?: string | null
   role: DashboardRole
   em: number
 }

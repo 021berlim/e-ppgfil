@@ -29,7 +29,6 @@ import {
 } from '@/lib/store'
 import { isCoordinator } from '@/lib/auth-types'
 import {
-  RESPONSAVEIS,
   STATUS_FINAIS,
   STATUS_LIST,
   STATUS_STYLES,
@@ -60,6 +59,13 @@ type FaixaTempo = {
   id: FaixaTempoId
   nome: string
   itens: Protocolo[]
+}
+
+type ResponsavelAtribuivel = {
+  id: string
+  name: string
+  email: string
+  role: 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR'
 }
 
 const FAIXAS_TEMPO: Array<{ id: FaixaTempoId; nome: string }> = [
@@ -435,6 +441,8 @@ export function KanbanBoard() {
   const [filtroResp, setFiltroResp] = useState('')
   const [busca, setBusca] = useState('')
   const buscaAdiada = useDeferredValue(busca)
+  const [responsaveis, setResponsaveis] = useState<ResponsavelAtribuivel[]>([])
+  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
   const [ativoId, setAtivoId] = useState<string | null>(null)
   const [movimentoPendente, setMovimentoPendente] = useState<{
     id: string
@@ -447,6 +455,30 @@ export function KanbanBoard() {
   const passosTutorial = readOnly
     ? PASSOS_TUTORIAL.filter((passo) => passo.animacao !== 'arrastar')
     : PASSOS_TUTORIAL
+
+  useEffect(() => {
+    let ativo = true
+    async function carregarResponsaveis() {
+      setCarregandoResponsaveis(true)
+      try {
+        const resposta = await fetch('/api/admin/protocol-assignees', { cache: 'no-store' })
+        const dados = await resposta.json().catch(() => null)
+        if (!resposta.ok) {
+          throw new Error(dados?.error ?? 'Nao foi possivel carregar responsaveis.')
+        }
+        if (ativo) setResponsaveis(Array.isArray(dados) ? dados : [])
+      } catch {
+        if (ativo) setResponsaveis([])
+      } finally {
+        if (ativo) setCarregandoResponsaveis(false)
+      }
+    }
+
+    void carregarResponsaveis()
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -479,6 +511,10 @@ export function KanbanBoard() {
     })
     return Array.from(tipos).sort()
   }, [protocolos])
+
+  const responsaveisDisponiveis = useMemo(() => {
+    return responsaveis.map((responsavel) => responsavel.name).sort()
+  }, [responsaveis])
 
   const porStatus = useMemo(() => {
     const mapa = {} as Record<Status, Protocolo[]>
@@ -627,11 +663,21 @@ export function KanbanBoard() {
             >
               <option value="">Todos</option>
               <option value="__sem__">Sem responsável</option>
-              {RESPONSAVEIS.map((r) => (
+              {responsaveisDisponiveis.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
               ))}
+              {carregandoResponsaveis && (
+                <option value="" disabled>
+                  Carregando responsáveis...
+                </option>
+              )}
+              {!carregandoResponsaveis && responsaveisDisponiveis.length === 0 && (
+                <option value="" disabled>
+                  Nenhum responsável disponível
+                </option>
+              )}
             </Select>
           </div>
           </div>

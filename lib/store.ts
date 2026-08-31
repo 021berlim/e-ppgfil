@@ -562,6 +562,7 @@ export function usuarioAtualInfo(): ClientSession | null {
       id: sessao.id,
       email,
       name: sessao.name,
+      avatar_url: sessao.avatar_url ?? null,
       role: sessao.role ?? 'SECRETARY_ADMIN',
       em: sessao.em ?? Date.now(),
     }

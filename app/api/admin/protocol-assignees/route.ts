@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireWriteAdmin } from '@/lib/auth-server'
+import { getCurrentUser } from '@/lib/auth-server'
 import { listProtocolAssignees } from '@/lib/users-admin'
 
 function errorResponse(error: unknown) {
@@ -9,7 +9,10 @@ function errorResponse(error: unknown) {
 
 export async function GET() {
   try {
-    await requireWriteAdmin()
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Acesso nao autorizado.' }, { status: 401 })
+    }
     const rows = await listProtocolAssignees()
     return NextResponse.json(rows)
   } catch (error) {
