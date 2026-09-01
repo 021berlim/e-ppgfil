@@ -61,60 +61,46 @@ export function ProtocolStatusUpdateEmail({
 
   const steps = [
     {
-      id: "gerado",
+      id: "inicio",
       label: "Início",
-      status: "Concluído",
-      date:
-        previousStatus && previousStatus !== "—"
-          ? `em ${updatedAt}`
-          : "Registro inicial",
-      isCompleted:
-        currentStatus !== "Gerado" &&
-        currentStatus !== "Em tramitação" &&
-        currentStatus !== "Com exigência",
+      status: currentStatus === "Gerado" ? "Em andamento" : "Concluído",
+      date: currentStatus === "Gerado" ? "Registro inicial" : `em ${updatedAt}`,
+      isCompleted: currentStatus !== "Gerado",
       isCurrent: currentStatus === "Gerado",
-      isPending: currentStatus === "Gerado" ? false : false,
+      isPending: false,
     },
     {
-      id: "tramite",
+      id: "analise",
       label: "Em análise",
       status:
         currentStatus === "Em tramitação"
           ? "Em andamento"
           : currentStatus === "Com exigência"
-            ? "Pendente"
-            : currentStatus === "Gerado"
-              ? "Pendente"
-              : "Concluído",
-      date:
-        currentStatus === "Em tramitação"
-          ? `em ${updatedAt}`
-          : currentStatus === "Com exigência"
-            ? "Aguardando"
+            ? "Aguardando documento"
             : currentStatus === "Deferido" || currentStatus === "Indeferido"
-              ? `em ${updatedAt}`
-              : "Aguardando",
+              ? "Concluído"
+              : "Pendente",
+      date:
+        currentStatus === "Em tramitação" || currentStatus === "Com exigência"
+          ? `em ${updatedAt}`
+          : currentStatus === "Deferido" || currentStatus === "Indeferido"
+            ? `em ${updatedAt}`
+            : "Aguardando",
       isCompleted:
-        currentStatus === "Deferido" ||
-        currentStatus === "Indeferido" ||
-        currentStatus === "Com exigência",
-      isCurrent: currentStatus === "Em tramitação",
-      isPending:
-        currentStatus === "Gerado" || currentStatus === "Com exigência",
+        currentStatus === "Deferido" || currentStatus === "Indeferido",
+      isCurrent:
+        currentStatus === "Em tramitação" || currentStatus === "Com exigência",
+      isPending: currentStatus === "Gerado",
     },
     {
-      id: "final",
+      id: "resultado",
       label: currentStatus === "Indeferido" ? "Indeferido" : "Concluído",
       status:
         currentStatus === "Indeferido"
           ? "Não se aplica"
           : currentStatus === "Deferido"
             ? "Concluído"
-            : currentStatus === "Com exigência"
-              ? "Pendente"
-              : currentStatus === "Gerado"
-                ? "Pendente"
-                : "Concluído",
+            : "Pendente",
       date:
         currentStatus === "Indeferido" || currentStatus === "Deferido"
           ? `em ${updatedAt}`

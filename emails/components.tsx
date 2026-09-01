@@ -251,7 +251,11 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                   : "•";
             const connectorStyle = {
               ...stepConnector,
-              background: isCompleted || isCurrent ? c.primary : "#DADADA",
+              background: isCompleted
+                ? "#22C55E"
+                : isCurrent
+                  ? c.primary
+                  : "#DADADA",
               opacity: index === steps.length - 1 ? 0 : 1,
             };
 
@@ -278,7 +282,7 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                                 : "#F3F4F6",
                           borderColor: circleColor,
                           boxShadow: isCurrent
-                            ? `0 0 0 4px ${"rgba(107,30,44,0.12)"}`
+                            ? `0 0 0 4px rgba(107, 30, 44, 0.12)`
                             : isCompleted
                               ? "0 0 0 3px rgba(34, 197, 94, 0.14)"
                               : "none",
