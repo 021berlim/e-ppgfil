@@ -110,9 +110,9 @@ Props:
 
 ```ts
 type WelcomeEmailProps = {
-  userName: string
-  loginUrl: string
-}
+  userName: string;
+  loginUrl: string;
+};
 ```
 
 Conteudo:
@@ -130,18 +130,18 @@ Props:
 
 ```ts
 type ProtocolReceiptEmailProps = {
-  requesterName: string
-  protocolNumber: string
-  createdAt: string
-  categoryName: string
-  requestTypeName: string
-  summary: string
-  status: string
-  consultationUrl: string
-  receiptPdfUrl?: string
-  receiptAttached?: boolean
-  attachmentsSummary: Array<{ filename: string; sizeLabel: string }>
-}
+  requesterName: string;
+  protocolNumber: string;
+  createdAt: string;
+  categoryName: string;
+  requestTypeName: string;
+  summary: string;
+  status: string;
+  consultationUrl: string;
+  receiptPdfUrl?: string;
+  receiptAttached?: boolean;
+  attachmentsSummary: Array<{ filename: string; sizeLabel: string }>;
+};
 ```
 
 Conteudo:
@@ -160,14 +160,14 @@ Props:
 
 ```ts
 type ProtocolStatusUpdateEmailProps = {
-  requesterName: string
-  protocolNumber: string
-  previousStatus: string
-  currentStatus: string
-  observation: string
-  updatedAt: string
-  consultationUrl: string
-}
+  requesterName: string;
+  protocolNumber: string;
+  previousStatus: string;
+  currentStatus: string;
+  observation: string;
+  updatedAt: string;
+  consultationUrl: string;
+};
 ```
 
 Conteudo:
@@ -185,10 +185,10 @@ Props:
 
 ```ts
 type PasswordResetEmailProps = {
-  userName: string
-  resetUrl: string
-  expiresAt: string
-}
+  userName: string;
+  resetUrl: string;
+  expiresAt: string;
+};
 ```
 
 Conteudo:
@@ -202,14 +202,14 @@ Conteudo:
 Criar `lib/email/resend.ts`:
 
 ```ts
-import { Resend } from 'resend'
+import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+export const resend = new Resend(process.env.RESEND_API_KEY);
 
 export function getEmailFrom() {
-  const from = process.env.RESEND_FROM
-  if (!from) throw new Error('RESEND_FROM nao configurada.')
-  return from
+  const from = process.env.RESEND_FROM;
+  if (!from) throw new Error("RESEND_FROM nao configurada.");
+  return from;
 }
 ```
 
@@ -221,7 +221,9 @@ export async function sendWelcomeEmail(to: string, user: WelcomeEmailData) {}
 export async function sendProtocolReceiptEmail(
   to: string,
   protocolData: ProtocolReceiptEmailData,
-  pdf: { mode: 'link'; url: string } | { mode: 'attachment'; filename: string; content: Buffer },
+  pdf:
+    | { mode: "link"; url: string }
+    | { mode: "attachment"; filename: string; content: Buffer },
 ) {}
 
 export async function sendProtocolStatusUpdateEmail(
@@ -229,13 +231,16 @@ export async function sendProtocolStatusUpdateEmail(
   data: ProtocolStatusUpdateEmailData,
 ) {}
 
-export async function sendPasswordResetEmail(to: string, data: PasswordResetEmailData) {}
+export async function sendPasswordResetEmail(
+  to: string,
+  data: PasswordResetEmailData,
+) {}
 ```
 
 `sendProtocolReceiptEmail` deve montar:
 
 - `react: <ProtocolReceiptEmail ... />`.
-- `subject: "[e-PPGFIL] Protocolo {numero} registrado"`.
+- `subject: "Protocolo {numero} registrado"`.
 - `attachments` apenas quando `pdf.mode === 'attachment'`.
 - Sem CC/BCC por padrao.
 - `replyTo` com `RESEND_REPLY_TO`, se configurado.
@@ -271,7 +276,7 @@ attachments: [
     filename: `protocolo-${safeProtocolNumber}.pdf`,
     content: pdfBuffer,
   },
-]
+];
 ```
 
 Uso recomendado somente quando:
