@@ -228,7 +228,7 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
         style={stepperTable}
       >
         <tr>
-          {steps.map((step, index) => {
+          {steps.flatMap((step, index) => {
             const isCompleted = Boolean(step.isCompleted);
             const isCurrent = Boolean(step.isCurrent);
             const isPending = Boolean(step.isPending);
@@ -255,96 +255,98 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
               opacity: index === steps.length - 1 ? 0 : 1,
             };
 
-            return (
-              <>
-                <td valign="top" style={stepCell} key={`${step.id}-cell`}>
-                  <table
-                    role="presentation"
-                    cellPadding={0}
-                    cellSpacing={0}
-                    border={0}
-                    width="100%"
-                  >
-                    <tr>
-                      <td align="center" style={stepNodeCell}>
-                        <div
+            const cell = (
+              <td valign="top" style={stepCell} key={`${step.id}-cell`}>
+                <table
+                  role="presentation"
+                  cellPadding={0}
+                  cellSpacing={0}
+                  border={0}
+                  width="100%"
+                >
+                  <tr>
+                    <td align="center" style={stepNodeCell}>
+                      <div
+                        style={{
+                          ...stepNode,
+                          backgroundColor: isCompleted
+                            ? "#22C55E"
+                            : isRejected
+                              ? "#C0392B"
+                              : isCurrent
+                                ? "#FFFFFF"
+                                : "#F3F4F6",
+                          borderColor: circleColor,
+                          boxShadow: isCurrent
+                            ? `0 0 0 4px ${"rgba(107,30,44,0.12)"}`
+                            : isCompleted
+                              ? "0 0 0 3px rgba(34, 197, 94, 0.14)"
+                              : "none",
+                        }}
+                      >
+                        <span
                           style={{
-                            ...stepNode,
-                            backgroundColor: isCompleted
-                              ? "#22C55E"
-                              : isRejected
-                                ? "#C0392B"
-                                : isCurrent
+                            ...stepIcon,
+                            color:
+                              isCompleted || isRejected || isCurrent
+                                ? isCompleted || isRejected
                                   ? "#FFFFFF"
-                                  : "#F3F4F6",
-                            borderColor: circleColor,
-                            boxShadow: isCurrent
-                              ? `0 0 0 4px ${"rgba(107,30,44,0.12)"}`
-                              : isCompleted
-                                ? "0 0 0 3px rgba(34, 197, 94, 0.14)"
-                                : "none",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              ...stepIcon,
-                              color:
-                                isCompleted || isRejected || isCurrent
-                                  ? isCompleted || isRejected
-                                    ? "#FFFFFF"
-                                    : c.primary
-                                  : "#6B7280",
-                              fontWeight: isCurrent ? "700" : "600",
-                            }}
-                          >
-                            {iconLabel}
-                          </Text>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" style={stepLabelCell}>
-                        <Text
-                          style={{
-                            ...stepTitle,
-                            color: isCurrent ? c.primary : c.text,
+                                  : c.primary
+                                : "#6B7280",
                             fontWeight: isCurrent ? "700" : "600",
                           }}
                         >
-                          {step.label}
-                        </Text>
-                        <Text
-                          style={{
-                            ...stepStatus,
-                            color: isRejected
-                              ? "#B42318"
-                              : isCompleted
-                                ? "#22C55E"
-                                : isCurrent
-                                  ? c.primary
-                                  : "#4B5563",
-                          }}
-                        >
-                          {step.status}
-                        </Text>
-                        {step.date ? (
-                          <Text style={stepDate}>{step.date}</Text>
-                        ) : null}
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-                {index < steps.length - 1 ? (
-                  <td
-                    valign="middle"
-                    style={connectorCell}
-                    key={`${step.id}-connector`}
-                  >
-                    <div style={connectorStyle} />
-                  </td>
-                ) : null}
-              </>
+                          {iconLabel}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style={stepLabelCell}>
+                      <div
+                        style={{
+                          ...stepTitle,
+                          color: isCurrent ? c.primary : c.text,
+                          fontWeight: isCurrent ? "700" : "600",
+                        }}
+                      >
+                        {step.label}
+                      </div>
+                      <div
+                        style={{
+                          ...stepStatus,
+                          color: isRejected
+                            ? "#B42318"
+                            : isCompleted
+                              ? "#22C55E"
+                              : isCurrent
+                                ? c.primary
+                                : "#4B5563",
+                        }}
+                      >
+                        {step.status}
+                      </div>
+                      {step.date ? (
+                        <div style={stepDate}>{step.date}</div>
+                      ) : null}
+                    </td>
+                  </tr>
+                </table>
+              </td>
             );
+
+            const connector =
+              index < steps.length - 1 ? (
+                <td
+                  valign="middle"
+                  style={connectorCell}
+                  key={`${step.id}-connector`}
+                >
+                  <div style={connectorStyle} />
+                </td>
+              ) : null;
+
+            return [cell, connector].filter(Boolean) as React.ReactNode[];
           })}
         </tr>
       </table>
@@ -355,15 +357,15 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
 export const textStyle = {
   color: c.text,
   fontFamily: font,
-  fontSize: "15px",
-  lineHeight: "24px",
+  fontSize: "16px",
+  lineHeight: "26px",
   margin: "0 0 14px",
 };
 export const mutedTextStyle = {
   ...textStyle,
   color: c.muted,
-  fontSize: "13px",
-  lineHeight: "20px",
+  fontSize: "14px",
+  lineHeight: "22px",
 };
 const body = {
   backgroundColor: "#F6F7F8",
@@ -381,8 +383,8 @@ const container = {
   maxWidth: "680px",
 };
 const header = {
-  backgroundColor: "#F7F5F3",
-  borderBottom: `1px solid ${c.border}`,
+  backgroundColor: c.dark,
+  borderBottom: `5px solid ${c.gold}`,
   padding: "20px 32px 18px",
 };
 const logoColumn = { width: "34%", verticalAlign: "middle" as const };
@@ -398,19 +400,19 @@ const bannerTextColumn = {
   verticalAlign: "middle" as const,
 };
 const bannerTitle = {
-  color: c.dark,
+  color: "#FFF",
   fontFamily: font,
-  fontSize: "22px",
+  fontSize: "24px",
   fontWeight: "700",
   letterSpacing: ".3px",
-  lineHeight: "26px",
+  lineHeight: "28px",
   margin: "0 0 2px",
   textAlign: "left" as const,
 };
 const bannerSubtitle = {
-  color: c.muted,
+  color: "#E6D8DB",
   fontFamily: font,
-  fontSize: "12px",
+  fontSize: "13px",
   lineHeight: "18px",
   margin: 0,
   textAlign: "left" as const,
@@ -422,15 +424,15 @@ const documentHeader = {
 const heading = {
   color: c.text,
   fontFamily: font,
-  fontSize: "23px",
-  lineHeight: "30px",
+  fontSize: "25px",
+  lineHeight: "32px",
   margin: 0,
 };
 const headingDescription = {
   color: c.muted,
   fontFamily: font,
-  fontSize: "14px",
-  lineHeight: "21px",
+  fontSize: "15px",
+  lineHeight: "22px",
   margin: "7px 0 0",
 };
 const referenceText = {
@@ -460,9 +462,9 @@ const protocolLabel = {
 const protocolNumber = {
   color: c.dark,
   fontFamily: "Courier New, monospace",
-  fontSize: "22px",
+  fontSize: "24px",
   fontWeight: "700",
-  lineHeight: "28px",
+  lineHeight: "30px",
   margin: "0 0 10px",
 };
 const statusBadge = {
@@ -537,25 +539,25 @@ const stepLabelCell = {
 const stepTitle = {
   color: c.text,
   fontFamily: font,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: "16px",
-  margin: "0 0 2px",
+  margin: "0 0 3px",
   textTransform: "uppercase" as const,
 };
 const stepStatus = {
   color: "#4B5563",
   fontFamily: font,
-  fontSize: "10px",
+  fontSize: "11px",
   fontWeight: "700",
-  lineHeight: "14px",
+  lineHeight: "15px",
   margin: "0 0 3px",
   textTransform: "uppercase" as const,
 };
 const stepDate = {
   color: c.muted,
   fontFamily: font,
-  fontSize: "9px",
-  lineHeight: "13px",
+  fontSize: "10px",
+  lineHeight: "14px",
   margin: 0,
 };
 const connectorCell = {
@@ -620,10 +622,10 @@ const button = {
   color: "#FFF",
   display: "inline-block",
   fontFamily: font,
-  fontSize: "14px",
+  fontSize: "16px",
   fontWeight: "700",
   margin: "0 0 12px",
-  padding: "13px 22px",
+  padding: "14px 24px",
   textDecoration: "none",
 };
 const actionHelp = {
