@@ -23,26 +23,26 @@ function getTrackingMessage(status: string) {
   const normalized = status.trim();
 
   if (normalized === "Gerado") {
-    return "Seu protocolo foi registrado no sistema e já está aguardando a análise inicial da secretaria.";
+    return "Recebemos seu protocolo! Ele já está registrado e em fila para a primeira análise da secretaria.";
   }
 
   if (normalized === "Em tramitação") {
-    return "Sua solicitação está sendo analisada pela secretaria e pelo processo administrativo do programa.";
+    return "Seu pedido está em andamento. A secretaria e a equipe do programa estão analisando os detalhes.";
   }
 
   if (normalized === "Com exigência") {
-    return "A secretaria precisa de uma complementação ou esclarecimento para continuar o processamento do seu pedido. Consulte o histórico do protocolo e acompanhe o que precisa ser enviado.";
+    return "Precisamos de mais informações para dar sequencia ao seu pedido. Por favor, verifique o histórico do protocolo para enviar os ajustes necessários.";
   }
 
   if (normalized === "Deferido") {
-    return "Seu processo foi deferido. A solicitação foi aprovada e segue conforme o trâmite do programa.";
+    return "Boas notícias: sua solicitação foi aprovada! O processo segue o fluxo normal do programa.";
   }
 
   if (normalized === "Indeferido") {
-    return "Seu processo foi indeferido. A secretaria concluiu o exame e você pode acompanhar o motivo no histórico do protocolo.";
+    return "Sua solicitação não foi aprovada. Disponibilizamos o motivo detalhado no histórico do seu protocolo.";
   }
 
-  return "Seu processo está em atualização e a secretaria segue acompanhando o andamento da solicitação.";
+  return "Estamos atualizando o status da sua solicitação. Por favor, tente novamente em breve.";
 }
 
 export function ProtocolStatusUpdateEmail({
