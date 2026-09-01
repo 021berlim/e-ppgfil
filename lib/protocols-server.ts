@@ -212,14 +212,14 @@ export async function listProtocols({ includeArchived = false }: { includeArchiv
 
 export async function getProtocolByPublicLookup(cpf: string, number: string) {
   const protocols = await queryProtocols(
-    'WHERE req.cpf = $1 AND upper(p.number) = upper($2) LIMIT 1',
+    'WHERE req.cpf = $1 AND upper(p.number) = upper($2)',
     [digitsOnly(cpf), number.trim()],
   )
   return protocols[0] ?? null
 }
 
 export async function getProtocolById(id: string) {
-  const protocols = await queryProtocols('WHERE p.id = $1 LIMIT 1', [id], true)
+  const protocols = await queryProtocols('WHERE p.id = $1', [id], true)
   return protocols[0] ?? null
 }
 
