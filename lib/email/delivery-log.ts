@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import type { EmailSendResult } from './types'
 
 export async function recordEmailDelivery(input: {
-  eventType: 'welcome' | 'protocol_receipt' | 'protocol_status_update' | 'password_reset'
+  eventType: 'welcome' | 'protocol_receipt' | 'protocol_generated' | 'protocol_status_update' | 'password_reset'
   recipientEmail: string
   result: EmailSendResult
   protocolId?: string | null

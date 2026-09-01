@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { registrarAuditoria } from '@/lib/audit-server'
 import { getCurrentUser } from '@/lib/auth-server'
 import { recordEmailDelivery } from '@/lib/email/delivery-log'
-import { sendProtocolReceiptEmail } from '@/lib/email/senders'
+import { sendProtocolReceiptEmail, sendProtocolStatusUpdateEmail } from '@/lib/email/senders'
 import {
   consultationUrl,
   createProtocol,
@@ -103,6 +103,16 @@ export async function POST(request: Request) {
       attachmentsSummary: formatAttachmentSummaries(payload.anexos),
     }, pdfDelivery)
 
+    const generationEmailResult = await sendProtocolStatusUpdateEmail(created.protocol.email, {
+      requesterName: created.protocol.nome,
+      protocolNumber: created.protocol.numero,
+      previousStatus: '—',
+      currentStatus: created.protocol.status,
+      observation: 'Seu protocolo foi registrado no sistema e já está disponível para acompanhamento.',
+      updatedAt: formatDateTime(created.protocol.criadoEm),
+      consultationUrl: consultationUrl(baseUrl, created.protocol.numero),
+    })
+
     await recordEmailDelivery({
       eventType: 'protocol_receipt',
       recipientEmail: created.protocol.email,
@@ -112,6 +122,17 @@ export async function POST(request: Request) {
         protocolNumber: created.protocol.numero,
         deliveryMode,
         receiptDocumentId: receiptDocument?.documentFileId,
+      },
+    })
+
+    await recordEmailDelivery({
+      eventType: 'protocol_generated',
+      recipientEmail: created.protocol.email,
+      protocolId: created.protocol.id,
+      result: generationEmailResult,
+      metadata: {
+        protocolNumber: created.protocol.numero,
+        currentStatus: created.protocol.status,
       },
     })
 
@@ -129,6 +150,8 @@ export async function POST(request: Request) {
       details: {
         emailStatus: emailResult.status,
         emailError: emailResult.error,
+        generationEmailStatus: generationEmailResult.status,
+        generationEmailError: generationEmailResult.error,
         receiptDeliveryMode: deliveryMode,
       },
     })
