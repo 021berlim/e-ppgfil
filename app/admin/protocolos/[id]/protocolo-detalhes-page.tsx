@@ -1,19 +1,49 @@
 'use client'
 
+import { useEffect, useState, useCallback } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useProtocolos } from '@/hooks/use-protocolos'
 import { ProtocoloDetalhes } from '../protocolo-modal'
 import { FormSkeleton } from '@/components/loading-skeletons'
+import { obterProtocoloPorIdRemoto } from '@/lib/protocolos-client'
+import type { Protocolo } from '@/lib/types'
 
 export function DetalhesProtocoloPage({ id }: { id: string }) {
   const router = useRouter()
-  const { protocolos, carregado, carregando, erro } = useProtocolos({ incluirArquivados: true })
-  const protocolo = protocolos.find((item) => item.id === id)
+  const [protocolo, setProtocolo] = useState<Protocolo | null>(null)
+  const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
+
+  const carregar = useCallback(async () => {
+    try {
+      setCarregando(true)
+      setErro(null)
+      const dados = await obterProtocoloPorIdRemoto(id)
+      setProtocolo(dados)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Protocolo nao encontrado.')
+      setProtocolo(null)
+    } finally {
+      setCarregando(false)
+    }
+  }, [id])
+
+  useEffect(() => {
+    void carregar()
+
+    const handleRefresh = () => {
+      void carregar()
+    }
+    window.addEventListener('epfil:protocolos-refresh', handleRefresh)
+    return () => {
+      window.removeEventListener('epfil:protocolos-refresh', handleRefresh)
+    }
+  }, [carregar])
+
   const voltar = () =>
     router.push(protocolo?.arquivado ? '/admin/protocolos/arquivados' : '/admin/protocolos')
 
-  if (!carregado || carregando) return <FormSkeleton />
+  if (carregando) return <FormSkeleton />
 
   if (erro || !protocolo) {
     return (

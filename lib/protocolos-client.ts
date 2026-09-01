@@ -52,6 +52,15 @@ export async function consultarProtocoloRemoto(cpf: string, numero: string) {
   return payload as Protocolo
 }
 
+export async function obterProtocoloPorIdRemoto(id: string) {
+  const resposta = await fetch(`/api/protocolos/${encodeURIComponent(id)}`, { cache: 'no-store' })
+  const payload = await resposta.json()
+  if (!resposta.ok) {
+    throw new Error(payload.error ?? 'Protocolo nao encontrado.')
+  }
+  return payload as Protocolo
+}
+
 export async function listarProtocolosRemoto(incluirArquivados: boolean) {
   const params = new URLSearchParams()
   if (incluirArquivados) params.set('incluirArquivados', 'true')

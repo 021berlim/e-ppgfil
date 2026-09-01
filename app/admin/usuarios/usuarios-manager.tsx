@@ -230,6 +230,8 @@ export function UsuariosManager() {
                           <img
                             src={user.avatar_url}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
                           />
                         ) : (

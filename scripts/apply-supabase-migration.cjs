@@ -29,15 +29,23 @@ async function main() {
     throw new Error('Informe o caminho da migracao SQL.')
   }
 
-  const envPath = path.resolve(process.cwd(), '.env')
-  const env = loadEnv(envPath)
-  if (!env.DATABASE_URL) {
-    throw new Error('DATABASE_URL ausente no .env.')
+  let databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    if (fs.existsSync(path.resolve(process.cwd(), '.env.local'))) {
+      databaseUrl = loadEnv(path.resolve(process.cwd(), '.env.local')).DATABASE_URL
+    }
+    if (!databaseUrl && fs.existsSync(path.resolve(process.cwd(), '.env'))) {
+      databaseUrl = loadEnv(path.resolve(process.cwd(), '.env')).DATABASE_URL
+    }
+  }
+
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL ausente no ambiente, .env.local ou .env.')
   }
 
   const sql = fs.readFileSync(path.resolve(process.cwd(), migrationPath), 'utf8')
   const client = new Client({
-    connectionString: env.DATABASE_URL,
+    connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false },
   })
 

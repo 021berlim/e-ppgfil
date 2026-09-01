@@ -260,6 +260,8 @@ function CardConteudo({
                     <img
                       src={avatarResponsavel}
                       alt=""
+                      loading="lazy"
+                      decoding="async"
                       className="size-full object-cover"
                     />
                   ) : (

@@ -1,7 +1,5 @@
 'use client'
 
-import { jsPDF } from 'jspdf'
-import QRCode from 'qrcode'
 import { formatarData, formatarTamanho, prazoPrevisto } from './store'
 import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from './categorias'
 import type { Protocolo } from './types'
@@ -23,6 +21,12 @@ function gerarCodigoAutenticacao(id: string, criadoEm: string): string {
 }
 
 export async function baixarComprovantePDF(protocolo: Protocolo) {
+  const [{ jsPDF }, QRCodeModule] = await Promise.all([
+    import('jspdf'),
+    import('qrcode'),
+  ])
+  const QRCode = (QRCodeModule.default || QRCodeModule) as typeof import('qrcode')
+
   const urlConsulta = new URL('/consulta', window.location.origin)
   urlConsulta.searchParams.set('protocolo', protocolo.numero)
   const qrCodeDataUrl = await QRCode.toDataURL(urlConsulta.toString(), {

@@ -218,6 +218,8 @@ export function PerfilForm() {
                     <img
                       src={form.avatar_url}
                       alt=""
+                      loading="lazy"
+                      decoding="async"
                       className="size-36 rounded-full border-4 border-card object-cover shadow-xl ring-1 ring-border sm:size-40"
                     />
                   ) : (

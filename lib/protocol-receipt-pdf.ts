@@ -1,7 +1,36 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
-import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from './categorias'
+import defaultCategories from '@/data/categorias-solicitacoes.json'
 import type { Protocolo } from './types'
+
+type CategoryItem = {
+  id: string
+  nome: string
+  tiposSolicitacao: Array<{
+    id: string
+    nome: string
+    prazoDias?: number
+    prazoDescricao?: string
+  }>
+}
+
+function getSlaInfo(typeNameOrId: string) {
+  const normalized = typeNameOrId.trim().toLowerCase()
+  for (const cat of defaultCategories as CategoryItem[]) {
+    for (const t of cat.tiposSolicitacao || []) {
+      if (
+        t.id.toLowerCase() === normalized ||
+        t.nome.toLowerCase() === normalized
+      ) {
+        return {
+          prazoDias: t.prazoDias,
+          prazoDescricao: t.prazoDescricao,
+        }
+      }
+    }
+  }
+  return { prazoDias: undefined, prazoDescricao: undefined }
+}
 
 export function maskCpf(cpf: string): string {
   const digits = cpf.replace(/\D/g, '').padStart(11, '0').slice(-11)
@@ -40,8 +69,8 @@ function addBusinessDays(base: Date, days: number): Date {
 }
 
 function predictedDate(protocol: Protocolo): Date | null {
-  const days = obterPrazoSlaTipo(protocol.tipo)
-  return days ? addBusinessDays(new Date(protocol.criadoEm), days) : null
+  const { prazoDias } = getSlaInfo(protocol.tipo)
+  return prazoDias ? addBusinessDays(new Date(protocol.criadoEm), prazoDias) : null
 }
 
 function authCode(id: string, createdAt: string): string {

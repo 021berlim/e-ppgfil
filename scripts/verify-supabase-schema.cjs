@@ -1,9 +1,10 @@
 const fs = require('fs')
 const { Client } = require('pg')
 
-function loadEnv() {
+function loadEnv(filePath) {
   const env = {}
-  const raw = fs.readFileSync('.env', 'utf8')
+  if (!fs.existsSync(filePath)) return env
+  const raw = fs.readFileSync(filePath, 'utf8')
 
   for (const line of raw.split(/\r?\n/)) {
     const match = line.match(/^\s*([^#=\s]+)\s*=\s*(.*)\s*$/)
@@ -23,9 +24,16 @@ function loadEnv() {
 }
 
 async function main() {
-  const env = loadEnv()
+  let databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    databaseUrl = loadEnv('.env.local').DATABASE_URL || loadEnv('.env').DATABASE_URL
+  }
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL ausente no ambiente, .env.local ou .env.')
+  }
+
   const client = new Client({
-    connectionString: env.DATABASE_URL,
+    connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false },
   })
 

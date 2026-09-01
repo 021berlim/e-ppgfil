@@ -127,7 +127,7 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
       `
         INSERT INTO public.research_lines (title, summary, disciplines, source_url)
         VALUES ($1, $2, $3, $4)
-        RETURNING *
+        RETURNING id, title, summary, disciplines, source_url, created_at, updated_at
       `,
       [
         requiredString(payload.title, 'title'),
@@ -150,7 +150,7 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
             advising_count, is_active
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          RETURNING *
+          RETURNING id, full_name, position, expertise, highest_degree, lattes_url, profile_url, advising_count, is_active, created_at, updated_at
         `,
         [
           requiredString(payload.full_name, 'full_name'),
@@ -179,7 +179,7 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
       `
         INSERT INTO public.procedures (title, deadline_text, steps, source_url)
         VALUES ($1, $2, $3, $4)
-        RETURNING *
+        RETURNING id, title, deadline_text, steps, source_url, created_at, updated_at
       `,
       [
         requiredString(payload.title, 'title'),
@@ -195,7 +195,7 @@ export async function createEntity(entity: EntityName, payload: Record<string, u
     `
       INSERT INTO public.institutional_forms (name, file_type, source_url, is_available)
       VALUES ($1, $2, $3, $4)
-      RETURNING *
+      RETURNING id, name, file_type, source_url, is_available, document_file_id, created_at, updated_at
     `,
     [
       requiredString(payload.name, 'name'),
@@ -217,7 +217,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
             disciplines = $4,
             source_url = $5
         WHERE id = $1
-        RETURNING *
+        RETURNING id, title, summary, disciplines, source_url, created_at, updated_at
       `,
       [
         id,
@@ -246,7 +246,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
               advising_count = $8,
               is_active = $9
           WHERE id = $1
-          RETURNING *
+          RETURNING id, full_name, position, expertise, highest_degree, lattes_url, profile_url, advising_count, is_active, created_at, updated_at
         `,
         [
           id,
@@ -280,7 +280,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
             steps = $4,
             source_url = $5
         WHERE id = $1
-        RETURNING *
+        RETURNING id, title, deadline_text, steps, source_url, created_at, updated_at
       `,
       [
         id,
@@ -301,7 +301,7 @@ export async function updateEntity(entity: EntityName, id: string, payload: Reco
           source_url = $4,
           is_available = $5
       WHERE id = $1
-      RETURNING *
+      RETURNING id, name, file_type, source_url, is_available, document_file_id, created_at, updated_at
     `,
     [
       id,

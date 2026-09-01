@@ -1,74 +1,80 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useDeferredValue, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, ScrollText } from 'lucide-react'
 import type { RegistroAuditoria } from '@/lib/types'
 import { formatarData } from '@/lib/store'
 import { TableSkeleton } from '@/components/loading-skeletons'
 
-const REGISTROS_POR_PAGINA = 100
+const REGISTROS_POR_PAGINA = 50
 
 export function AuditoriaLista() {
   const [registros, setRegistros] = useState<RegistroAuditoria[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(1)
   const [busca, setBusca] = useState('')
+  const buscaAdiada = useDeferredValue(busca)
   const [categoria, setCategoria] = useState('todas')
   const [pagina, setPagina] = useState(1)
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     let cancelado = false
+    setCarregando(true)
 
-    const ordenar = (itens: RegistroAuditoria[]) =>
-      [...itens].sort((a, b) => b.data.localeCompare(a.data))
-
-    const carregarRemotos = async () => {
+    const carregar = async () => {
       try {
-        const resposta = await fetch('/api/admin/audit-logs', { cache: 'no-store' })
-        if (!resposta.ok) return []
-        const dados = (await resposta.json()) as RegistroAuditoria[]
-        return Array.isArray(dados) ? dados : []
+        const params = new URLSearchParams({
+          pagina: String(pagina),
+          limite: String(REGISTROS_POR_PAGINA),
+        })
+        if (categoria !== 'todas') params.set('categoria', categoria)
+        if (buscaAdiada.trim()) params.set('busca', buscaAdiada.trim())
+
+        const resposta = await fetch(`/api/admin/audit-logs?${params.toString()}`, { cache: 'no-store' })
+        if (!resposta.ok) {
+          if (!cancelado) {
+            setRegistros([])
+            setTotal(0)
+            setTotalPaginas(1)
+            setCarregando(false)
+          }
+          return
+        }
+
+        const dados = await resposta.json()
+        if (!cancelado) {
+          if (dados && Array.isArray(dados.itens)) {
+            setRegistros(dados.itens)
+            setTotal(dados.total ?? dados.itens.length)
+            setTotalPaginas(dados.totalPaginas ?? 1)
+          } else if (Array.isArray(dados)) {
+            setRegistros(dados)
+            setTotal(dados.length)
+            setTotalPaginas(Math.max(1, Math.ceil(dados.length / REGISTROS_POR_PAGINA)))
+          }
+          setCarregando(false)
+        }
       } catch (erro) {
-        console.error('[Auditoria] Erro ao carregar logs remotos:', erro)
-        return []
+        if (!cancelado) {
+          console.error('[Auditoria] Erro ao carregar logs:', erro)
+          setRegistros([])
+          setTotal(0)
+          setTotalPaginas(1)
+          setCarregando(false)
+        }
       }
     }
 
-    const atualizar = async () => {
-      const remotos = await carregarRemotos()
-      if (!cancelado) setRegistros(ordenar(remotos))
-      if (!cancelado) setCarregando(false)
-    }
-
-    void atualizar()
+    void carregar()
     return () => {
       cancelado = true
     }
-  }, [])
-
-  const filtrados = useMemo(() => {
-    const termo = busca.trim().toLocaleLowerCase('pt-BR')
-    return registros.filter((registro) => {
-      if (categoria !== 'todas' && registro.categoria !== categoria) return false
-      if (!termo) return true
-      return [registro.ator, registro.acao, registro.protocoloNumero, registro.detalhes]
-        .filter(Boolean)
-        .some((valor) => valor!.toLocaleLowerCase('pt-BR').includes(termo))
-    })
-  }, [busca, categoria, registros])
-
-  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / REGISTROS_POR_PAGINA))
-  const registrosDaPagina = useMemo(() => {
-    const inicio = (pagina - 1) * REGISTROS_POR_PAGINA
-    return filtrados.slice(inicio, inicio + REGISTROS_POR_PAGINA)
-  }, [filtrados, pagina])
+  }, [pagina, categoria, buscaAdiada])
 
   useEffect(() => {
     setPagina(1)
-  }, [busca, categoria])
-
-  useEffect(() => {
-    setPagina((atual) => Math.min(atual, totalPaginas))
-  }, [totalPaginas])
+  }, [buscaAdiada, categoria])
 
   return (
     <section className="px-6 py-6 lg:px-8">
@@ -116,7 +122,7 @@ export function AuditoriaLista() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {registrosDaPagina.map((registro) => (
+              {registros.map((registro) => (
                 <tr key={registro.id} className="align-top transition hover:bg-secondary/40">
                   <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-muted-foreground">{formatarData(registro.data)}</td>
                   <td className="px-5 py-4 font-bold text-foreground">{registro.ator}</td>
@@ -131,7 +137,7 @@ export function AuditoriaLista() {
           </table>
             </div>
 
-        {filtrados.length === 0 && (
+        {registros.length === 0 && (
           <div className="grid place-items-center px-6 py-16 text-center">
             <ScrollText className="size-9 text-muted-foreground/50" aria-hidden="true" />
             <p className="mt-3 text-sm font-extrabold text-foreground">Nenhum registro encontrado</p>
@@ -146,13 +152,12 @@ export function AuditoriaLista() {
 
       <div className="mt-3 flex flex-col items-center justify-between gap-3 sm:flex-row">
         <p className="text-xs font-semibold text-muted-foreground">
-          {filtrados.length === 0
+          {total === 0
             ? 'Nenhum registro'
             : `Exibindo ${(pagina - 1) * REGISTROS_POR_PAGINA + 1}–${Math.min(
                 pagina * REGISTROS_POR_PAGINA,
-                filtrados.length,
-              )} de ${filtrados.length} registro(s)`}
-          {filtrados.length !== registros.length && ` (${registros.length} no total)`}
+                total,
+              )} de ${total} registro(s)`}
         </p>
 
         {totalPaginas > 1 && (

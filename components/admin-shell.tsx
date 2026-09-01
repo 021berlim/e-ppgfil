@@ -204,6 +204,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <img
                   src={sessao.avatar_url}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="size-9 shrink-0 rounded-full object-cover ring-2 ring-sidebar-accent"
                 />
               ) : (

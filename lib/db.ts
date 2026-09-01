@@ -14,6 +14,12 @@ function createPool() {
   return new Pool({
     connectionString,
     ssl: { rejectUnauthorized: false },
+    max: process.env.PG_POOL_MAX ? parseInt(process.env.PG_POOL_MAX, 10) : 20,
+    min: process.env.PG_POOL_MIN ? parseInt(process.env.PG_POOL_MIN, 10) : 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+    maxUses: 7500,
+    allowExitOnIdle: false,
   })
 }
 

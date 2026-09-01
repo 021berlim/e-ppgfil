@@ -96,7 +96,49 @@ function stringifyDetails(details: unknown) {
   return entries.join(' | ')
 }
 
-export async function listarAuditoria(limite = 1000) {
+export type ListarAuditoriaParams = {
+  limite?: number
+  pagina?: number
+  busca?: string
+  categoria?: string
+}
+
+export async function listarAuditoria({
+  limite = 50,
+  pagina = 1,
+  busca,
+  categoria,
+}: ListarAuditoriaParams = {}) {
+  const page = Math.max(1, pagina)
+  const limit = Math.min(200, Math.max(1, limite))
+  const offset = (page - 1) * limit
+
+  const conditions: string[] = []
+  const values: unknown[] = []
+
+  if (categoria && categoria !== 'todas') {
+    values.push(categoria)
+    conditions.push(`category = $${values.length}`)
+  }
+
+  if (busca && busca.trim()) {
+    const term = `%${busca.trim()}%`
+    values.push(term)
+    const idx = values.length
+    conditions.push(
+      `(actor_label ILIKE $${idx} OR action ILIKE $${idx} OR protocol_number ILIKE $${idx} OR details::text ILIKE $${idx})`,
+    )
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+  const countResult = await db.query(
+    `SELECT count(*)::int AS total FROM public.audit_logs ${whereClause}`,
+    values,
+  )
+  const total = countResult.rows[0]?.total ?? 0
+
+  const queryValues = [...values, limit, offset]
   const result = await db.query(
     `
       SELECT
@@ -108,13 +150,14 @@ export async function listarAuditoria(limite = 1000) {
         protocol_number,
         details
       FROM public.audit_logs
+      ${whereClause}
       ORDER BY created_at DESC
-      LIMIT $1
+      LIMIT $${queryValues.length - 1} OFFSET $${queryValues.length}
     `,
-    [limite],
+    queryValues,
   )
 
-  return result.rows.map((row) => ({
+  const itens = result.rows.map((row) => ({
     id: row.id,
     data: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     ator: row.actor_label,
@@ -123,4 +166,13 @@ export async function listarAuditoria(limite = 1000) {
     protocoloNumero: row.protocol_number ?? undefined,
     detalhes: stringifyDetails(row.details),
   }))
+
+  const totalPaginas = Math.max(1, Math.ceil(total / limit))
+
+  return {
+    itens,
+    total,
+    pagina: page,
+    totalPaginas,
+  }
 }
