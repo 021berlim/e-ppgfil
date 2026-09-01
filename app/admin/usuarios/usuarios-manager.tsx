@@ -1,13 +1,14 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
-import { Edit2, Plus, Search, Shield, Trash2, UserRound, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Edit2, LoaderCircle, Plus, Search, Shield, Trash2, UserRound, X } from 'lucide-react'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { Field, Select, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { cargoAtual } from '@/lib/store'
 import { DASHBOARD_ROLE_LABELS, canCreateUsers } from '@/lib/auth-types'
+import { TableSkeleton } from '@/components/loading-skeletons'
 
 type RoleSlug = 'ROOT' | 'SECRETARY_ADMIN' | 'SECRETARY_OPERATOR' | 'COORDINATOR'
 
@@ -67,6 +68,7 @@ export function UsuariosManager() {
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<DashboardUser | null>(null)
@@ -131,6 +133,8 @@ export function UsuariosManager() {
 
   async function save(event: React.FormEvent) {
     event.preventDefault()
+    if (savingRef.current) return
+    savingRef.current = true
     setSaving(true)
     try {
       if (editing) {
@@ -151,6 +155,7 @@ export function UsuariosManager() {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Erro ao salvar usuario.')
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
@@ -197,7 +202,7 @@ export function UsuariosManager() {
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {loading ? (
-          <p className="px-5 py-8 text-sm font-bold text-muted-foreground">Carregando usuarios...</p>
+          <TableSkeleton rows={6} columns={6} />
         ) : filtered.length === 0 ? (
           <p className="px-5 py-8 text-sm font-bold text-muted-foreground">
             Nenhum usuario encontrado.
@@ -374,7 +379,8 @@ export function UsuariosManager() {
                   disabled={saving}
                   className="rounded-full bg-primary px-6 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {saving ? 'Salvando...' : 'Salvar usuario'}
+                  {saving && <LoaderCircle className="mr-2 inline size-3.5 animate-spin" aria-hidden="true" />}
+                  Salvar usuario
                 </button>
               </div>
             </form>

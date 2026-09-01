@@ -18,13 +18,13 @@ export function useCategorias() {
 
   useEffect(() => {
     refresh()
-    setCarregado(true)
     void fetch('/api/categorias', { cache: 'no-store' })
       .then((resposta) => (resposta.ok ? resposta.json() : null))
       .then((dados) => {
         if (Array.isArray(dados)) hidratarCategorias(dados)
       })
       .catch((erro) => console.warn('[API] Usando cache local de categorias:', erro))
+      .finally(() => setCarregado(true))
     const unsubscribe = subscribeCategorias(refresh)
     return () => {
       unsubscribe()

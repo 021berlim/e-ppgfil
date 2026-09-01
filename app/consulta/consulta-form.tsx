@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, CalendarClock, CircleAlert, Download, Search, Send } from 'lucide-react'
+import { ArrowLeft, CalendarClock, CircleAlert, Download, LoaderCircle, Search, Send } from 'lucide-react'
 import { FormCard } from '@/components/public-shell'
 import { Field, TextInput } from '@/components/form-field'
 import { UploadAnexos } from '@/components/anexos'
@@ -19,6 +19,7 @@ import { STATUS_FINAIS, type Anexo, type Protocolo } from '@/lib/types'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import { obterPrazoDescricaoTipo } from '@/lib/categorias'
 import { adicionarAndamentoRemoto, consultarProtocoloRemoto } from '@/lib/protocolos-client'
+import { ProtocolDetailSkeleton } from '@/components/loading-skeletons'
 
 export function ConsultaForm() {
   const [cpf, setCpf] = useState('')
@@ -29,6 +30,7 @@ export function ConsultaForm() {
   const [erroAnexos, setErroAnexos] = useState('')
   const [confirmarEnvio, setConfirmarEnvio] = useState(false)
   const [consultando, setConsultando] = useState(false)
+  const consultaEmCurso = useRef(false)
 
   useEffect(() => {
     const protocolo = new URLSearchParams(window.location.search).get('protocolo')
@@ -37,6 +39,7 @@ export function ConsultaForm() {
 
   async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
+    if (consultaEmCurso.current) return
     setErro('')
     setResultado(null)
     setAnexos([])
@@ -51,6 +54,7 @@ export function ConsultaForm() {
       return
     }
 
+    consultaEmCurso.current = true
     setConsultando(true)
     try {
       const achado = await consultarProtocoloRemoto(cpf, numero)
@@ -60,6 +64,7 @@ export function ConsultaForm() {
         'Nenhum protocolo encontrado com esse CPF e número. Confira os dados e tente novamente.',
       )
     } finally {
+      consultaEmCurso.current = false
       setConsultando(false)
     }
   }
@@ -133,10 +138,12 @@ export function ConsultaForm() {
           <div className="sm:col-span-2">
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
+              disabled={consultando}
+              aria-busy={consultando}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Search className="size-4" aria-hidden="true" />
-              {consultando ? 'Consultando...' : 'Consultar'}
+              {consultando ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Search className="size-4" aria-hidden="true" />}
+              Consultar
             </button>
           </div>
         </form>
@@ -151,6 +158,8 @@ export function ConsultaForm() {
           </p>
         )}
       </FormCard>
+
+      {consultando && <ProtocolDetailSkeleton />}
 
       {resultado && (
         <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

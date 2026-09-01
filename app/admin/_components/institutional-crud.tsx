@@ -1,12 +1,13 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Download,
   Edit2,
   ExternalLink,
   FileText,
+  LoaderCircle,
   Plus,
   Search,
   Trash2,
@@ -17,6 +18,7 @@ import { Field, Select, TextArea, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { canManageAdministrativeCatalogs, isCoordinator } from '@/lib/auth-types'
 import { cargoAtual } from '@/lib/store'
+import { TableSkeleton } from '@/components/loading-skeletons'
 
 type EntityName = 'research-lines' | 'faculty-members' | 'procedures' | 'institutional-forms'
 
@@ -198,6 +200,7 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
   const [researchLines, setResearchLines] = useState<ResearchLine[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Row | null>(null)
@@ -293,6 +296,8 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
 
   async function save(event: React.FormEvent) {
     event.preventDefault()
+    if (savingRef.current) return
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = normalizePayload(entity, form)
@@ -314,6 +319,7 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Erro ao salvar cadastro.')
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
@@ -360,7 +366,7 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {loading ? (
-          <p className="px-5 py-8 text-sm font-bold text-muted-foreground">Carregando cadastro...</p>
+          <TableSkeleton rows={6} columns={4} />
         ) : filtered.length === 0 ? (
           <p className="px-5 py-8 text-sm font-bold text-muted-foreground">
             Nenhum registro encontrado.
@@ -434,7 +440,8 @@ function InstitutionalCrud({ entity }: { entity: EntityName }) {
                   disabled={saving}
                   className="rounded-full bg-primary px-6 py-2.5 text-xs font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {saving ? 'Salvando...' : 'Salvar'}
+                  {saving && <LoaderCircle className="mr-2 inline size-3.5 animate-spin" aria-hidden="true" />}
+                  Salvar
                 </button>
               </div>
             </form>

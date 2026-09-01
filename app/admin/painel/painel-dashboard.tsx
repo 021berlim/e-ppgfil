@@ -14,6 +14,7 @@ import {
 } from '@/lib/types'
 import { useProtocolos } from '@/hooks/use-protocolos'
 import { PageHeader } from '@/components/admin-shell'
+import { DashboardSkeleton } from '@/components/loading-skeletons'
 
 const DIA_MS = 1000 * 60 * 60 * 24
 
@@ -51,7 +52,7 @@ function Barra({
 }
 
 export function PainelDashboard() {
-  const { protocolos, carregado } = useProtocolos()
+  const { protocolos, carregado, carregando, erro } = useProtocolos()
 
   const m = useMemo(() => {
     const porStatus = {} as Record<Status, number>
@@ -127,8 +128,10 @@ export function PainelDashboard() {
       />
 
       <div className="grid gap-6 px-6 py-6 lg:px-8">
-        {!carregado ? (
-          <p className="text-sm font-bold text-muted-foreground">Carregando métricas…</p>
+        {!carregado || carregando ? (
+          <DashboardSkeleton />
+        ) : erro ? (
+          <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/8 p-5 text-sm font-bold text-destructive">{erro}</div>
         ) : (
           <>
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

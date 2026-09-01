@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { TriangleAlert, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { LoaderCircle, TriangleAlert, X } from 'lucide-react'
 import { TextArea } from '@/components/form-field'
 
 export function ConfirmacaoModal({
@@ -25,26 +25,38 @@ export function ConfirmacaoModal({
   labelMotivo?: string
   placeholderMotivo?: string
   onCancelar: () => void
-  onConfirmar: (motivo: string) => void
+  onConfirmar: (motivo: string) => void | Promise<void>
 }) {
   const [motivo, setMotivo] = useState('')
   const [erro, setErro] = useState('')
+  const [processando, setProcessando] = useState(false)
+  const processandoRef = useRef(false)
 
   useEffect(() => {
     if (!aberto) {
       setMotivo('')
       setErro('')
+      setProcessando(false)
+      processandoRef.current = false
     }
   }, [aberto])
 
   if (!aberto) return null
 
-  function confirmar() {
+  async function confirmar() {
+    if (processandoRef.current) return
     if (exigirMotivo && !motivo.trim()) {
       setErro('Informe o motivo antes de continuar.')
       return
     }
-    onConfirmar(motivo.trim())
+    processandoRef.current = true
+    setProcessando(true)
+    try {
+      await onConfirmar(motivo.trim())
+    } finally {
+      processandoRef.current = false
+      setProcessando(false)
+    }
   }
 
   return (
@@ -68,7 +80,7 @@ export function ConfirmacaoModal({
               {descricao}
             </p>
           </div>
-          <button type="button" onClick={onCancelar} aria-label="Cancelar" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground">
+          <button type="button" onClick={onCancelar} disabled={processando} aria-label="Cancelar" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50">
             <X className="size-4" aria-hidden="true" />
           </button>
         </div>
@@ -88,24 +100,28 @@ export function ConfirmacaoModal({
               placeholder={placeholderMotivo}
               className="mt-1.5 min-h-28"
               autoFocus
+              disabled={processando}
             />
             {erro && <p role="alert" className="mt-1.5 text-xs font-bold text-destructive">{erro}</p>}
           </div>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button type="button" onClick={onCancelar} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-extrabold text-foreground hover:bg-secondary">
+          <button type="button" onClick={onCancelar} disabled={processando} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-extrabold text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50">
             Cancelar
           </button>
           <button
             type="button"
-            onClick={confirmar}
-            className={`rounded-full px-5 py-2.5 text-sm font-extrabold hover:opacity-90 ${
+            onClick={() => void confirmar()}
+            disabled={processando}
+            aria-busy={processando}
+            className={`inline-flex min-w-28 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${
               tom === 'perigo'
                 ? 'bg-destructive text-destructive-foreground'
                 : 'bg-primary text-primary-foreground'
             }`}
           >
+            {processando && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}
             {textoConfirmar}
           </button>
         </div>

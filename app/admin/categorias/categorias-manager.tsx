@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { PageHeader } from '@/components/admin-shell'
+import { CategoriesSkeleton } from '@/components/loading-skeletons'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { Field, TextArea, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
@@ -126,11 +127,14 @@ export function CategoriasManager() {
 
   function salvarCategoria(e: React.FormEvent) {
     e.preventDefault()
+    const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    if (botao?.disabled) return
     if (readOnly) return
     if (!nomeCategoria.trim()) {
       setErroCategoria('Informe o nome da categoria.')
       return
     }
+    if (botao) botao.disabled = true
 
     if (categoriaEdicao) {
       editarCategoria(categoriaEdicao.id, {
@@ -186,6 +190,8 @@ export function CategoriasManager() {
 
   function salvarTipo(e: React.FormEvent) {
     e.preventDefault()
+    const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    if (botao?.disabled) return
     if (readOnly) return
     if (!nomeTipo.trim()) {
       setErroTipo('Informe o nome do tipo de solicitação.')
@@ -204,6 +210,7 @@ export function CategoriasManager() {
       )
       return
     }
+    if (botao) botao.disabled = true
 
     if (tipoEdicao) {
       editarTipoSolicitacao(categoriaAlvoTipo.id, tipoEdicao.id, {
@@ -296,6 +303,10 @@ export function CategoriasManager() {
       </PageHeader>
 
       <div className="grid gap-6 px-6 py-6 lg:px-8">
+        {!carregado ? (
+          <CategoriesSkeleton />
+        ) : (
+          <>
         {/* Cards de Métricas */}
         <section className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -353,9 +364,7 @@ export function CategoriasManager() {
         </div>
 
         {/* Lista de Categorias */}
-        {!carregado ? (
-          <p className="text-sm font-bold text-muted-foreground">Carregando categorias…</p>
-        ) : categoriasFiltradas.length === 0 ? (
+        {categoriasFiltradas.length === 0 ? (
           <div className="grid place-items-center rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
             <FolderTree className="size-10 text-muted-foreground/40" />
             <h3 className="mt-3 text-base font-extrabold text-foreground">
@@ -494,6 +503,8 @@ export function CategoriasManager() {
               </article>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
 

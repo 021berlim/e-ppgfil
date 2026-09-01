@@ -16,8 +16,10 @@ export function AnexoChip({
   onRemove?: () => void
 }) {
   const [baixando, setBaixando] = useState(false)
+  const downloadEmCurso = useRef(false)
 
   async function baixarAnexo() {
+    if (downloadEmCurso.current) return
     if (!anexo.documentFileId) {
       alert(
         `Arquivo sem armazenamento configurado\n\nArquivo: ${anexo.nome}\nTipo: ${anexo.tipo}\nTamanho: ${formatarTamanho(anexo.tamanho)}`,
@@ -25,6 +27,7 @@ export function AnexoChip({
       return
     }
 
+    downloadEmCurso.current = true
     setBaixando(true)
     try {
       const params = new URLSearchParams()
@@ -40,6 +43,7 @@ export function AnexoChip({
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Nao foi possivel baixar o arquivo.')
     } finally {
+      downloadEmCurso.current = false
       setBaixando(false)
     }
   }
@@ -95,10 +99,13 @@ export function UploadAnexos({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [enviando, setEnviando] = useState(false)
+  const uploadEmCurso = useRef(false)
   const [erroUpload, setErroUpload] = useState('')
 
   async function handleFiles(files: FileList | null) {
     if (!files?.length) return
+    if (uploadEmCurso.current) return
+    uploadEmCurso.current = true
     setEnviando(true)
     setErroUpload('')
     try {
@@ -107,6 +114,7 @@ export function UploadAnexos({
     } catch (error) {
       setErroUpload(error instanceof Error ? error.message : 'Nao foi possivel enviar o arquivo.')
     } finally {
+      uploadEmCurso.current = false
       setEnviando(false)
       if (inputRef.current) inputRef.current.value = ''
     }
@@ -184,6 +192,7 @@ export function ChecklistDocumentos({
 }) {
   const [errosArquivo, setErrosArquivo] = useState<Record<string, string>>({})
   const [enviandoDocumento, setEnviandoDocumento] = useState<Record<string, boolean>>({})
+  const uploadsEmCurso = useRef(new Set<string>())
   const obrigatorios = documentos.filter((documento) => documento.obrigatorio)
   const obrigatoriosAnexados = obrigatorios.filter(
     (documento) => anexosPorDocumento[documento.id],
@@ -191,6 +200,7 @@ export function ChecklistDocumentos({
 
   async function selecionarArquivo(documento: DocumentoExigido, arquivo?: File) {
     if (!arquivo) return
+    if (uploadsEmCurso.current.has(documento.id)) return
     const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? ''
     const formatos = documento.formatosAceitos.map((formato) =>
       formato.toLowerCase().replace(/^\./, ''),
@@ -210,6 +220,7 @@ export function ChecklistDocumentos({
       return
     }
     setErrosArquivo((atuais) => ({ ...atuais, [documento.id]: '' }))
+    uploadsEmCurso.current.add(documento.id)
     setEnviandoDocumento((atuais) => ({ ...atuais, [documento.id]: true }))
     try {
       const anexo = await enviarDocumentoR2(arquivo)
@@ -221,6 +232,7 @@ export function ChecklistDocumentos({
           error instanceof Error ? error.message : 'Nao foi possivel enviar o arquivo.',
       }))
     } finally {
+      uploadsEmCurso.current.delete(documento.id)
       setEnviandoDocumento((atuais) => ({ ...atuais, [documento.id]: false }))
     }
   }

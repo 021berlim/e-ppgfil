@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, LoaderCircle, Lock, ShieldCheck } from 'lucide-react'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { Field, TextInput } from '@/components/form-field'
 import { login } from '@/lib/store'
@@ -16,9 +16,11 @@ export function LoginForm() {
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const envioEmCurso = useRef(false)
 
   async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
+    if (envioEmCurso.current) return
     setErro('')
     if (!email.trim() || !senha.trim()) {
       setErro('Preencha e-mail e senha.')
@@ -29,6 +31,7 @@ export function LoginForm() {
       return
     }
 
+    envioEmCurso.current = true
     setCarregando(true)
     try {
       const resposta = await fetch('/api/auth/login', {
@@ -45,6 +48,7 @@ export function LoginForm() {
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Não foi possível entrar.')
     } finally {
+      envioEmCurso.current = false
       setCarregando(false)
     }
   }
@@ -136,8 +140,8 @@ export function LoginForm() {
               disabled={carregando}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90"
             >
-              <Lock className="size-4" aria-hidden="true" />
-              {carregando ? 'Entrando...' : 'Entrar'}
+              {carregando ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Lock className="size-4" aria-hidden="true" />}
+              Entrar
             </button>
           </form>
 

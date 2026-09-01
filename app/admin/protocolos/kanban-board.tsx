@@ -39,6 +39,8 @@ import { Select, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
+import { KanbanColumnSkeleton, KanbanSkeleton } from '@/components/loading-skeletons'
+import { Skeleton } from '@/components/ui/skeleton'
 import { gerenciarProtocoloRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_TUTORIAL: TourStep[] = [
@@ -466,7 +468,7 @@ const Coluna = memo(function Coluna({
 
 export function KanbanBoard() {
   const router = useRouter()
-  const { protocolos, carregado, erro } = useProtocolos()
+  const { protocolos, carregado, carregando, erro } = useProtocolos()
   const [filtro, setFiltro] = useState('')
   const [filtroResp, setFiltroResp] = useState('')
   const [busca, setBusca] = useState('')
@@ -476,10 +478,12 @@ export function KanbanBoard() {
   const [ativoId, setAtivoId] = useState<string | null>(null)
   const [movimentoPendente, setMovimentoPendente] = useState<{
     id: string
+    origem: Status
     destino: Status
     nome: string
   } | null>(null)
   const [arquivarId, setArquivarId] = useState<string | null>(null)
+  const [etapasAtualizando, setEtapasAtualizando] = useState<Status[]>([])
   const [tourAtivo, setTourAtivo] = useState(false)
   const readOnly = isCoordinator(cargoAtual())
   const passosTutorial = readOnly
@@ -601,21 +605,25 @@ export function KanbanBoard() {
     const id = String(e.active.id)
     const alvo = protocolos.find((p) => p.id === id)
     if (!alvo || alvo.status === destino) return
-    setMovimentoPendente({ id, destino: destino as Status, nome: alvo.nome })
+    setMovimentoPendente({ id, origem: alvo.status, destino: destino as Status, nome: alvo.nome })
   }, [protocolos, readOnly])
 
-  const confirmarMovimento = useCallback(() => {
+  const confirmarMovimento = useCallback(async () => {
     if (!movimentoPendente) return
     if (readOnly) {
       setMovimentoPendente(null)
       return
     }
-    void moverStatusRemoto(movimentoPendente.id, movimentoPendente.destino)
-      .then(() => toast(`Etapa atualizada e e-mail enviado a ${movimentoPendente.nome}.`))
-      .catch((error) =>
-        toast(error instanceof Error ? error.message : 'Nao foi possivel atualizar o protocolo.'),
-      )
-    setMovimentoPendente(null)
+    setEtapasAtualizando([movimentoPendente.origem, movimentoPendente.destino])
+    try {
+      await moverStatusRemoto(movimentoPendente.id, movimentoPendente.destino)
+      toast(`Etapa atualizada e e-mail enviado a ${movimentoPendente.nome}.`)
+      setMovimentoPendente(null)
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Nao foi possivel atualizar o protocolo.')
+    } finally {
+      setEtapasAtualizando([])
+    }
   }, [movimentoPendente, readOnly])
 
   const handleOpen = useCallback(
@@ -691,38 +699,24 @@ export function KanbanBoard() {
             >
               Responsável
             </label>
-            <Select
-              id="filtro-resp"
-              value={filtroResp}
-              onChange={(e) => setFiltroResp(e.target.value)}
-              className="w-full sm:w-52"
-            >
-              <option value="">Todos</option>
-              <option value="__sem__">Sem responsável</option>
-              {responsaveisDisponiveis.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-              {carregandoResponsaveis && (
-                <option value="" disabled>
-                  Carregando responsáveis...
-                </option>
-              )}
-              {!carregandoResponsaveis && responsaveisDisponiveis.length === 0 && (
-                <option value="" disabled>
-                  Nenhum responsável disponível
-                </option>
-              )}
-            </Select>
+            {carregandoResponsaveis ? (
+              <Skeleton className="h-11 w-full sm:w-52" />
+            ) : (
+              <Select id="filtro-resp" value={filtroResp} onChange={(e) => setFiltroResp(e.target.value)} className="w-full sm:w-52">
+                <option value="">Todos</option>
+                <option value="__sem__">Sem responsável</option>
+                {responsaveisDisponiveis.map((r) => <option key={r} value={r}>{r}</option>)}
+                {responsaveisDisponiveis.length === 0 && <option value="" disabled>Nenhum responsável disponível</option>}
+              </Select>
+            )}
           </div>
           </div>
         </div>
       </div>
 
       <div className="min-h-0 flex-1 px-6 py-6 lg:px-8">
-        {!carregado ? (
-          <p className="text-sm font-bold text-muted-foreground">Carregando protocolos…</p>
+        {!carregado || (carregando && etapasAtualizando.length === 0) ? (
+          <KanbanSkeleton />
         ) : erro ? (
           <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/8 p-5 text-sm font-bold text-destructive">
             {erro}
@@ -730,7 +724,9 @@ export function KanbanBoard() {
         ) : (
           <DndContext sensors={sensors} onDragStart={handleStart} onDragEnd={handleEnd}>
             <div data-tour="kanban-columns" className="grid h-full min-h-0 min-w-0 auto-rows-[32rem] grid-cols-1 gap-4 overflow-x-hidden overflow-y-auto pb-4 sm:grid-cols-2 lg:grid-cols-3 xl:auto-rows-fr xl:grid-cols-5 xl:overflow-y-hidden">
-              {STATUS_LIST.map((s) => (
+              {STATUS_LIST.map((s) => etapasAtualizando.includes(s) ? (
+                <KanbanColumnSkeleton key={s} />
+              ) : (
                 <Coluna
                   key={s}
                   status={s}
@@ -764,13 +760,15 @@ export function KanbanBoard() {
         descricao="O protocolo sairá da esteira principal, mas todos os dados e o histórico serão preservados."
         textoConfirmar="Arquivar"
         onCancelar={() => setArquivarId(null)}
-        onConfirmar={() => {
+        onConfirmar={async () => {
           if (!arquivarId) return
           if (readOnly) return
-          void gerenciarProtocoloRemoto(arquivarId, 'archive').catch((error) =>
-            toast(error instanceof Error ? error.message : 'Nao foi possivel arquivar o protocolo.'),
-          )
-          setArquivarId(null)
+          try {
+            await gerenciarProtocoloRemoto(arquivarId, 'archive')
+            setArquivarId(null)
+          } catch (error) {
+            toast(error instanceof Error ? error.message : 'Nao foi possivel arquivar o protocolo.')
+          }
         }}
       />
     </div>

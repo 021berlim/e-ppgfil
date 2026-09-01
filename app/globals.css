@@ -129,6 +129,26 @@
   }
 }
 
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 55%), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
 .tour-demonstrar-arraste {
   animation: tour-demonstrar-arraste 1.5s ease-in-out infinite;
   box-shadow: 0 8px 22px rgb(43 43 43 / 18%);
@@ -136,7 +156,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tour-demonstrar-arraste {
+  .tour-demonstrar-arraste,
+  .skeleton-shimmer::after {
     animation: none;
   }
 }

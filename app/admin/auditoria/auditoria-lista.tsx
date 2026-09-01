@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, ScrollText } from 'lucide-react'
 import type { RegistroAuditoria } from '@/lib/types'
 import { formatarData } from '@/lib/store'
+import { TableSkeleton } from '@/components/loading-skeletons'
 
 const REGISTROS_POR_PAGINA = 100
 
@@ -12,6 +13,7 @@ export function AuditoriaLista() {
   const [busca, setBusca] = useState('')
   const [categoria, setCategoria] = useState('todas')
   const [pagina, setPagina] = useState(1)
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     let cancelado = false
@@ -34,6 +36,7 @@ export function AuditoriaLista() {
     const atualizar = async () => {
       const remotos = await carregarRemotos()
       if (!cancelado) setRegistros(ordenar(remotos))
+      if (!cancelado) setCarregando(false)
     }
 
     void atualizar()
@@ -97,7 +100,11 @@ export function AuditoriaLista() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div className="max-h-[calc(100vh-20rem)] min-h-80 overflow-auto overscroll-contain">
+        {carregando ? (
+          <TableSkeleton rows={7} columns={5} />
+        ) : (
+          <>
+            <div className="max-h-[calc(100vh-20rem)] min-h-80 overflow-auto overscroll-contain">
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="sticky top-0 z-10 bg-secondary text-xs uppercase tracking-wider text-muted-foreground shadow-sm">
               <tr>
@@ -122,7 +129,7 @@ export function AuditoriaLista() {
               ))}
             </tbody>
           </table>
-        </div>
+            </div>
 
         {filtrados.length === 0 && (
           <div className="grid place-items-center px-6 py-16 text-center">
@@ -132,6 +139,8 @@ export function AuditoriaLista() {
               Novas ações administrativas aparecerão automaticamente nesta trilha.
             </p>
           </div>
+        )}
+          </>
         )}
       </div>
 

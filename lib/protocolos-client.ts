@@ -1,5 +1,13 @@
 import type { Anexo, Protocolo, Status } from './types'
 
+async function revalidarProtocolosAbertos() {
+  const tarefas: Promise<void>[] = []
+  window.dispatchEvent(new CustomEvent('epfil:protocolos-refresh', {
+    detail: { waitUntil: (tarefa: Promise<void>) => tarefas.push(tarefa) },
+  }))
+  await Promise.allSettled(tarefas)
+}
+
 export type CriarProtocoloResponse = {
   protocolo: Protocolo
   receipt: {
@@ -62,7 +70,7 @@ export async function moverStatusRemoto(id: string, status: Status, observation?
   if (!resposta.ok) {
     throw new Error(payload.error ?? 'Nao foi possivel atualizar o protocolo.')
   }
-  window.dispatchEvent(new Event('epfil:protocolos-refresh'))
+  await revalidarProtocolosAbertos()
   return payload
 }
 
@@ -78,7 +86,7 @@ export async function gerenciarProtocoloRemoto(
   })
   const payload = await resposta.json()
   if (!resposta.ok) throw new Error(payload.error ?? 'Nao foi possivel atualizar o protocolo.')
-  window.dispatchEvent(new Event('epfil:protocolos-refresh'))
+  await revalidarProtocolosAbertos()
   return payload
 }
 
@@ -103,7 +111,7 @@ export async function adicionarAndamentoRemoto(input: {
   if (!resposta.ok) {
     throw new Error(payload.error ?? 'Nao foi possivel registrar o andamento.')
   }
-  window.dispatchEvent(new Event('epfil:protocolos-refresh'))
+  await revalidarProtocolosAbertos()
   return payload
 }
 

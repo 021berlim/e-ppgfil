@@ -7,9 +7,10 @@ import { PageHeader } from '@/components/admin-shell'
 import { TextInput } from '@/components/form-field'
 import { useProtocolos } from '@/hooks/use-protocolos'
 import { formatarCPF, formatarData, soDigitos } from '@/lib/store'
+import { TableSkeleton } from '@/components/loading-skeletons'
 
 export function ProtocolosArquivados() {
-  const { protocolos, carregado, erro } = useProtocolos({ incluirArquivados: true })
+  const { protocolos, carregado, carregando, erro } = useProtocolos({ incluirArquivados: true })
   const [busca, setBusca] = useState('')
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
@@ -70,8 +71,8 @@ export function ProtocolosArquivados() {
       </div>
 
       <main className="px-6 py-6 lg:px-8">
-        {!carregado ? (
-          <p className="text-sm font-bold text-muted-foreground">Carregando arquivados…</p>
+        {!carregado || carregando ? (
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"><TableSkeleton rows={7} columns={7} /></div>
         ) : erro ? (
           <div role="alert" className="rounded-2xl border border-destructive/30 bg-destructive/8 p-5 text-sm font-bold text-destructive">{erro}</div>
         ) : arquivados.length === 0 ? (

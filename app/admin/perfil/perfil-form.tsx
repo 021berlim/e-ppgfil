@@ -1,13 +1,14 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState } from 'react'
-import { BadgeCheck, Camera, Eye, EyeOff, KeyRound, Mail, Save, Trash2, UserCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { BadgeCheck, Camera, Eye, EyeOff, KeyRound, LoaderCircle, Mail, Save, Trash2, UserCircle } from 'lucide-react'
 import { Field, TextInput } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { login, usuarioAtualInfo } from '@/lib/store'
 import { DASHBOARD_ROLE_LABELS, type ClientSession } from '@/lib/auth-types'
+import { FormSkeleton } from '@/components/loading-skeletons'
 
 type FormState = {
   name: string
@@ -50,6 +51,9 @@ export function PerfilForm() {
   const [savingAvatar, setSavingAvatar] = useState(false)
   const [savingEmail, setSavingEmail] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
+  const avatarEmCurso = useRef(false)
+  const emailEmCurso = useRef(false)
+  const senhaEmCurso = useRef(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -128,6 +132,8 @@ export function PerfilForm() {
   }
 
   async function saveAvatarUrl(avatarUrl: string | null) {
+    if (avatarEmCurso.current) return
+    avatarEmCurso.current = true
     const avatarAnterior = form.avatar_url
     updateField('avatar_url', avatarUrl)
     setSavingAvatar(true)
@@ -141,12 +147,15 @@ export function PerfilForm() {
       updateField('avatar_url', avatarAnterior)
       toast(error instanceof Error ? error.message : 'Erro ao salvar foto.')
     } finally {
+      avatarEmCurso.current = false
       setSavingAvatar(false)
     }
   }
 
   async function saveEmail(event: React.FormEvent) {
     event.preventDefault()
+    if (emailEmCurso.current) return
+    emailEmCurso.current = true
     setSavingEmail(true)
     try {
       await saveProfile({
@@ -157,17 +166,20 @@ export function PerfilForm() {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Erro ao salvar e-mail.')
     } finally {
+      emailEmCurso.current = false
       setSavingEmail(false)
     }
   }
 
   async function savePassword(event: React.FormEvent) {
     event.preventDefault()
+    if (senhaEmCurso.current) return
     if (form.newPassword !== form.confirmPassword) {
       toast('A confirmacao da nova senha nao confere.')
       return
     }
 
+    senhaEmCurso.current = true
     setSavingPassword(true)
     try {
       await saveProfile({
@@ -180,16 +192,13 @@ export function PerfilForm() {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Erro ao alterar senha.')
     } finally {
+      senhaEmCurso.current = false
       setSavingPassword(false)
     }
   }
 
   if (loading) {
-    return (
-      <section className="px-6 py-6 lg:px-8">
-        <p className="text-sm font-bold text-muted-foreground">Carregando perfil...</p>
-      </section>
-    )
+    return <FormSkeleton />
   }
 
   return (
@@ -246,8 +255,8 @@ export function PerfilForm() {
 
               <div className="flex flex-wrap gap-2">
                 <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90">
-                  <Camera className="size-4" aria-hidden="true" />
-                  {savingAvatar ? 'Salvando...' : 'Alterar foto'}
+                  {savingAvatar ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Camera className="size-4" aria-hidden="true" />}
+                  Alterar foto
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp,image/gif"
@@ -311,8 +320,8 @@ export function PerfilForm() {
                     disabled={savingEmail}
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <Save className="size-4" aria-hidden="true" />
-                    {savingEmail ? 'Salvando...' : 'Salvar e-mail'}
+                    {savingEmail ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
+                    Salvar e-mail
                   </button>
                 </div>
               </div>
@@ -370,8 +379,8 @@ export function PerfilForm() {
                     disabled={savingPassword}
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <Save className="size-4" aria-hidden="true" />
-                    {savingPassword ? 'Salvando...' : 'Alterar senha'}
+                    {savingPassword ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
+                    Alterar senha
                   </button>
                 </div>
               </div>

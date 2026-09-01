@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { EpfilLogo } from '@/components/epfil-logo'
 import { Toaster } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
+import { PageSkeleton } from '@/components/loading-skeletons'
 import { login, logout, usuarioAtualInfo } from '@/lib/store'
 import {
   DASHBOARD_ROLE_LABELS,
@@ -119,11 +120,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   })).filter((grupo) => grupo.itens.length > 0)
 
   if (!pronto) {
-    return (
-      <div className="grid min-h-dvh place-items-center bg-background">
-        <p className="text-sm font-bold text-muted-foreground">Verificando acesso…</p>
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   return (

@@ -29,6 +29,7 @@ import { Select, TextArea } from '@/components/form-field'
 import { toast } from '@/components/toast'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { TourGuiado, type TourStep } from '@/components/tour-guiado'
+import { Skeleton } from '@/components/ui/skeleton'
 import { adicionarAndamentoRemoto, gerenciarProtocoloRemoto, moverStatusRemoto } from '@/lib/protocolos-client'
 
 const PASSOS_DETALHES: TourStep[] = [
@@ -333,22 +334,14 @@ export function ProtocoloDetalhes({
                   >
                     Responsável
                   </label>
-                  <Select
-                    id="responsavel"
-                    value={responsaveis.find((item) => item.name === protocolo.responsavel)?.id ?? ''}
-                    onChange={(e) => {
+                  {carregandoResponsaveis ? (
+                    <Skeleton className="mt-1.5 h-10 w-full" />
+                  ) : (
+                    <Select id="responsavel" value={responsaveis.find((item) => item.name === protocolo.responsavel)?.id ?? ''} onChange={(e) => {
                       const escolhido = responsaveis.find((item) => item.id === e.target.value)
-                      setAcaoPendente({
-                        tipo: 'responsavel',
-                        responsavelId: e.target.value,
-                        responsavelNome: escolhido?.name ?? '',
-                      })
-                    }}
-                    className="mt-1.5 py-2 text-sm"
-                  >
-                    <option value="">
-                      {carregandoResponsaveis ? 'Carregando responsáveis...' : 'Sem responsável'}
-                    </option>
+                      setAcaoPendente({ tipo: 'responsavel', responsavelId: e.target.value, responsavelNome: escolhido?.name ?? '' })
+                    }} className="mt-1.5 py-2 text-sm">
+                    <option value="">Sem responsável</option>
                     {responsavelAtualForaDaLista && (
                       <option value="" disabled>
                         {protocolo.responsavel} (fora da lista atual)
@@ -359,12 +352,13 @@ export function ProtocoloDetalhes({
                         {responsavel.name}
                       </option>
                     ))}
-                    {!carregandoResponsaveis && responsaveis.length === 0 && (
+                    {responsaveis.length === 0 && (
                       <option value="" disabled>
                         Nenhum responsável disponível
                       </option>
                     )}
-                  </Select>
+                    </Select>
+                  )}
                 </div>
                 <div className="bg-card px-6 py-4">
                   <label

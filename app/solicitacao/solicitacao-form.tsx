@@ -10,6 +10,7 @@ import { formatarCPF, soDigitos } from '@/lib/store'
 import type { Anexo, Protocolo } from '@/lib/types'
 import { ConfirmacaoModal } from '@/components/confirmacao-modal'
 import { useCategorias } from '@/hooks/use-categorias'
+import { Skeleton } from '@/components/ui/skeleton'
 import { baixarComprovantePDF } from '@/lib/gerar-comprovante-pdf'
 import {
   abrirDocumentoRemoto,
@@ -22,7 +23,7 @@ type Erros = Partial<
 >
 
 export function SolicitacaoForm() {
-  const { categorias } = useCategorias()
+  const { categorias, carregado: categoriasCarregadas } = useCategorias()
   const [cpf, setCpf] = useState('')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -38,7 +39,6 @@ export function SolicitacaoForm() {
   const [resultadoCriacao, setResultadoCriacao] = useState<CriarProtocoloResponse | null>(null)
   const [copiado, setCopiado] = useState(false)
   const [confirmarCriacao, setConfirmarCriacao] = useState(false)
-  const [enviando, setEnviando] = useState(false)
 
   const categoriaSelecionada = categorias.find(
     (c) => c.id === categoria || c.nome === categoria,
@@ -92,7 +92,6 @@ export function SolicitacaoForm() {
   }
 
   async function confirmarSolicitacao() {
-    setEnviando(true)
     try {
       const resultado = await criarProtocoloRemoto({
         cpf,
@@ -117,8 +116,6 @@ export function SolicitacaoForm() {
         documentos: error instanceof Error ? error.message : 'Nao foi possivel registrar a solicitacao.',
       })
       setConfirmarCriacao(false)
-    } finally {
-      setEnviando(false)
     }
   }
 
@@ -298,19 +295,14 @@ export function SolicitacaoForm() {
               hint={categoriaSelecionada?.descricao}
               className="min-w-0"
             >
-              <Select
-                id="categoria"
-                value={categoria}
-                onChange={(e) => handleCategoriaChange(e.target.value)}
-                className="w-full min-w-0"
-              >
-                <option value="">Selecione sua categoria…</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </Select>
+              {!categoriasCarregadas ? (
+                <Skeleton className="h-11 w-full" />
+              ) : (
+                <Select id="categoria" value={categoria} onChange={(e) => handleCategoriaChange(e.target.value)} className="w-full min-w-0">
+                  <option value="">Selecione sua categoria…</option>
+                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </Select>
+              )}
             </Field>
 
             <Field
@@ -421,11 +413,6 @@ export function SolicitacaoForm() {
         onCancelar={() => setConfirmarCriacao(false)}
         onConfirmar={confirmarSolicitacao}
       />
-      {enviando && (
-        <p className="mt-3 text-center text-xs font-bold text-muted-foreground">
-          Registrando protocolo e enviando comprovante...
-        </p>
-      )}
     </div>
   )
 }

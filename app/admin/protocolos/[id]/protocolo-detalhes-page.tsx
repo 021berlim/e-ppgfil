@@ -4,21 +4,16 @@ import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useProtocolos } from '@/hooks/use-protocolos'
 import { ProtocoloDetalhes } from '../protocolo-modal'
+import { FormSkeleton } from '@/components/loading-skeletons'
 
 export function DetalhesProtocoloPage({ id }: { id: string }) {
   const router = useRouter()
-  const { protocolos, carregado, erro } = useProtocolos({ incluirArquivados: true })
+  const { protocolos, carregado, carregando, erro } = useProtocolos({ incluirArquivados: true })
   const protocolo = protocolos.find((item) => item.id === id)
   const voltar = () =>
     router.push(protocolo?.arquivado ? '/admin/protocolos/arquivados' : '/admin/protocolos')
 
-  if (!carregado) {
-    return (
-      <div className="grid min-h-[50dvh] place-items-center px-6">
-        <p className="text-sm font-bold text-muted-foreground">Carregando protocolo…</p>
-      </div>
-    )
-  }
+  if (!carregado || carregando) return <FormSkeleton />
 
   if (erro || !protocolo) {
     return (
