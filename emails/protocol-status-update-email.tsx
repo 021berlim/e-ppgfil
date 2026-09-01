@@ -1,4 +1,4 @@
-import { Text } from '@react-email/components'
+import { Text } from "@react-email/components";
 import {
   ActionBlock,
   Content,
@@ -7,17 +7,17 @@ import {
   InfoRow,
   ProtocolReference,
   textStyle,
-} from './components'
+} from "./components";
 
 export type ProtocolStatusUpdateEmailProps = {
-  requesterName: string
-  protocolNumber: string
-  previousStatus: string
-  currentStatus: string
-  observation: string
-  updatedAt: string
-  consultationUrl: string
-}
+  requesterName: string;
+  protocolNumber: string;
+  previousStatus: string;
+  currentStatus: string;
+  observation: string;
+  updatedAt: string;
+  consultationUrl: string;
+};
 
 export function ProtocolStatusUpdateEmail({
   requesterName,
@@ -36,8 +36,12 @@ export function ProtocolStatusUpdateEmail({
       reference={protocolNumber}
     >
       <Content>
-        <Text style={textStyle}>Olá, <strong>{requesterName}</strong>.</Text>
-        <Text style={textStyle}>Há uma nova atualização na sua solicitação.</Text>
+        <Text style={textStyle}>
+          Olá, <strong>{requesterName}</strong>.
+        </Text>
+        <Text style={textStyle}>
+          Há uma nova atualização na sua solicitação.
+        </Text>
         <ProtocolReference number={protocolNumber} status={currentStatus} />
         <InfoPanel title="Dados da movimentação">
           <InfoRow label="Situação anterior" value={previousStatus} />
@@ -45,12 +49,13 @@ export function ProtocolStatusUpdateEmail({
           <InfoRow label="Data da movimentação" value={updatedAt} />
         </InfoPanel>
         <Text style={textStyle}>
-          <strong>Observação:</strong> {observation || 'Não há observações adicionais.'}
+          <strong>Observação:</strong>{" "}
+          {observation || "Não há observações adicionais."}
         </Text>
         <ActionBlock href={consultationUrl} label="Consultar protocolo" />
       </Content>
     </EmailShell>
-  )
+  );
 }
 
-export default ProtocolStatusUpdateEmail
+export default ProtocolStatusUpdateEmail;
