@@ -211,7 +211,7 @@ export function PerfilForm() {
 
           <div className="relative px-5 pb-7 sm:px-7">
             <div className="-mt-20 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="relative w-fit">
                   {form.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -237,7 +237,7 @@ export function PerfilForm() {
                   </label>
                 </div>
 
-                <div className="min-w-0 pt-1 sm:pt-14">
+                <div className="min-w-0 pt-1 sm:pt-20">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="max-w-full break-words text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
                       {form.name || 'Seu perfil'}
