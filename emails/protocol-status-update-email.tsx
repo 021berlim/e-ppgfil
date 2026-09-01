@@ -3,8 +3,7 @@ import {
   ActionBlock,
   Content,
   EmailShell,
-  InfoPanel,
-  InfoRow,
+  ProcessStepper,
   ProtocolReference,
   textStyle,
 } from "./components";
@@ -60,6 +59,77 @@ export function ProtocolStatusUpdateEmail({
       ? previousStatus
       : "Registro inicial";
 
+  const steps = [
+    {
+      id: "gerado",
+      label: "Início",
+      status: "Concluído",
+      date:
+        previousStatus && previousStatus !== "—"
+          ? `em ${updatedAt}`
+          : "Registro inicial",
+      isCompleted:
+        currentStatus !== "Gerado" &&
+        currentStatus !== "Em tramitação" &&
+        currentStatus !== "Com exigência",
+      isCurrent: currentStatus === "Gerado",
+      isPending: currentStatus === "Gerado" ? false : false,
+    },
+    {
+      id: "tramite",
+      label: "Em análise",
+      status:
+        currentStatus === "Em tramitação"
+          ? "Em andamento"
+          : currentStatus === "Com exigência"
+            ? "Pendente"
+            : currentStatus === "Gerado"
+              ? "Pendente"
+              : "Concluído",
+      date:
+        currentStatus === "Em tramitação"
+          ? `em ${updatedAt}`
+          : currentStatus === "Com exigência"
+            ? "Aguardando"
+            : currentStatus === "Deferido" || currentStatus === "Indeferido"
+              ? `em ${updatedAt}`
+              : "Aguardando",
+      isCompleted:
+        currentStatus === "Deferido" ||
+        currentStatus === "Indeferido" ||
+        currentStatus === "Com exigência",
+      isCurrent: currentStatus === "Em tramitação",
+      isPending:
+        currentStatus === "Gerado" || currentStatus === "Com exigência",
+    },
+    {
+      id: "final",
+      label: currentStatus === "Indeferido" ? "Indeferido" : "Concluído",
+      status:
+        currentStatus === "Indeferido"
+          ? "Não se aplica"
+          : currentStatus === "Deferido"
+            ? "Concluído"
+            : currentStatus === "Com exigência"
+              ? "Pendente"
+              : currentStatus === "Gerado"
+                ? "Pendente"
+                : "Concluído",
+      date:
+        currentStatus === "Indeferido" || currentStatus === "Deferido"
+          ? `em ${updatedAt}`
+          : "Aguardando",
+      isCompleted:
+        currentStatus === "Deferido" || currentStatus === "Indeferido",
+      isCurrent: currentStatus === "Deferido" || currentStatus === "Indeferido",
+      isRejected: currentStatus === "Indeferido",
+      isPending:
+        currentStatus === "Gerado" ||
+        currentStatus === "Em tramitação" ||
+        currentStatus === "Com exigência",
+    },
+  ];
+
   return (
     <EmailShell
       preview={`Atualizacao do protocolo ${protocolNumber}: ${currentStatus}.`}
@@ -77,11 +147,7 @@ export function ProtocolStatusUpdateEmail({
         </Text>
         <ProtocolReference number={protocolNumber} status={currentStatus} />
 
-        <InfoPanel title="Rastreio do processo">
-          <InfoRow label="Etapa atual" value={currentStatus} />
-          <InfoRow label="Etapa anterior" value={previousLabel} />
-          <InfoRow label="Última atualização" value={updatedAt} />
-        </InfoPanel>
+        <ProcessStepper steps={steps} />
 
         <Text style={textStyle}>
           <strong>O que está acontecendo:</strong> {trackingMessage}

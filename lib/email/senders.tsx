@@ -94,7 +94,7 @@ export async function sendProtocolStatusUpdateEmail(
   if (!emailSendingConfigured()) return skippedResult;
   return sendReactEmail({
     to,
-    subject: `Atualizacao do protocolo ${data.protocolNumber}`,
+    subject: `Atualização do protocolo ${data.protocolNumber}`,
     react: <ProtocolStatusUpdateEmail {...data} />,
   });
 }
