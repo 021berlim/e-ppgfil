@@ -61,19 +61,13 @@ export async function baixarComprovantePDF(protocolo: Protocolo) {
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(9)
   doc.setTextColor(107, 30, 44)
-  doc.text('UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO — UERJ', margin, cursorY)
-
-  cursorY += 4.5
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(80, 80, 80)
-  doc.text('CENTRO DE EDUCAÇÃO E HUMANIDADES · INSTITUTO DE FILOSOFIA E CIÊNCIAS HUMANAS', margin, cursorY)
+  doc.text('UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO (UERJ)', margin, cursorY)
 
   cursorY += 4
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.setTextColor(60, 60, 60)
-  doc.text('PROGRAMA DE PÓS-GRADUAÇÃO EM FILOSOFIA — PPGFIL', margin, cursorY)
+  doc.text('PROGRAMA DE PÓS-GRADUAÇÃO EM FILOSOFIA (PPGFIL)', margin, cursorY)
 
   cursorY += 7
   doc.setDrawColor(213, 204, 196) // #D5CCC4
@@ -91,7 +85,7 @@ export async function baixarComprovantePDF(protocolo: Protocolo) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.5)
   doc.setTextColor(100, 100, 100)
-  doc.text('Sistema Eletrônico de Solicitações e Atendimento da Secretaria — e-PPGFIL', margin, cursorY)
+  doc.text('Sistema Eletrônico de Protocolos e-PPGFIL', margin, cursorY)
 
   // 4. Caixa de Destaque do Número de Protocolo
   cursorY += 7

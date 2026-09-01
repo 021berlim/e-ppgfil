@@ -133,9 +133,6 @@ export function ProtocolStatusUpdateEmail({
   return (
     <EmailShell
       preview={`Atualizacao do protocolo ${protocolNumber}: ${currentStatus}.`}
-      title="Seu processo está em"
-      description={currentStatus}
-      reference={protocolNumber}
     >
       <Content>
         <Text style={textStyle}>

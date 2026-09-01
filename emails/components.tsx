@@ -37,7 +37,7 @@ export function EmailShell({
   children,
 }: {
   preview: string;
-  title: string;
+  title?: string;
   description?: string;
   reference?: string;
   children: ReactNode;
@@ -54,8 +54,8 @@ export function EmailShell({
                 <Column style={logoColumn}>
                   <Img
                     src={logoUrl}
-                    width="192"
-                    height="80"
+                    width="160"
+                    height="64"
                     alt="PPGFIL UERJ — Pós-graduação em Filosofia"
                     style={logo}
                   />
@@ -63,21 +63,22 @@ export function EmailShell({
                 <Column style={bannerTextColumn}>
                   <Text style={bannerTitle}>e-PPGFIL</Text>
                   <Text style={bannerSubtitle}>
-                    Sistema de solicitações do Programa de Pós-Graduação em
-                    Filosofia
+                    Programa de Pós-Graduação em Filosofia - UERJ
                   </Text>
                 </Column>
               </Row>
             </Section>
-            <Section style={documentHeader}>
-              <Heading style={heading}>{title}</Heading>
-              {description ? (
-                <Text style={headingDescription}>{description}</Text>
-              ) : null}
-              {reference ? (
-                <Text style={referenceText}>Referência: {reference}</Text>
-              ) : null}
-            </Section>
+            {title || description || reference ? (
+              <Section style={documentHeader}>
+                {title ? <Heading style={heading}>{title}</Heading> : null}
+                {description ? (
+                  <Text style={headingDescription}>{description}</Text>
+                ) : null}
+                {reference ? (
+                  <Text style={referenceText}>Referência: {reference}</Text>
+                ) : null}
+              </Section>
+            ) : null}
             {children}
             <Hr style={hr} />
             <Section style={footerSection}>
@@ -279,7 +280,9 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                             borderColor: circleColor,
                             boxShadow: isCurrent
                               ? `0 0 0 4px ${"rgba(107,30,44,0.12)"}`
-                              : "none",
+                              : isCompleted
+                                ? "0 0 0 3px rgba(34, 197, 94, 0.14)"
+                                : "none",
                           }}
                         >
                           <Text
@@ -287,7 +290,9 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                               ...stepIcon,
                               color:
                                 isCompleted || isRejected || isCurrent
-                                  ? "#FFFFFF"
+                                  ? isCompleted || isRejected
+                                    ? "#FFFFFF"
+                                    : c.primary
                                   : "#6B7280",
                               fontWeight: isCurrent ? "700" : "600",
                             }}
@@ -313,9 +318,11 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                             ...stepStatus,
                             color: isRejected
                               ? "#B42318"
-                              : isCurrent
-                                ? c.primary
-                                : "#4B5563",
+                              : isCompleted
+                                ? "#22C55E"
+                                : isCurrent
+                                  ? c.primary
+                                  : "#4B5563",
                           }}
                         >
                           {step.status}
@@ -374,43 +381,43 @@ const container = {
   maxWidth: "680px",
 };
 const header = {
-  backgroundColor: c.dark,
-  borderBottom: `5px solid ${c.gold}`,
-  padding: "22px 32px 20px",
+  backgroundColor: "#F7F5F3",
+  borderBottom: `1px solid ${c.border}`,
+  padding: "20px 32px 18px",
 };
-const logoColumn = { width: "42%", verticalAlign: "middle" as const };
+const logoColumn = { width: "34%", verticalAlign: "middle" as const };
 const logo = {
   display: "block",
-  height: "80px",
+  height: "64px",
   margin: 0,
   objectFit: "contain" as const,
-  width: "192px",
+  width: "160px",
 };
 const bannerTextColumn = {
-  paddingLeft: "24px",
+  paddingLeft: "12px",
   verticalAlign: "middle" as const,
 };
 const bannerTitle = {
-  color: "#FFF",
+  color: c.dark,
   fontFamily: font,
-  fontSize: "24px",
+  fontSize: "22px",
   fontWeight: "700",
   letterSpacing: ".3px",
-  lineHeight: "30px",
-  margin: "0 0 5px",
+  lineHeight: "26px",
+  margin: "0 0 2px",
   textAlign: "left" as const,
 };
 const bannerSubtitle = {
-  color: "#E6D8DB",
+  color: c.muted,
   fontFamily: font,
-  fontSize: "13px",
-  lineHeight: "19px",
+  fontSize: "12px",
+  lineHeight: "18px",
   margin: 0,
   textAlign: "left" as const,
 };
 const documentHeader = {
   borderBottom: `1px solid ${c.border}`,
-  padding: "28px 38px 22px",
+  padding: "18px 38px 10px",
 };
 const heading = {
   color: c.text,
