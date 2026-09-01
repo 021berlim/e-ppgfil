@@ -3,6 +3,11 @@ import { createHash, randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import {
+  invalidateSessionCache,
+  readSessionCache,
+  writeSessionCache,
+} from '@/lib/redis-cache'
+import {
   canManageAdministrativeCatalogs,
   canCreateUsers,
   canManageUsers,
@@ -45,6 +50,7 @@ export async function clearSession() {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE)?.value
   if (token) {
+    const tokenHash = hashToken(token)
     await db.query(
       `
         UPDATE public.user_sessions
@@ -52,8 +58,9 @@ export async function clearSession() {
         WHERE refresh_token_hash = $1
           AND revoked_at IS NULL
       `,
-      [hashToken(token)],
+      [tokenHash],
     )
+    await invalidateSessionCache(tokenHash)
   }
   cookieStore.delete(SESSION_COOKIE)
 }
@@ -62,6 +69,10 @@ export async function getCurrentUser(): Promise<ClientSession | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE)?.value
   if (!token) return null
+  const tokenHash = hashToken(token)
+
+  const cached = await readSessionCache(tokenHash)
+  if (cached) return cached
 
   const result = await db.query(
     `
@@ -81,20 +92,22 @@ export async function getCurrentUser(): Promise<ClientSession | null> {
         AND u.is_active = true
       LIMIT 1
     `,
-    [hashToken(token)],
+    [tokenHash],
   )
 
   const user = result.rows[0]
   if (!user?.role) return null
 
-  return {
+  const session = {
     id: user.id,
     email: user.email,
     name: user.name,
     avatar_url: user.avatar_url,
     role: user.role as DashboardRole,
     em: Date.now(),
-  }
+  } satisfies ClientSession
+  await writeSessionCache(tokenHash, session)
+  return session
 }
 
 export async function authenticateDashboardUser(email: string, password: string) {

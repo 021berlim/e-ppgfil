@@ -1,5 +1,11 @@
 import type { PoolClient } from 'pg'
 import { db } from './db'
+import {
+  invalidateCatalogCache,
+  readCatalogCache,
+  writeCatalogCache,
+} from './redis-cache'
+import type { CategoriaItem } from './categorias'
 
 type DocumentInput = {
   nome: string
@@ -33,6 +39,9 @@ function slugify(value: string) {
 }
 
 export async function listRequestCatalog() {
+  const cached = await readCatalogCache<CategoriaItem[]>()
+  if (cached) return cached
+
   const result = await db.query(`
     SELECT c.id, c.name, c.description,
       COALESCE(jsonb_agg(jsonb_build_object(
@@ -50,9 +59,11 @@ export async function listRequestCatalog() {
     GROUP BY c.id
     ORDER BY c.sort_order, c.created_at
   `)
-  return result.rows.map((row) => ({
+  const catalog = result.rows.map((row) => ({
     id: row.id, nome: row.name, descricao: row.description, tiposSolicitacao: row.types,
   }))
+  await writeCatalogCache(catalog)
+  return catalog
 }
 
 async function upsertCategory(client: PoolClient, item: CategoryInput, order: number) {
@@ -113,6 +124,7 @@ export async function replaceRequestCatalog(input: unknown) {
     }
     await client.query('UPDATE request_categories SET is_active=false WHERE NOT (id=ANY($1::uuid[]))', [activeCategoryIds])
     await client.query('COMMIT')
+    await invalidateCatalogCache()
     return listRequestCatalog()
   } catch (error) {
     await client.query('ROLLBACK')

@@ -1,5 +1,10 @@
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
+import {
+  invalidateUserSessionCache,
+  readRolesCache,
+  writeRolesCache,
+} from '@/lib/redis-cache'
 
 const ALLOWED_ROLES = ['ROOT', 'SECRETARY_ADMIN', 'SECRETARY_OPERATOR', 'COORDINATOR'] as const
 
@@ -46,6 +51,9 @@ function validatePassword(value: unknown, required: boolean) {
 }
 
 export async function listDashboardRoles() {
+  const cached = await readRolesCache()
+  if (cached) return cached
+
   const result = await db.query(
     `
       SELECT id, slug, name, description
@@ -55,6 +63,7 @@ export async function listDashboardRoles() {
     `,
     [ALLOWED_ROLES],
   )
+  await writeRolesCache(result.rows)
   return result.rows
 }
 
@@ -174,6 +183,7 @@ export async function updateDashboardUser(id: string, payload: Record<string, un
 
     await assignSingleRole(client, id, role)
     await client.query('COMMIT')
+    await invalidateUserSessionCache(id)
     return { ...userResult.rows[0], role, role_name: role }
   } catch (error) {
     await client.query('ROLLBACK')
@@ -185,6 +195,7 @@ export async function updateDashboardUser(id: string, payload: Record<string, un
 
 export async function deleteDashboardUser(id: string) {
   const result = await db.query('DELETE FROM public.users WHERE id = $1', [id])
+  if (result.rowCount) await invalidateUserSessionCache(id)
   return result.rowCount ?? 0
 }
 

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import type { ClientSession, DashboardRole } from '@/lib/auth-types'
+import { invalidateUserSessionCache } from '@/lib/redis-cache'
 
 function requiredString(value: unknown, field: string) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -110,6 +111,7 @@ export async function updateOwnProfile(user: ClientSession, payload: Record<stri
       )
 
   const updated = result.rows[0]
+  await invalidateUserSessionCache(user.id)
   return {
     id: updated.id,
     email: updated.email,
