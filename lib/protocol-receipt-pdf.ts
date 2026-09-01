@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
 import defaultCategories from '@/data/categorias-solicitacoes.json'
+import { obterPrazoDescricaoTipo, obterPrazoSlaTipo } from './categorias'
 import type { Protocolo } from './types'
 
 type CategoryItem = {
