@@ -243,12 +243,12 @@ export function ProcessStepper({ steps }: { steps: ProcessStep[] }) {
                   : "#9AA0A6";
 
             const iconLabel = isRejected
-              ? "×"
+              ? "\uf00d"
               : isCompleted
-                ? "✓"
+                ? "\uf00c"
                 : isPending
-                  ? "-"
-                  : "•";
+                  ? "\uf111"
+                  : "\uf111";
             const connectorStyle = {
               ...stepConnector,
               background: isCompleted
@@ -531,8 +531,9 @@ const stepNode = {
 };
 const stepIcon = {
   color: "#6B7280",
-  fontFamily: font,
-  fontSize: "14px",
+  fontFamily: '"Font Awesome 6 Free", Arial, sans-serif',
+  fontSize: "13px",
+  fontWeight: "700",
   lineHeight: "20px",
   margin: 0,
 };
